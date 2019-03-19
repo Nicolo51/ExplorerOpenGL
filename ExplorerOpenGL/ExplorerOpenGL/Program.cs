@@ -1,4 +1,6 @@
-﻿using System;
+﻿using ExplorerOpenGL.Model;
+using System;
+using System.Diagnostics;
 
 namespace ExplorerOpenGL
 {

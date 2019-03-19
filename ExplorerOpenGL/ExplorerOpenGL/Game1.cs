@@ -1,6 +1,10 @@
-﻿using Microsoft.Xna.Framework;
+﻿using ExplorerOpenGL.Controllers;
+using ExplorerOpenGL.Model.Sprites;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using System;
+using System.Collections.Generic;
 
 namespace ExplorerOpenGL
 {
@@ -11,42 +15,73 @@ namespace ExplorerOpenGL
     {
         GraphicsDeviceManager graphics;
         SpriteBatch spriteBatch;
-        
+        List<Sprite> _sprites;
+
+        const int Height = 730;
+        const int Width = 1360; 
         public Game1()
         {
             graphics = new GraphicsDeviceManager(this);
+
             Content.RootDirectory = "Content";
+            graphics.PreferredBackBufferHeight = Height;
+            graphics.PreferredBackBufferWidth = Width;
+            IsMouseVisible = false; 
+            graphics.IsFullScreen = false;
         }
 
-        /// <summary>
-        /// Allows the game to perform any initialization it needs to before starting to run.
-        /// This is where it can query for any required services and load any non-graphic
-        /// related content.  Calling base.Initialize will enumerate through any components
-        /// and initialize them as well.
-        /// </summary>
         protected override void Initialize()
         {
-            // TODO: Add your initialization logic here
 
             base.Initialize();
         }
 
-        /// <summary>
-        /// LoadContent will be called once per game and is the place to load
-        /// all of your content.
-        /// </summary>
+
         protected override void LoadContent()
         {
-            // Create a new SpriteBatch, which can be used to draw textures.
             spriteBatch = new SpriteBatch(GraphicsDevice);
 
-            // TODO: use this.Content to load your game content here
+            Controller.TextureManager = new TextureManager(graphics);
+            var TextureButton = Controller.TextureManager.CreateTexture(101, 101, test);
+
+            var fonts = new Dictionary<string, SpriteFont>()
+            {
+                {"Default", Content.Load<SpriteFont>("Fonts/Default") },
+            };
+
+            _sprites = new List<Sprite>()
+            {
+                new Button(TextureButton)
+                {
+                    Position = new Vector2(100,100),
+                },
+                new MousePointer()
+            };
+
+            Controller.DebugManager = new DebugManager(_sprites, fonts);
+
+            Controller.KeyboardUtils.KeyPressed += OnKeyPressed; 
+
         }
 
-        /// <summary>
-        /// UnloadContent will be called once per game and is the place to unload
-        /// game-specific content.
-        /// </summary>
+        private void OnKeyPressed(Keys[] keys)
+        {
+            if(Controller.KeyboardUtils.IsContaining(keys, Keys.F3))
+            {
+                Controller.DebugManager.ToggleDebugMode(); 
+            }
+        }
+
+        public Color test(int input)
+        {
+            if (input % 2 == 1)
+            {
+                return Color.Red;
+            }
+            else
+                return Color.Black; 
+        }
+
         protected override void UnloadContent()
         {
             // TODO: Unload any non ContentManager content here
@@ -59,10 +94,17 @@ namespace ExplorerOpenGL
         /// <param name="gameTime">Provides a snapshot of timing values.</param>
         protected override void Update(GameTime gameTime)
         {
-            if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
-                Exit();
-
+            for (int i = 0; i < _sprites.Count; i++)
+            {
+                if (_sprites[i].IsRemove)
+                {
+                    _sprites.RemoveAt(i);
+                    i--; 
+                }
+                _sprites[i].Update(gameTime, _sprites);
+            }
             // TODO: Add your update logic here
+            Controller.Update(); 
 
             base.Update(gameTime);
         }
@@ -74,9 +116,17 @@ namespace ExplorerOpenGL
         protected override void Draw(GameTime gameTime)
         {
             GraphicsDevice.Clear(Color.CornflowerBlue);
+            spriteBatch.Begin(SpriteSortMode.BackToFront);
 
-            // TODO: Add your drawing code here
+            foreach(var sprite in _sprites)
+            {
+                sprite.Draw(spriteBatch);
+            }
 
+            if(Controller.DebugManager.IsDebuging)
+                Controller.DebugManager.DebugDraw(spriteBatch); 
+
+            spriteBatch.End(); 
             base.Draw(gameTime);
         }
     }
