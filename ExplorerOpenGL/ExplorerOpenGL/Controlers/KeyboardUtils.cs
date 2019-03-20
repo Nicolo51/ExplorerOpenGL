@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ExplorerOpenGL.Controllers
+namespace ExplorerOpenGL.Controlers
 {
     public class KeyboardUtils
     {
@@ -18,10 +18,11 @@ namespace ExplorerOpenGL.Controllers
         public delegate void KeyReleasedEventHandler(Keys[] keys);
         public event KeyReleasedEventHandler KeyRealeased;
 
+        public bool CapsLock { get { return currentKeyboardState.CapsLock; } }
 
         public KeyboardUtils()
         {
-
+            currentKeyboardState = Keyboard.GetState(); 
         }
 
         public bool IsContaining(Keys[] keys, Keys seekingKey)
@@ -61,10 +62,10 @@ namespace ExplorerOpenGL.Controllers
         {
             List<Keys> KeyReleased = new List<Keys>();
 
-            for (int i = 0; i < currentPressedKeys.Length; i++)
+            for (int i = 0; i < previousPressedKeys.Length; i++)
             {
                 bool Released = true;
-                for (int j = 0; j < previousPressedKeys.Length; j++)
+                for (int j = 0; j < currentPressedKeys.Length; j++)
                 {
                     if (previousPressedKeys[j] == currentPressedKeys[i])
                     {
@@ -74,7 +75,7 @@ namespace ExplorerOpenGL.Controllers
                 }
                 if (Released)
                 {
-                    KeyReleased.Add(currentPressedKeys[i]);
+                    KeyReleased.Add(previousPressedKeys[i]);
                 }
             }
             return KeyReleased.ToArray(); 
@@ -104,6 +105,16 @@ namespace ExplorerOpenGL.Controllers
             return KeyPressed.ToArray();
         }
 
+        public bool IsKeyDown(Keys key)
+        {
+            return currentKeyboardState.IsKeyDown(key);
+        }
+
+        public bool IsKeyUp(Keys key)
+        {
+            return currentKeyboardState.IsKeyUp(key); 
+        } 
+
         protected virtual void OnKeyRelease(Keys[] keys)
         {
             KeyRealeased?.Invoke(keys);
@@ -113,5 +124,7 @@ namespace ExplorerOpenGL.Controllers
         {
             KeyPressed?.Invoke(keys); 
         }
+
+
     }
 }

@@ -1,10 +1,11 @@
-﻿using ExplorerOpenGL.Controllers;
+﻿using ExplorerOpenGL.Controlers;
 using ExplorerOpenGL.Model.Sprites;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
+using System.Threading;
 
 namespace ExplorerOpenGL
 {
@@ -13,12 +14,14 @@ namespace ExplorerOpenGL
     /// </summary>
     public class Game1 : Game
     {
+        Controler controler; 
         GraphicsDeviceManager graphics;
         SpriteBatch spriteBatch;
         List<Sprite> _sprites;
 
         const int Height = 730;
         const int Width = 1360; 
+
         public Game1()
         {
             graphics = new GraphicsDeviceManager(this);
@@ -26,13 +29,12 @@ namespace ExplorerOpenGL
             Content.RootDirectory = "Content";
             graphics.PreferredBackBufferHeight = Height;
             graphics.PreferredBackBufferWidth = Width;
-            IsMouseVisible = false; 
+            IsMouseVisible = true; 
             graphics.IsFullScreen = false;
         }
 
         protected override void Initialize()
         {
-
             base.Initialize();
         }
 
@@ -41,45 +43,55 @@ namespace ExplorerOpenGL
         {
             spriteBatch = new SpriteBatch(GraphicsDevice);
 
-            Controller.TextureManager = new TextureManager(graphics);
-            var TextureButton = Controller.TextureManager.CreateTexture(101, 101, test);
-
             var fonts = new Dictionary<string, SpriteFont>()
             {
                 {"Default", Content.Load<SpriteFont>("Fonts/Default") },
             };
 
-            _sprites = new List<Sprite>()
+
+
+            controler = new Controler(fonts, graphics, Content);
+
+            _sprites = new List<Sprite>(); 
+
+            var loading = new Thread(() =>
             {
-                new Button(TextureButton)
+                List<Sprite> sprites = new List<Sprite>()
+                {
+                new Button(controler.TextureManager.CreateTexture(101,101, pixels => Color.White))
                 {
                     Position = new Vector2(100,100),
                 },
-                new MousePointer()
-            };
+                new Button(controler.TextureManager.LoadNoneContentLoadedTexture(@"D:\Mes documents\Images\Fond d'écrans\010Aeolian3.jpg"))
+                {
+                    Position = new Vector2(200,200),
+                    scale = .1f,
+                },
 
-            Controller.DebugManager = new DebugManager(_sprites, fonts);
+                new MousePointer(),
+                };
 
-            Controller.KeyboardUtils.KeyPressed += OnKeyPressed; 
+                _sprites = sprites;
+            });
+            loading.Start();
+
+            _sprites.Add(new Button(controler.TextureManager.CreateTexture(200, 200, pixel => Color.Black)));
+
+            controler.KeyboardUtils.KeyPressed += OnKeyPressed;
 
         }
 
         private void OnKeyPressed(Keys[] keys)
         {
-            if(Controller.KeyboardUtils.IsContaining(keys, Keys.F3))
+            if(controler.KeyboardUtils.IsContaining(keys, Keys.F3))
             {
-                Controller.DebugManager.ToggleDebugMode(); 
+                controler.DebugManager.ToggleDebugMode(_sprites); 
             }
-        }
-
-        public Color test(int input)
-        {
-            if (input % 2 == 1)
+            if(controler.KeyboardUtils.IsContaining(keys, Keys.A))
             {
-                return Color.Red;
+                var top = new Thread(() => _sprites.Add(new Button(controler.TextureManager.LoadNoneContentLoadedTexture(@"D:\Mes documents\Images\Fond d'écrans\wallhaven-663393.png")){ scale = .5f, }));
+                top.Start(); 
             }
-            else
-                return Color.Black; 
         }
 
         protected override void UnloadContent()
@@ -94,6 +106,9 @@ namespace ExplorerOpenGL
         /// <param name="gameTime">Provides a snapshot of timing values.</param>
         protected override void Update(GameTime gameTime)
         {
+            if(_sprites == null)
+                return;
+
             for (int i = 0; i < _sprites.Count; i++)
             {
                 if (_sprites[i].IsRemove)
@@ -101,10 +116,10 @@ namespace ExplorerOpenGL
                     _sprites.RemoveAt(i);
                     i--; 
                 }
-                _sprites[i].Update(gameTime, _sprites);
+                _sprites[i].Update(gameTime, _sprites, controler);
             }
             // TODO: Add your update logic here
-            Controller.Update(); 
+            controler.Update(_sprites); 
 
             base.Update(gameTime);
         }
@@ -116,15 +131,18 @@ namespace ExplorerOpenGL
         protected override void Draw(GameTime gameTime)
         {
             GraphicsDevice.Clear(Color.CornflowerBlue);
+            if (_sprites == null)
+                return; 
             spriteBatch.Begin(SpriteSortMode.BackToFront);
+
 
             foreach(var sprite in _sprites)
             {
                 sprite.Draw(spriteBatch);
             }
 
-            if(Controller.DebugManager.IsDebuging)
-                Controller.DebugManager.DebugDraw(spriteBatch); 
+            if(controler.DebugManager.IsDebuging)
+                controler.DebugManager.DebugDraw(spriteBatch); 
 
             spriteBatch.End(); 
             base.Draw(gameTime);

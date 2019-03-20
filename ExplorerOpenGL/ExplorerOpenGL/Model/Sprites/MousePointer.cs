@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using ExplorerOpenGL.Controlers;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
@@ -26,7 +27,7 @@ namespace ExplorerOpenGL.Model.Sprites
 
         }
 
-        public override void Update(GameTime gameTime, List<Sprite> sprites)
+        public override void Update(GameTime gameTime, List<Sprite> sprites, Controler controler)
         {
             if(currentMouseState != null)
             {
@@ -35,7 +36,7 @@ namespace ExplorerOpenGL.Model.Sprites
             currentMouseState = Mouse.GetState(); 
             
 
-            base.Update(gameTime, sprites);
+            base.Update(gameTime, sprites, controler);
         }
 
         public override string ToString()

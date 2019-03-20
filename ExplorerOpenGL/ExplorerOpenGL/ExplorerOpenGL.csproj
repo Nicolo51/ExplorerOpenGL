@@ -42,9 +42,9 @@
     <ApplicationManifest>app.manifest</ApplicationManifest>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="Controllers\Controller.cs" />
-    <Compile Include="Controllers\DebugManager.cs" />
-    <Compile Include="Controllers\TextureManager.cs" />
+    <Compile Include="Controlers\Controler.cs" />
+    <Compile Include="Controlers\DebugManager.cs" />
+    <Compile Include="Controlers\TextureManager.cs" />
     <Compile Include="Game1.cs" />
     <Compile Include="Model\Sprites\Button.cs" />
     <Compile Include="Model\Sprites\MousePointer.cs" />
@@ -57,6 +57,7 @@
       <HintPath>$(MonoGameInstallDirectory)\MonoGame\v3.0\Assemblies\DesktopGL\MonoGame.Framework.dll</HintPath>
     </Reference>
     <Reference Include="System" />
+    <Reference Include="System.Drawing" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
   </ItemGroup>
@@ -111,7 +112,7 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="app.manifest" />
-    <Compile Include="Controllers\KeyboardUtils.cs" />
+    <Compile Include="Controlers\KeyboardUtils.cs" />
     <None Include="Content\Fonts\Default.spritefont" />
   </ItemGroup>
   <ItemGroup />

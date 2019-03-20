@@ -1,4 +1,5 @@
-﻿using ExplorerOpenGL.Model;
+﻿using ExplorerOpenGL.Controlers;
+using ExplorerOpenGL.Model;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -12,7 +13,7 @@ namespace ExplorerOpenGL.Model.Sprites
     public class Sprite
     {
         public bool IsRemove { get; set; }
-        public Vector2 Position { get; set; }
+        public Vector2 Position;
         protected Texture2D _texture;
         public float Radian { get; set; }
         public Rectangle HitBox { get { return new Rectangle((int)Position.X, (int)Position.Y, _texture.Width, _texture.Height); } }
@@ -26,7 +27,7 @@ namespace ExplorerOpenGL.Model.Sprites
             scale = 1;
         }
 
-        public virtual void Update(GameTime gameTime, List<Sprite> sprites)
+        public virtual void Update(GameTime gameTime, List<Sprite> sprites, Controler controler)
         {
             
         }

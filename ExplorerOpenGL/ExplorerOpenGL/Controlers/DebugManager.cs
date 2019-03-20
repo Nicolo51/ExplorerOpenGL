@@ -7,13 +7,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ExplorerOpenGL.Controllers
+namespace ExplorerOpenGL.Controlers
 {
     public class DebugManager
     {
         public Dictionary<string, SpriteFont> Fonts { get; set; }
         public Dictionary<string, Texture2D> Textures { get; set; }
-        private List<Sprite> _sprites;
 
         public Color TextColor { get; set; }
 
@@ -23,16 +22,15 @@ namespace ExplorerOpenGL.Controllers
 
         public bool IsDebuging { get; private set; } 
 
-        public DebugManager(List<Sprite> sprites, Dictionary<string, SpriteFont> fonts)
+        public DebugManager(Dictionary<string, SpriteFont> fonts)
         {
             Fonts = fonts; 
             debugMessage = new StringBuilder(); 
             IsDebuging = false; 
             TextColor = Color.White; 
-            _sprites = sprites; 
         }
 
-        public void Update()
+        public void Update(List<Sprite> sprites)
         {
             if (!IsDebuging)
                 return;
@@ -40,17 +38,17 @@ namespace ExplorerOpenGL.Controllers
             BuildDebugMessage(); 
         }
 
-        public void ToggleDebugMode()
+        public void ToggleDebugMode(List<Sprite> sprites)
         {
             IsDebuging = !IsDebuging; 
             if(IsDebuging)
             { 
-                SortSpriteToDebug();
+                SortSpriteToDebug(sprites);
                 BuildDebugMessage(); 
             }
         }
 
-        public void SortSpriteToDebug()
+        public void SortSpriteToDebug(List<Sprite> _sprites)
         {
             ClearDebugMember();
             foreach(var sprite in _sprites)
