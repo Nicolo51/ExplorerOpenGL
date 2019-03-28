@@ -25,7 +25,7 @@ namespace ExplorerOpenGL
         public Game1()
         {
             graphics = new GraphicsDeviceManager(this);
-
+            Window.AllowUserResizing = true; 
             Content.RootDirectory = "Content";
             graphics.PreferredBackBufferHeight = Height;
             graphics.PreferredBackBufferWidth = Width;
@@ -58,24 +58,19 @@ namespace ExplorerOpenGL
             {
                 List<Sprite> sprites = new List<Sprite>()
                 {
-                new Button(controler.TextureManager.CreateTexture(101,101, pixels => Color.White))
+                new SideMenu(controler.TextureManager.CreateBorderedTexture(400, 730,5,0, e => new Color(167, 216, 134), e => new Color(131, 186, 94)), fonts["Default"])
                 {
-                    Position = new Vector2(100,100),
+                    Position = new Vector2(0,0),
+                    name = "Test",
+                    layerDepth = .5f,
                 },
-                new Button(controler.TextureManager.LoadNoneContentLoadedTexture(@"D:\Mes documents\Images\Fond d'écrans\010Aeolian3.jpg"))
-                {
-                    Position = new Vector2(200,200),
-                    scale = .1f,
-                },
-
+                
                 new MousePointer(),
                 };
 
                 _sprites = sprites;
             });
             loading.Start();
-
-            _sprites.Add(new Button(controler.TextureManager.CreateTexture(200, 200, pixel => Color.Black)));
 
             controler.KeyboardUtils.KeyPressed += OnKeyPressed;
 
@@ -87,12 +82,8 @@ namespace ExplorerOpenGL
             {
                 controler.DebugManager.ToggleDebugMode(_sprites); 
             }
-            if(controler.KeyboardUtils.IsContaining(keys, Keys.A))
-            {
-                var top = new Thread(() => _sprites.Add(new Button(controler.TextureManager.LoadNoneContentLoadedTexture(@"D:\Mes documents\Images\Fond d'écrans\wallhaven-663393.png")){ scale = .5f, }));
-                top.Start(); 
-            }
         }
+
 
         protected override void UnloadContent()
         {

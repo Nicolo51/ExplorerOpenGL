@@ -29,7 +29,7 @@ namespace ExplorerOpenGL.Model.Sprites
 
         public virtual void Update(GameTime gameTime, List<Sprite> sprites, Controler controler)
         {
-            
+
         }
 
         public virtual void Draw(SpriteBatch spriteBatch)

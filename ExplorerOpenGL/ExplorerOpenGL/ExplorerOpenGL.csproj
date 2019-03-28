@@ -46,8 +46,10 @@
     <Compile Include="Controlers\DebugManager.cs" />
     <Compile Include="Controlers\TextureManager.cs" />
     <Compile Include="Game1.cs" />
+    <Compile Include="Model\Sides.cs" />
     <Compile Include="Model\Sprites\Button.cs" />
     <Compile Include="Model\Sprites\MousePointer.cs" />
+    <Compile Include="Model\Sprites\SideMenu.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Model\Sprites\Sprite.cs" />

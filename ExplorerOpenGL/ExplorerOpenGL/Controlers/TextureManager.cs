@@ -34,6 +34,44 @@ namespace ExplorerOpenGL.Controlers
             return texture;
         }
 
+        public Texture2D CreateBorderedTexture(int width, int height, int thickness, int distanceBorder, Func<int, Color> borderPaint, Func<int, Color> backgroundPaint)
+        {
+            Texture2D texture = new Texture2D(graphics.GraphicsDevice, width, height);
+            Color[] data = new Color[width * height];
+
+            for(int i = 0; i < height; i++)
+            {
+                for(int j = 0; j < width; j++)
+                {
+                   data[i * width + j] = backgroundPaint(i * width + j);
+                }
+            }
+            for (int i = 0; i < height; i++)
+            {
+                for (int j = 0; j < width; j++)
+                {
+                    if ((i == distanceBorder && (j > distanceBorder && j < width - 1 - distanceBorder)) || (i == height - 1 - distanceBorder && (j > distanceBorder && j < width - 1 - distanceBorder)) || (j == distanceBorder && (i > distanceBorder && i < height - 1 - distanceBorder)) || (j == width - 1 - distanceBorder && (i > distanceBorder && i < height - 1 - distanceBorder)))
+                    {
+                        for (int x = 0 - thickness / 2; x < thickness / 2; x++)
+                        {
+                            for (int y = 0 - thickness / 2; y < thickness / 2; y++)
+                            {
+                                int index = i * width + j + y + (x * width);
+
+                                if (index > data.Length-1 || index < 0)
+                                    continue;
+
+                                data[index] = borderPaint(i * width + j);
+                            }
+                        }
+                    }
+                }
+            }
+            
+            texture.SetData(data); 
+            return texture; 
+        }
+
         public Texture2D LoadNoneContentLoadedTexture(string path)
         {
             var image = (System.Drawing.Bitmap)System.Drawing.Image.FromFile(path);

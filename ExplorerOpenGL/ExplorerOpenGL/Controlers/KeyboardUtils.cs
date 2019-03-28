@@ -67,7 +67,7 @@ namespace ExplorerOpenGL.Controlers
                 bool Released = true;
                 for (int j = 0; j < currentPressedKeys.Length; j++)
                 {
-                    if (previousPressedKeys[j] == currentPressedKeys[i])
+                    if (previousPressedKeys[i] == currentPressedKeys[j])
                     {
                         Released = false;
                         break;
