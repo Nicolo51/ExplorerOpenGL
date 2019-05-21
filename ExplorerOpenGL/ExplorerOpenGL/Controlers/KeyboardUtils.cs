@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework.Input;
+﻿using ExplorerOpenGL.Model;
+using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -44,8 +45,8 @@ namespace ExplorerOpenGL.Controlers
             Keys[] currentPressedKeys = currentKeyboardState.GetPressedKeys();
             Keys[] previousPressedKeys = previousKeyboardState.GetPressedKeys();
 
-            Keys[] NewKeys = GetPressedKey(currentPressedKeys, previousPressedKeys);
-            Keys[] LostKeys = GetReleasedKey(currentPressedKeys, previousPressedKeys);
+            Keys[] NewKeys = GetPressedKey(currentPressedKeys, previousPressedKeys).GetArray();
+            Keys[] LostKeys = GetReleasedKey(currentPressedKeys, previousPressedKeys).GetArray() ;
 
             if (NewKeys.Length > 0) 
             {
@@ -58,7 +59,7 @@ namespace ExplorerOpenGL.Controlers
 
         }
 
-        private Keys[] GetReleasedKey(Keys[] currentPressedKeys, Keys[] previousPressedKeys)
+        private KeysArray GetReleasedKey(Keys[] currentPressedKeys, Keys[] previousPressedKeys)
         {
             List<Keys> KeyReleased = new List<Keys>();
 
@@ -78,10 +79,10 @@ namespace ExplorerOpenGL.Controlers
                     KeyReleased.Add(previousPressedKeys[i]);
                 }
             }
-            return KeyReleased.ToArray(); 
+            return new KeysArray(KeyReleased.ToArray()); 
         }
 
-        private Keys[] GetPressedKey(Keys[] currentPressedKeys, Keys[] previousPressedKeys)
+        private KeysArray GetPressedKey(Keys[] currentPressedKeys, Keys[] previousPressedKeys)
         {
 
             List<Keys> KeyPressed = new List<Keys>();
@@ -102,7 +103,7 @@ namespace ExplorerOpenGL.Controlers
                     KeyPressed.Add(currentPressedKeys[i]);
                 }
             }
-            return KeyPressed.ToArray();
+            return new KeysArray(KeyPressed.ToArray());
         }
 
         public bool IsKeyDown(Keys key)

@@ -46,6 +46,7 @@
     <Compile Include="Controlers\DebugManager.cs" />
     <Compile Include="Controlers\TextureManager.cs" />
     <Compile Include="Game1.cs" />
+    <Compile Include="Model\KeysArray.cs" />
     <Compile Include="Model\Sides.cs" />
     <Compile Include="Model\Sprites\Button.cs" />
     <Compile Include="Model\Sprites\MousePointer.cs" />

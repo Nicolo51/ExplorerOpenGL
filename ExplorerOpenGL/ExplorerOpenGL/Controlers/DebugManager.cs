@@ -1,6 +1,8 @@
-﻿using ExplorerOpenGL.Model.Sprites;
+﻿using ExplorerOpenGL.Model;
+using ExplorerOpenGL.Model.Sprites;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,6 +15,8 @@ namespace ExplorerOpenGL.Controlers
     {
         public Dictionary<string, SpriteFont> Fonts { get; set; }
         public Dictionary<string, Texture2D> Textures { get; set; }
+
+        public List<string> EventLogList { get; private set; }
 
         public Color TextColor { get; set; }
 
@@ -45,6 +49,14 @@ namespace ExplorerOpenGL.Controlers
             { 
                 SortSpriteToDebug(sprites);
                 BuildDebugMessage(); 
+            }
+        }
+
+        public void AddEvent(object input)
+        {
+            if(input is KeysArray)
+            {
+                EventLogList.Add(input.ToString()); 
             }
         }
 

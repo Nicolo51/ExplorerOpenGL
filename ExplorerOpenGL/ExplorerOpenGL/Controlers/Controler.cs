@@ -26,6 +26,9 @@ namespace ExplorerOpenGL.Controlers
             KeyboardUtils = new KeyboardUtils();
             DebugManager = new DebugManager(Fonts);
             TextureManager = new TextureManager(Graphics, content);
+
+            KeyboardUtils.KeyPressed += DebugManager.AddEvent;
+            KeyboardUtils.KeyRealeased += DebugManager.AddEvent;
             
             fonts = Fonts;
             graphics = Graphics; 
