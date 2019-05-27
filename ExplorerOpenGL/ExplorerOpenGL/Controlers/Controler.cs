@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -24,8 +25,8 @@ namespace ExplorerOpenGL.Controlers
         {
             
             KeyboardUtils = new KeyboardUtils();
-            DebugManager = new DebugManager(Fonts);
             TextureManager = new TextureManager(Graphics, content);
+            DebugManager = new DebugManager(TextureManager, Fonts, Graphics);
 
             KeyboardUtils.KeyPressed += DebugManager.AddEvent;
             KeyboardUtils.KeyRealeased += DebugManager.AddEvent;
@@ -46,6 +47,13 @@ namespace ExplorerOpenGL.Controlers
                 throw new NullReferenceException("Toutes les instances des controllers doivent être initialisées"); 
             }
 
+        }
+        public void UpdateDisplay(object sender, EventArgs e)
+        {
+            GameWindow window = sender as GameWindow;
+            graphics.PreferredBackBufferHeight = window.ClientBounds.Height;
+            graphics.PreferredBackBufferWidth = window.ClientBounds.Width;
+            graphics.ApplyChanges();
         }
     }
 }

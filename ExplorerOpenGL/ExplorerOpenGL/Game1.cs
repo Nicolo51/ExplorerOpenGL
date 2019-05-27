@@ -48,8 +48,6 @@ namespace ExplorerOpenGL
                 {"Default", Content.Load<SpriteFont>("Fonts/Default") },
             };
 
-
-
             controler = new Controler(fonts, graphics, Content);
 
             _sprites = new List<Sprite>(); 
@@ -67,10 +65,12 @@ namespace ExplorerOpenGL
                 
                 new MousePointer(),
                 };
-
                 _sprites = sprites;
             });
             loading.Start();
+
+            Window.ClientSizeChanged += controler.UpdateDisplay;
+            Window.AllowUserResizing = true;
 
             controler.KeyboardUtils.KeyPressed += OnKeyPressed;
 

@@ -16,18 +16,28 @@ namespace ExplorerOpenGL.Controlers
         public Dictionary<string, SpriteFont> Fonts { get; set; }
         public Dictionary<string, Texture2D> Textures { get; set; }
 
+        TextureManager textureManager; 
+
         public List<string> EventLogList { get; private set; }
+
+        public Texture2D backgroundTexture { get; private set; }
 
         public Color TextColor { get; set; }
 
+        float scale = 1;
+
         //To Debug
-        StringBuilder debugMessage; 
-        MousePointer debugMouse; 
+        StringBuilder debugMessage;
+        MousePointer debugMouse;
+        GraphicsDeviceManager graphics; 
 
         public bool IsDebuging { get; private set; } 
 
-        public DebugManager(Dictionary<string, SpriteFont> fonts)
+        public DebugManager(TextureManager textureManager,  Dictionary<string, SpriteFont> fonts, GraphicsDeviceManager graphics)
         {
+            this.textureManager = textureManager;
+            this.backgroundTexture = backgroundTexture; 
+            this.graphics = graphics; 
             Fonts = fonts; 
             debugMessage = new StringBuilder(); 
             IsDebuging = false; 
@@ -39,7 +49,7 @@ namespace ExplorerOpenGL.Controlers
             if (!IsDebuging)
                 return;
 
-            BuildDebugMessage(); 
+            BuildDebugMessage(sprites); 
         }
 
         public void ToggleDebugMode(List<Sprite> sprites)
@@ -48,7 +58,7 @@ namespace ExplorerOpenGL.Controlers
             if(IsDebuging)
             { 
                 SortSpriteToDebug(sprites);
-                BuildDebugMessage(); 
+                BuildDebugMessage(sprites); 
             }
         }
 
@@ -72,9 +82,29 @@ namespace ExplorerOpenGL.Controlers
             }
         }
 
-        private void BuildDebugMessage()
+        private void BuildDebugMessage(List<Sprite> sprites)
         {
             debugMessage.Clear();
+
+            debugMessage.Append("Window dimension : " + graphics.PreferredBackBufferHeight + ", " + graphics.PreferredBackBufferWidth +"\n");
+
+            debugMessage.Append("Sprite Count = " + sprites.Count.ToString() + "\n");
+            Dictionary<Type, int> debugTypeList = new Dictionary<Type, int>();
+            foreach(Sprite sprite in sprites)
+            {
+                Type t = sprite.GetType();
+                if (debugTypeList.ContainsKey(t))
+                    debugTypeList[t]++;
+                else
+                    debugTypeList.Add(t, 1); 
+            }
+
+            for(int i = 0;  i < debugTypeList.Count; i++)
+            {
+                debugMessage.Append("  - " + debugTypeList.ElementAt(i).Key.Name.ToString() + " : " + debugTypeList.ElementAt(i).Value.ToString() + "\n");
+            }
+
+           
             if (debugMouse != null)
                 debugMessage.Append(debugMouse.ToString());
             else
@@ -88,8 +118,12 @@ namespace ExplorerOpenGL.Controlers
 
         public void DebugDraw(SpriteBatch spriteBatch)
         {
-            spriteBatch.DrawString(Fonts["Default"], debugMessage, Vector2.Zero , TextColor); 
+            Vector2 stringDimension = Fonts["Default"].MeasureString(debugMessage);
+
+            spriteBatch.Draw(textureManager.CreateTexture((int)stringDimension.X, (int)stringDimension.Y, paint => Color.Black), Vector2.Zero, null, Color.White * 0.5f, 0f, Vector2.Zero, scale, SpriteEffects.None, 0.01f);  
+            spriteBatch.DrawString(Fonts["Default"], debugMessage, Vector2.Zero, Color.White, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f); 
         }
 
+        
     }
 }
