@@ -13,6 +13,7 @@ namespace ExplorerOpenGL.Controlers
 {
     public class Controler
     {
+        public Vector2 scales { get; set; }
         public KeyboardUtils KeyboardUtils;
         public DebugManager DebugManager; //instantiate on load
         public TextureManager TextureManager; //instantiate on load 
@@ -51,9 +52,20 @@ namespace ExplorerOpenGL.Controlers
         public void UpdateDisplay(object sender, EventArgs e)
         {
             GameWindow window = sender as GameWindow;
+            Vector2 Bounds = new Vector2(window.ClientBounds.Width, window.ClientBounds.Height); 
+            if(Bounds.X > Bounds.Y)
+            {
+                window.Se
+            }
+            else
+            {
+
+            }
+
             graphics.PreferredBackBufferHeight = window.ClientBounds.Height;
             graphics.PreferredBackBufferWidth = window.ClientBounds.Width;
             graphics.ApplyChanges();
+
         }
     }
 }

@@ -24,7 +24,7 @@ namespace ExplorerOpenGL.Controlers
 
         public Color TextColor { get; set; }
 
-        float scale = 1;
+        float scale = .5f;
 
         //To Debug
         StringBuilder debugMessage;
@@ -120,10 +120,9 @@ namespace ExplorerOpenGL.Controlers
         {
             Vector2 stringDimension = Fonts["Default"].MeasureString(debugMessage);
 
-            spriteBatch.Draw(textureManager.CreateTexture((int)stringDimension.X, (int)stringDimension.Y, paint => Color.Black), Vector2.Zero, null, Color.White * 0.5f, 0f, Vector2.Zero, scale, SpriteEffects.None, 0.01f);  
-            spriteBatch.DrawString(Fonts["Default"], debugMessage, Vector2.Zero, Color.White, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f); 
+            spriteBatch.Draw(textureManager.CreateTexture((int)stringDimension.X, (int)stringDimension.Y, paint => Color.Black), Vector2.Zero, null, Color.White * 0.5f, 0f, Vector2.Zero, scale, SpriteEffects.None, 1f);
+            spriteBatch.DrawString(Fonts["Default"], debugMessage, Vector2.Zero, Color.White, 0f, Vector2.Zero, scale, SpriteEffects.None, .98f);
+            spriteBatch.DrawString(Fonts["Default"], debugMessage, new Vector2( 3,3), Color.Black * 0.5f, 0f, Vector2.Zero, scale, SpriteEffects.None, .99f);
         }
-
-        
     }
 }

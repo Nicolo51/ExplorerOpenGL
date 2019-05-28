@@ -56,13 +56,6 @@ namespace ExplorerOpenGL
             {
                 List<Sprite> sprites = new List<Sprite>()
                 {
-                new SideMenu(controler.TextureManager.CreateBorderedTexture(400, 730,5,0, e => new Color(167, 216, 134), e => new Color(131, 186, 94)), fonts["Default"])
-                {
-                    Position = new Vector2(0,0),
-                    name = "Test",
-                    layerDepth = .5f,
-                },
-                
                 new MousePointer(),
                 };
                 _sprites = sprites;
