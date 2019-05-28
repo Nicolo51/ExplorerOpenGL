@@ -105,5 +105,26 @@ namespace ExplorerOpenGL.Controlers
         {
             return Content.Load<Texture2D>(path);
         }
+
+        public Texture2D OutlineText(string input, SpriteFont font, SpriteBatch spriteBatch)
+        {
+            Vector2 stringDimension = font.MeasureString(input);
+            Texture2D texture = new Texture2D(graphics.GraphicsDevice, (int)stringDimension.X, (int)stringDimension.Y);
+
+            Color[] data = new Color[(int)stringDimension.X * (int)stringDimension.Y];
+
+            RenderTarget2D target = new RenderTarget2D(graphics.GraphicsDevice, (int)stringDimension.X, (int)stringDimension.Y);
+            graphics.GraphicsDevice.SetRenderTarget(target);// Now the spriteBatch will render to the RenderTarget2D
+
+            spriteBatch.DrawString(font, input, Vector2.Zero, Color.White, 0f, Vector2.Zero, 1f, SpriteEffects.None, 0f);
+
+            target.GetData(data);
+
+            graphics.GraphicsDevice.SetRenderTarget(null);
+
+            texture.SetData(data);
+
+            return texture;
+        }
     }
 }
