@@ -23,6 +23,7 @@ namespace ExplorerOpenGL.Model.Sprites
         public SideMenu(Texture2D texture, SpriteFont Font)
             :base()
         {
+            name = string.Empty; 
             font = Font; 
             _texture = texture;
             Side = Sides.Left; 

@@ -48,7 +48,7 @@ namespace ExplorerOpenGL
                 {"Default", Content.Load<SpriteFont>("Fonts/Default") },
             };
 
-            controler = new Controler(fonts, graphics, Content);
+            controler = new Controler(fonts, graphics, Content, spriteBatch);
 
             _sprites = new List<Sprite>(); 
 
@@ -56,7 +56,9 @@ namespace ExplorerOpenGL
             {
                 List<Sprite> sprites = new List<Sprite>()
                 {
-                new MousePointer(),
+                    //new SideMenu(controler.TextureManager.CreateTexture(100,100, paint => new Color(100,0,0,0)), fonts["Default"]),
+                    
+                    new MousePointer(),
                 };
                 _sprites = sprites;
             });

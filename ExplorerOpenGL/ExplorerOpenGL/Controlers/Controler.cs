@@ -22,11 +22,11 @@ namespace ExplorerOpenGL.Controlers
         Dictionary<string, SpriteFont> fonts;
         GraphicsDeviceManager graphics;
 
-        public Controler(Dictionary<string, SpriteFont> Fonts, GraphicsDeviceManager Graphics, ContentManager content)
+        public Controler(Dictionary<string, SpriteFont> Fonts, GraphicsDeviceManager Graphics, ContentManager content, SpriteBatch spriteBatch)
         {
             
             KeyboardUtils = new KeyboardUtils();
-            TextureManager = new TextureManager(Graphics, content);
+            TextureManager = new TextureManager(Graphics, content, spriteBatch);
             DebugManager = new DebugManager(TextureManager, Fonts, Graphics);
 
             KeyboardUtils.KeyPressed += DebugManager.AddEvent;
@@ -53,14 +53,7 @@ namespace ExplorerOpenGL.Controlers
         {
             GameWindow window = sender as GameWindow;
             Vector2 Bounds = new Vector2(window.ClientBounds.Width, window.ClientBounds.Height); 
-            if(Bounds.X > Bounds.Y)
-            {
-                window.Se
-            }
-            else
-            {
-
-            }
+           
 
             graphics.PreferredBackBufferHeight = window.ClientBounds.Height;
             graphics.PreferredBackBufferWidth = window.ClientBounds.Width;

@@ -13,12 +13,14 @@ namespace ExplorerOpenGL.Controlers
     public class TextureManager
     {
         private GraphicsDeviceManager graphics;
-        private ContentManager Content; 
+        private ContentManager Content;
+        private SpriteBatch spriteBatch; 
 
-        public TextureManager(GraphicsDeviceManager Graphics, ContentManager content)
+        public TextureManager(GraphicsDeviceManager Graphics, ContentManager content, SpriteBatch spriteBatch)
         {
             Content = content; 
-            graphics = Graphics; 
+            graphics = Graphics;
+            this.spriteBatch = spriteBatch;
         }
         public Texture2D CreateTexture(int width, int height, Func<int, Color> paint)
         {
@@ -106,23 +108,42 @@ namespace ExplorerOpenGL.Controlers
             return Content.Load<Texture2D>(path);
         }
 
-        public Texture2D OutlineText(string input, SpriteFont font, SpriteBatch spriteBatch)
+        public Texture2D OutlineText(string input, SpriteFont font, Color borderColor, Color colorText, int Thickness)
         {
             Vector2 stringDimension = font.MeasureString(input);
             Texture2D texture = new Texture2D(graphics.GraphicsDevice, (int)stringDimension.X, (int)stringDimension.Y);
 
+            RenderTarget2D target = new RenderTarget2D(
+                graphics.GraphicsDevice,
+                (int)stringDimension.X,
+                (int)stringDimension.Y,
+                false,
+                graphics.GraphicsDevice.PresentationParameters.BackBufferFormat,
+                DepthFormat.Depth24);
+
             Color[] data = new Color[(int)stringDimension.X * (int)stringDimension.Y];
 
-            RenderTarget2D target = new RenderTarget2D(graphics.GraphicsDevice, (int)stringDimension.X, (int)stringDimension.Y);
-            graphics.GraphicsDevice.SetRenderTarget(target);// Now the spriteBatch will render to the RenderTarget2D
+            spriteBatch.GraphicsDevice.SetRenderTarget(target);
+            spriteBatch.GraphicsDevice.DepthStencilState = new DepthStencilState() { DepthBufferEnable = true };
 
+            spriteBatch.GraphicsDevice.Clear(Color.CornflowerBlue);
+            spriteBatch.Begin();
+        
             spriteBatch.DrawString(font, input, Vector2.Zero, Color.White, 0f, Vector2.Zero, 1f, SpriteEffects.None, 0f);
 
-            target.GetData(data);
+            spriteBatch.End(); 
+            
+            
 
-            graphics.GraphicsDevice.SetRenderTarget(null);
+            target.GetData(data);
+            
+            spriteBatch.GraphicsDevice.SetRenderTarget(null);
 
             texture.SetData(data);
+
+            target.Dispose(); 
+
+            data = null;
 
             return texture;
         }
