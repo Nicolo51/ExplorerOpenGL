@@ -108,7 +108,7 @@ namespace ExplorerOpenGL.Controlers
             return Content.Load<Texture2D>(path);
         }
 
-        public Texture2D OutlineText(string input, SpriteFont font, Color borderColor, Color colorText, int Thickness)
+        public Texture2D OutlineText(string input, SpriteFont font, Color borderColor, Color textColor, int Thickness)
         {
             Vector2 stringDimension = font.MeasureString(input);
             Texture2D texture = new Texture2D(graphics.GraphicsDevice, (int)stringDimension.X, (int)stringDimension.Y);
@@ -126,10 +126,13 @@ namespace ExplorerOpenGL.Controlers
             spriteBatch.GraphicsDevice.SetRenderTarget(target);
             spriteBatch.GraphicsDevice.DepthStencilState = new DepthStencilState() { DepthBufferEnable = true };
 
-            spriteBatch.GraphicsDevice.Clear(Color.CornflowerBlue);
-            spriteBatch.Begin();
+            spriteBatch.GraphicsDevice.Clear(Color.Transparent);
+            spriteBatch.Begin(SpriteSortMode.Deferred,
+                              BlendState.AlphaBlend,
+                              SamplerState.PointClamp,
+                              null, null, null, null);
         
-            spriteBatch.DrawString(font, input, Vector2.Zero, Color.White, 0f, Vector2.Zero, 1f, SpriteEffects.None, 0f);
+            spriteBatch.DrawString(font, input, Vector2.Zero, textColor, 0f, Vector2.Zero, 1f, SpriteEffects.None, 0f);
 
             spriteBatch.End(); 
             
@@ -138,6 +141,68 @@ namespace ExplorerOpenGL.Controlers
             target.GetData(data);
             
             spriteBatch.GraphicsDevice.SetRenderTarget(null);
+            for (int x = 0; x < (int)stringDimension.X; x++)
+            {
+                for (int y = 0; y < (int)stringDimension.Y; y++)
+                {
+                    if(data[y * (int)stringDimension.X + x] != Color.Transparent)
+                    {
+                        data[y * (int)stringDimension.X + x] = textColor;
+                    }
+                }
+            }
+
+            for (int x = 0; x < (int)stringDimension.X; x++)
+            {
+                for( int y = 0; y < (int)stringDimension.Y; y++)
+                {
+                    int pos = y * (int)stringDimension.X + x;
+                    int row = (int)stringDimension.X;
+
+                    
+
+                    if ( data[pos] == textColor)
+                    {
+                        if (!(pos - 1 < 0) && !(pos + 1 > data.Length) && !(pos - row * Thickness < 0) && !(pos + row * Thickness > data.Length))
+                        {
+                            if (data[pos + 1] == Color.Transparent)
+                            {
+                                data[pos + 1] = borderColor;
+                            }
+                            if (data[pos - 1] == Color.Transparent )
+                            {
+                                data[pos - 1] = borderColor;
+                            }
+                            if (data[pos + row] == Color.Transparent)
+                            {
+                                data[pos + row] = borderColor;
+                            }
+                            if (data[pos - row] == Color.Transparent)
+                            {
+                                data[pos - row] = borderColor;
+                            }
+                        }
+                        //if (!(pos - row * Thickness < 0) && !(pos + row * Thickness > data.Length))
+                        //{
+                        //    if (data[pos + row * Thickness] == Color.Transparent && data[pos] == textColor)
+                        //    {
+                        //        for (int i = 0; i < Thickness; i++)
+                        //        {
+                        //            data[pos + row * i] = borderColor;
+                        //        }
+                        //    }
+                        //    if (data[pos - row * Thickness] == Color.Transparent && data[pos] == textColor)
+                        //    {
+                        //        for (int i = 0; i < Thickness; i++)
+                        //        {
+                        //            data[pos - row * i] = borderColor;
+                        //        }
+                        //    }
+                        //}
+                    }
+
+                }
+            }
 
             texture.SetData(data);
 

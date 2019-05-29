@@ -52,7 +52,7 @@ namespace ExplorerOpenGL.Controlers
                 return;
 
             BuildDebugMessage(sprites);
-            OutlineDebugMessageTexture = textureManager.OutlineText(debugMessage.ToString(), Fonts["Default"], Color.White, Color.Black, 10);
+            OutlineDebugMessageTexture = textureManager.OutlineText(debugMessage.ToString(), Fonts["Default"], Color.Black, Color.White, 3);
         }
 
         public void ToggleDebugMode(List<Sprite> sprites)
@@ -124,11 +124,9 @@ namespace ExplorerOpenGL.Controlers
             Vector2 stringDimension = Fonts["Default"].MeasureString(debugMessage);
 
             //spriteBatch.Draw(textureManager.CreateTexture((int)stringDimension.X, (int)stringDimension.Y, paint => Color.Black), Vector2.Zero, null, Color.White * 0.5f, 0f, Vector2.Zero, scale, SpriteEffects.None, 1f);
-            //spriteBatch.Draw(textureManager.OutlineText(debugMessage.ToString(), Fonts["Default"], spriteBatch, Color.White, Color.Black, 5), Vector2.Zero, null, Color.White * 0.5f, 0f, Vector2.Zero, scale, SpriteEffects.None, 1f);
-            //spriteBatch.DrawString(Fonts["Default"], debugMessage, Vector2.Zero, Color.White, 0f, Vector2.Zero, scale, SpriteEffects.None, .98f);
-            //spriteBatch.DrawString(Fonts["Default"], debugMessage, new Vector2( 3,3), Color.Black * 0.5f, 0f, Vector2.Zero, scale, SpriteEffects.None, .99f);
+
             //textureManager.OutlineText(debugMessage.ToString(), Fonts["Default"], spriteBatch, Color.White, Color.Black, 5);
-            spriteBatch.Draw(OutlineDebugMessageTexture, Vector2.Zero, null, Color.White * 0.5f, 0f, Vector2.Zero, scale, SpriteEffects.None, 1f);
+            spriteBatch.Draw(OutlineDebugMessageTexture, Vector2.Zero, null, Color.White, 0f, Vector2.Zero, scale, SpriteEffects.None, 1f);
             //spriteBatch.DrawString(Fonts["Default"], debugMessage, Vector2.Zero, Color.White, 0f, Vector2.Zero, 1f, SpriteEffects.None, 0f);
         }
     }
