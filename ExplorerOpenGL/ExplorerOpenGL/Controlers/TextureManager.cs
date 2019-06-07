@@ -135,54 +135,55 @@ namespace ExplorerOpenGL.Controlers
             spriteBatch.DrawString(font, input, Vector2.Zero, textColor, 0f, Vector2.Zero, 1f, SpriteEffects.None, 0f);
 
             spriteBatch.End(); 
-            
-            
-
             target.GetData(data);
-            
+
             spriteBatch.GraphicsDevice.SetRenderTarget(null);
+
+            List<int> contour = new List<int>();
+
             for (int x = 0; x < (int)stringDimension.X; x++)
             {
                 for (int y = 0; y < (int)stringDimension.Y; y++)
                 {
-                    if(data[y * (int)stringDimension.X + x] != Color.Transparent)
+                    int coord = y * (int)stringDimension.X + x; 
+                    if (data[coord] != Color.Transparent && GetPiexelArround(data, coord, stringDimension,Thickness))
                     {
-                        data[y * (int)stringDimension.X + x] = textColor;
+                        contour.Add(coord);
                     }
                 }
             }
 
-            for (int x = 0; x < (int)stringDimension.X; x++)
-            {
-                for( int y = 0; y < (int)stringDimension.Y; y++)
-                {
-                    int pos = y * (int)stringDimension.X + x;
-                    int row = (int)stringDimension.X;
+            //for (int x = 0; x < (int)stringDimension.X; x++)
+            //{
+            //    for( int y = 0; y < (int)stringDimension.Y; y++)
+            //    {
+            //        int pos = y * (int)stringDimension.X + x;
+            //        int row = (int)stringDimension.X;
 
                     
 
-                    if ( data[pos] == textColor)
-                    {
-                        if (!(pos - 1 < 0) && !(pos + 1 > data.Length) && !(pos - row * Thickness < 0) && !(pos + row * Thickness > data.Length))
-                        {
-                            if (data[pos + 1] == Color.Transparent)
-                            {
-                                data[pos + 1] = borderColor;
-                            }
-                            if (data[pos - 1] == Color.Transparent )
-                            {
-                                data[pos - 1] = borderColor;
-                            }
-                            if (data[pos + row] == Color.Transparent)
-                            {
-                                data[pos + row] = borderColor;
-                            }
-                            if (data[pos - row] == Color.Transparent)
-                            {
-                                data[pos - row] = borderColor;
-                            }
-                        }
-                        //if (!(pos - row * Thickness < 0) && !(pos + row * Thickness > data.Length))
+            //        if ( data[pos] == textColor)
+            //        {
+            //            if (!(pos - 1 < 0) && !(pos + 1 > data.Length) && !(pos - row * Thickness < 0) && !(pos + row * Thickness > data.Length))
+            //            {
+            //                if (data[pos + 1] == Color.Transparent)
+            //                {
+            //                    data[pos + 1] = borderColor;
+            //                }
+            //                if (data[pos - 1] == Color.Transparent )
+            //                {
+            //                    data[pos - 1] = borderColor;
+            //                }
+            //                if (data[pos + row] == Color.Transparent)
+            //                {
+            //                    data[pos + row] = borderColor;
+            //                }
+            //                if (data[pos - row] == Color.Transparent)
+            //                {
+            //                    data[pos - row] = borderColor;
+            //                }
+            //            }
+            //            //if (!(pos - row * Thickness < 0) && !(pos + row * Thickness > data.Length))
                         //{
                         //    if (data[pos + row * Thickness] == Color.Transparent && data[pos] == textColor)
                         //    {
@@ -201,7 +202,12 @@ namespace ExplorerOpenGL.Controlers
                         //}
                     }
 
-                }
+        private bool IsColoredPixelsArround(Color[] data, int coord, Vector2 stringDimension, int thickness)
+        {
+            bool output = false;
+            for(coord)
+        }
+    }
             }
 
             texture.SetData(data);
