@@ -17,6 +17,7 @@ namespace ExplorerOpenGL.Controlers
         public KeyboardUtils KeyboardUtils;
         public DebugManager DebugManager; //instantiate on load
         public TextureManager TextureManager; //instantiate on load 
+        public RenderManager renderManager; 
 
         List<Sprite> _sprites;
         Dictionary<string, SpriteFont> fonts;
