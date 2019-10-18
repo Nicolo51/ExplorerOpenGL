@@ -123,7 +123,7 @@ namespace ExplorerOpenGL.Controlers
 
         protected virtual void OnKeyPressed(Keys[] keys)
         {
-            KeyPressed?.Invoke(keys); 
+            KeyPressed?.Invoke(keys);
         }
 
 

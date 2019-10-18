@@ -5,6 +5,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Threading;
 
 namespace ExplorerOpenGL
@@ -48,34 +49,46 @@ namespace ExplorerOpenGL
                 {"Default", Content.Load<SpriteFont>("Fonts/Default") },
             };
 
-            controler = new Controler(fonts, graphics, Content, spriteBatch);
+            _sprites = new List<Sprite>();
 
-            _sprites = new List<Sprite>(); 
+            controler = new Controler(fonts, _sprites, graphics, Content, spriteBatch);
 
-            var loading = new Thread(() =>
-            {
-                List<Sprite> sprites = new List<Sprite>()
-                {
-                    //new SideMenu(controler.TextureManager.CreateTexture(100,100, paint => new Color(100,0,0,0)), fonts["Default"]),
-                    
-                    new MousePointer(),
-                };
-                _sprites = sprites;
-            });
-            loading.Start();
+            _sprites.Add(new MousePointer());
+
+            //Button testButton = new Button(controler.TextureManager.CreateTexture(100, 100, paint => Color.Blue), controler.TextureManager.CreateTexture(100, 100, paint => Color.Black * 0.5f), fonts["Default"] );
+            //testButton.MouseOver += OnMouseOver;
+
+            //_sprites.Add(testButton);
+
+
 
             Window.ClientSizeChanged += controler.UpdateDisplay;
             Window.AllowUserResizing = true;
 
             controler.KeyboardUtils.KeyPressed += OnKeyPressed;
 
+           
+
+        }
+
+        private void OnMouseOver(object sender, object triggerer)
+        {
+            (sender as Button).Text = "gerald pd";
         }
 
         private void OnKeyPressed(Keys[] keys)
         {
             if(controler.KeyboardUtils.IsContaining(keys, Keys.F3))
             {
-                controler.DebugManager.ToggleDebugMode(_sprites); 
+                controler.DebugManager.ToggleDebugMode(_sprites);
+            }
+            if (controler.KeyboardUtils.IsContaining(keys, Keys.E))
+            {
+                Texture2D screenshot = controler.RenderManager.RenderSceneToTexture();
+
+                Stream stream = File.Create(@"C:\Users\Nicolas Descotes\Desktop\image.png");
+                screenshot.SaveAsPng(stream, Width, Height);
+                stream.Dispose(); 
             }
         }
 

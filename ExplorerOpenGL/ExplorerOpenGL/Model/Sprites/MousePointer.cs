@@ -12,10 +12,8 @@ namespace ExplorerOpenGL.Model.Sprites
 {
     public class MousePointer : Sprite
     {
-        MouseState currentMouseState;
+        public MouseState currentMouseState { get; set; }
         MouseState prevMouseState;
-        
-        public new Rectangle HitBox { get { return new Rectangle(Position.ToPoint(), new Point(1, 1)); } }
 
         public MousePointer(Texture2D texture)
             : base()
@@ -33,8 +31,8 @@ namespace ExplorerOpenGL.Model.Sprites
             {
                 prevMouseState = currentMouseState; 
             }
-            currentMouseState = Mouse.GetState(); 
-            
+            currentMouseState = Mouse.GetState();
+            Position = new Vector2(currentMouseState.Position.X, currentMouseState.Position.Y); 
 
             base.Update(gameTime, sprites, controler);
         }

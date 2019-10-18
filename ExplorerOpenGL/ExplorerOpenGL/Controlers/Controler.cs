@@ -17,22 +17,23 @@ namespace ExplorerOpenGL.Controlers
         public KeyboardUtils KeyboardUtils;
         public DebugManager DebugManager; //instantiate on load
         public TextureManager TextureManager; //instantiate on load 
-        public RenderManager renderManager; 
+        public RenderManager RenderManager; 
 
         List<Sprite> _sprites;
         Dictionary<string, SpriteFont> fonts;
         GraphicsDeviceManager graphics;
 
-        public Controler(Dictionary<string, SpriteFont> Fonts, GraphicsDeviceManager Graphics, ContentManager content, SpriteBatch spriteBatch)
+        public Controler(Dictionary<string, SpriteFont> Fonts, List<Sprite> sprites, GraphicsDeviceManager Graphics, ContentManager content, SpriteBatch spriteBatch)
         {
             
             KeyboardUtils = new KeyboardUtils();
             TextureManager = new TextureManager(Graphics, content, spriteBatch);
             DebugManager = new DebugManager(TextureManager, Fonts, Graphics);
-
+            RenderManager = new RenderManager(sprites, Graphics, spriteBatch); 
             KeyboardUtils.KeyPressed += DebugManager.AddEvent;
             KeyboardUtils.KeyRealeased += DebugManager.AddEvent;
-            
+
+            _sprites = sprites; 
             fonts = Fonts;
             graphics = Graphics; 
         }
