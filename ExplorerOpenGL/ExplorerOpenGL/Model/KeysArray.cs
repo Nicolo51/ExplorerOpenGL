@@ -19,7 +19,7 @@ namespace ExplorerOpenGL.Model
         public override string ToString()
         {
             StringBuilder sb = new StringBuilder();
-
+            sb.Append("Keys pressed : ");
             foreach (Keys k in Keys)
             {
                 sb.Append(k.ToString());

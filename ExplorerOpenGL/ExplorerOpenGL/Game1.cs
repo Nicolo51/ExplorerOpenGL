@@ -1,4 +1,5 @@
 ﻿using ExplorerOpenGL.Controlers;
+using ExplorerOpenGL.Model;
 using ExplorerOpenGL.Model.Sprites;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -49,31 +50,40 @@ namespace ExplorerOpenGL
                 {"Default", Content.Load<SpriteFont>("Fonts/Default") },
             };
 
+            Texture2D player = Content.Load<Texture2D>("player");
+            Texture2D playerfeet = Content.Load<Texture2D>("playerfeet");
+
             _sprites = new List<Sprite>();
 
             controler = new Controler(fonts, _sprites, graphics, Content, spriteBatch);
 
             _sprites.Add(new MousePointer());
 
-            //Button testButton = new Button(controler.TextureManager.CreateTexture(100, 100, paint => Color.Blue), controler.TextureManager.CreateTexture(100, 100, paint => Color.Black * 0.5f), fonts["Default"] );
-            //testButton.MouseOver += OnMouseOver;
 
-            //_sprites.Add(testButton);
-
+            _sprites.Add(new Player(player, playerfeet, (MousePointer)_sprites[0])
+            {
+                Position = new Vector2(200, 200),
+                input = new Input()
+                {
+                    Down = Keys.S,
+                    Up = Keys.Z,
+                    Left = Keys.Q,
+                    Right = Keys.D,
+                }
+            });
 
 
             Window.ClientSizeChanged += controler.UpdateDisplay;
             Window.AllowUserResizing = true;
 
             controler.KeyboardUtils.KeyPressed += OnKeyPressed;
-
-           
-
+            controler.KeyboardUtils.KeyRealeased += OnKeyRealeased;
         }
 
-        private void OnMouseOver(object sender, object triggerer)
+        private void OnKeyRealeased(Keys[] keys)
         {
-            (sender as Button).Text = "gerald pd";
+            controler.DebugManager.AddEvent(new KeysArray(keys));
+
         }
 
         private void OnKeyPressed(Keys[] keys)
@@ -82,7 +92,7 @@ namespace ExplorerOpenGL
             {
                 controler.DebugManager.ToggleDebugMode(_sprites);
             }
-            if (controler.KeyboardUtils.IsContaining(keys, Keys.E))
+            if(controler.KeyboardUtils.IsContaining(keys, Keys.F2))
             {
                 Texture2D screenshot = controler.RenderManager.RenderSceneToTexture();
 
@@ -90,7 +100,10 @@ namespace ExplorerOpenGL
                 screenshot.SaveAsPng(stream, Width, Height);
                 stream.Dispose(); 
             }
+
+            controler.DebugManager.AddEvent(new KeysArray(keys)); 
         }
+
 
 
         protected override void UnloadContent()

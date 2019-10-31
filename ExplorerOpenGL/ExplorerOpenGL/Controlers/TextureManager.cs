@@ -15,10 +15,14 @@ namespace ExplorerOpenGL.Controlers
         private GraphicsDeviceManager graphics;
         private ContentManager Content;
         private SpriteBatch spriteBatch;
+        private RenderManager renderManager; 
 
-        public TextureManager(GraphicsDeviceManager Graphics, ContentManager content, SpriteBatch spriteBatch)
+
+
+        public TextureManager(GraphicsDeviceManager Graphics, ContentManager content, SpriteBatch spriteBatch, RenderManager renderManager)
         {
             Content = content;
+            this.renderManager = renderManager; 
             graphics = Graphics;
             this.spriteBatch = spriteBatch;
         }
@@ -110,43 +114,11 @@ namespace ExplorerOpenGL.Controlers
 
         public Texture2D OutlineText(string input, SpriteFont font, Color borderColor, Color textColor, int Thickness)
         {
-            StringBuilder temp = new StringBuilder();
-            temp.Append(" "); 
-            for(int i = 0; i < input.Length; i++)
-            {
-                if (input[i] == '\n')
-                    temp.Append(" \n ");
-                else
-                    temp.Append(input[i]); 
-            }
-            input = temp.ToString(); 
-            Vector2 stringDimension = font.MeasureString(input);
-            Texture2D texture = new Texture2D(graphics.GraphicsDevice, (int)stringDimension.X, (int)stringDimension.Y);
-
-            RenderTarget2D target = new RenderTarget2D(
-                graphics.GraphicsDevice,
-                (int)stringDimension.X,
-                (int)stringDimension.Y,
-                false,
-                graphics.GraphicsDevice.PresentationParameters.BackBufferFormat,
-                DepthFormat.Depth24);
-
-            Color[] data = new Color[(int)stringDimension.X * (int)stringDimension.Y];
-
-            spriteBatch.GraphicsDevice.SetRenderTarget(target);
-            spriteBatch.GraphicsDevice.DepthStencilState = new DepthStencilState() { DepthBufferEnable = true };
-
-            spriteBatch.GraphicsDevice.Clear(Color.Transparent);
-            spriteBatch.Begin(SpriteSortMode.BackToFront,
-                              BlendState.AlphaBlend,
-                              SamplerState.PointClamp,
-                              null, null, null, null);
-
-            spriteBatch.DrawString(font, input, Vector2.Zero, textColor, 0f, Vector2.Zero, 1f, SpriteEffects.None, 0f);
-
-            spriteBatch.End();
-            target.GetData(data);
-
+            Texture2D textTexture = renderManager.RenderTextToTexture(input, font, textColor);
+            Vector2 stringDimension = new Vector2(textTexture.Width, textTexture.Height);
+            Color[] data = new Color[textTexture.Width* textTexture.Height];
+            
+            textTexture.GetData(data);
             spriteBatch.GraphicsDevice.SetRenderTarget(null);
 
             List<int> contour = new List<int>();
@@ -183,13 +155,13 @@ namespace ExplorerOpenGL.Controlers
                     data[coord] = borderColor;
                 }
             }
-            texture.SetData(data);
+            textTexture.SetData(data);
 
-            target.Dispose();
+            
 
             data = null;
 
-            return texture;
+            return textTexture;
 
         }
 

@@ -15,7 +15,7 @@ namespace ExplorerOpenGL.Model.Sprites
         public bool IsRemove { get; set; }
         public Vector2 Position;
         protected Texture2D _texture;
-        public float Radian { get; set; }
+        protected float Radian { get; set; }
         public Rectangle HitBox { get {
                 if (_texture != null) return new Rectangle((int)Position.X, (int)Position.Y, _texture.Width, _texture.Height);
                 else return new Rectangle((int)Position.X, (int)Position.Y, 1, 1); 
@@ -23,7 +23,7 @@ namespace ExplorerOpenGL.Model.Sprites
         protected Vector2 origin;
         public SpriteEffects Effects { get; set; }
         public float  layerDepth { get; set; }
-        public float scale { get; set; }
+        protected float scale { get; set; }
 
         public Sprite()
         {
