@@ -10,17 +10,19 @@ using System.Threading.Tasks;
 
 namespace ExplorerOpenGL.Model.Sprites
 {
-    public class Player : Sprite 
+    public class Player : Sprite
     {
         private MousePointer mousePointer;
         public Input input;
         private PlayerFeet playerFeet;
-        private float Velocity; 
+        private float Velocity;
+        private Vector2 Direction; 
 
         public Player(Texture2D texture, Texture2D playerFeetTexture, MousePointer mousepointer)
-            :base ()
+            : base()
         {
-            playerFeet = new PlayerFeet(playerFeetTexture); 
+            Direction = new Vector2(0, 0);
+            playerFeet = new PlayerFeet(playerFeetTexture);
             this.mousePointer = mousepointer;
             _texture = texture;
             origin = new Vector2(texture.Width / 2, texture.Height / 2);
@@ -32,25 +34,24 @@ namespace ExplorerOpenGL.Model.Sprites
         {
             Radian = CalculateAngle(Position, mousePointer.Position);
             //Radian = (float)Math.PI; 
-            Move(controler); 
-            
+            Move(controler, sprites);
+
             base.Update(gameTime, sprites, controler);
         }
 
         private float CalculateAngle(Vector2 A, Vector2 B)
         {
-            Vector2 triangle = B - A; 
+            Vector2 triangle = B - A;
             float output = ((float)Math.Atan((double)((triangle.Y) / (triangle.X))));
-            if(triangle.X < 0)
+            if (triangle.X < 0)
             {
-                output += (float)Math.PI; 
+                output += (float)Math.PI;
             }
-            Debug.WriteLine(triangle);
-            return output; 
+            return output;
         }
-        private void Move(Controler controler)
+        private void Move(Controler controler, List<Sprite> sprites)
         {
-            Vector2 Direction = new Vector2();
+            Direction = Vector2.Zero;
             if (controler.KeyboardUtils.IsKeyDown(input.Down))
             {
                 Direction.Y += 1;
@@ -61,24 +62,40 @@ namespace ExplorerOpenGL.Model.Sprites
             }
             if (controler.KeyboardUtils.IsKeyDown(input.Right))
             {
-                Direction.X += 1; 
+                Direction.X += 1;
             }
             if (controler.KeyboardUtils.IsKeyDown(input.Left))
             {
                 Direction.X -= 1;
             }
-            float direction = (float)Math.Atan((double)(Direction.Y / Direction.X)); 
-            if(Direction != Vector2.Zero)
+
+            if (Direction != Vector2.Zero)
             {
-                if(Direction.X < 0)
+                float direction = (float)Math.Atan((double)(Direction.Y / Direction.X));
+                if (Direction.X < 0)
                 {
                     direction += (float)Math.PI;
                 }
                 playerFeet.SetDirection(direction);
-            }
+                for(int i = 0; i < sprites.Count; i++)
+                {
+                    var sprite = sprites[i]; 
+                    if(sprites[i] is Wall)
+                    {
+                        Debug.WriteLine(this.Direction);
 
-            Position += Direction * Velocity;
-            playerFeet.Position = Position; 
+                        if ((Direction.X > 0 && this.IsTouchingLeft(sprite)) ||
+                            (Direction.X < 0 & this.IsTouchingRight(sprite)))
+                            this.Direction.X = 0;
+
+                        if ((Direction.Y > 0 && this.IsTouchingTop(sprite)) ||
+                            (Direction.Y < 0 & this.IsTouchingBottom(sprite)))
+                            this.Direction.Y = 0;
+                    }
+                }
+                Position += Direction * Velocity;
+                playerFeet.Position = Position;
+            }            
         }
 
 
@@ -87,5 +104,38 @@ namespace ExplorerOpenGL.Model.Sprites
             playerFeet.Draw(spriteBatch);
             base.Draw(spriteBatch);
         }
+
+        private bool IsTouchingLeft(Sprite sprite)
+        {
+            return this.HitBox.Right + this.Velocity * Direction.X > sprite.HitBox.Left &&
+              this.HitBox.Left < sprite.HitBox.Left &&
+              this.HitBox.Bottom > sprite.HitBox.Top &&
+              this.HitBox.Top < sprite.HitBox.Bottom;
+        }
+
+        private bool IsTouchingRight(Sprite sprite)
+        {
+            return this.HitBox.Left + this.Velocity * Direction.X < sprite.HitBox.Right &&
+              this.HitBox.Right > sprite.HitBox.Right &&
+              this.HitBox.Bottom > sprite.HitBox.Top &&
+              this.HitBox.Top < sprite.HitBox.Bottom;
+        }
+
+        private bool IsTouchingTop(Sprite sprite)
+        {
+            return this.HitBox.Bottom + this.Velocity * Direction.Y > sprite.HitBox.Top &&
+              this.HitBox.Top < sprite.HitBox.Top &&
+              this.HitBox.Right > sprite.HitBox.Left &&
+              this.HitBox.Left < sprite.HitBox.Right;
+        }
+
+        private bool IsTouchingBottom(Sprite sprite)
+        {
+            return this.HitBox.Top + this.Velocity * Direction.Y < sprite.HitBox.Bottom &&
+              this.HitBox.Bottom > sprite.HitBox.Bottom &&
+              this.HitBox.Right > sprite.HitBox.Left &&
+              this.HitBox.Left < sprite.HitBox.Right;
+        }
+
     }
 }

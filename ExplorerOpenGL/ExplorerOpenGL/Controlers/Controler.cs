@@ -51,16 +51,6 @@ namespace ExplorerOpenGL.Controlers
             }
 
         }
-        public void UpdateDisplay(object sender, EventArgs e)
-        {
-            GameWindow window = sender as GameWindow;
-            Vector2 Bounds = new Vector2(window.ClientBounds.Width, window.ClientBounds.Height); 
-           
-
-            graphics.PreferredBackBufferHeight = window.ClientBounds.Height;
-            graphics.PreferredBackBufferWidth = window.ClientBounds.Width;
-            graphics.ApplyChanges();
-
-        }
+        
     }
 }

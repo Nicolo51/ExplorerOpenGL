@@ -22,14 +22,19 @@ namespace ExplorerOpenGL.Model.Sprites
 
         public delegate void MouseOverEventHandler(object sender, object triggerer);
         public event MouseOverEventHandler MouseOver;
-
+        public delegate void MouseLeaveEventHandler(object sender, object triggerer);
+        public event MouseLeaveEventHandler MouseLeave;
+        private bool isMouseOver;
+        private bool isClicked; 
+       
         public delegate void ClickEventHandler(object sender, object triggerer);
         public event ClickEventHandler Click; 
 
         public Button(Texture2D Texture, Texture2D MouseOverTexture, SpriteFont font)
             : base()
         {
-
+            isMouseOver = false;
+            isClicked = false; 
             this.mouseOverTexture = MouseOverTexture;
             this.font = font; 
             this._texture = Texture;
@@ -37,7 +42,7 @@ namespace ExplorerOpenGL.Model.Sprites
         }
 
         public Button()
-        : base()
+            : base()
         {
             Text = String.Empty; 
         }
@@ -45,35 +50,34 @@ namespace ExplorerOpenGL.Model.Sprites
 
         public override void Update(GameTime gameTime, List<Sprite> sprites, Controler controler)
         {
-            for(int i = 0; i < sprites.Count; i++)
+            for (int i = 0; i < sprites.Count && sprites[i] is MousePointer; i++)
             {
-                if(sprites[i] is MousePointer)
+                if (sprites[i] is MousePointer)
                 {
-                    if(sprites[i].HitBox.Intersects(this.HitBox))
+                    if (this.HitBox.Intersects((sprites[i] as MousePointer).HitBox))
                     {
-                        OnMouseOver(sprites[i]);
-                        if (mouseOverOpacityTexture < 1)
+                        if (((sprites[i] as MousePointer).currentMouseState.LeftButton == ButtonState.Pressed && (sprites[i] as MousePointer).prevMouseState.LeftButton == ButtonState.Released) || isClicked)
                         {
-                            mouseOverOpacityTexture += .2f;
+                            isClicked = true;
+                            opacity = 0.5f;
+                            if ((sprites[i] as MousePointer).currentMouseState.LeftButton == ButtonState.Released)
+                            {
+                                //faire la commande au moment ou le bouton est clické et relaché
+                                opacity = 1f; 
+                            }
                         }
-
-                        else if (mouseOverOpacityTexture > 1)
+                        if ((sprites[i] as MousePointer).currentMouseState.LeftButton == ButtonState.Released)
                         {
-                            mouseOverOpacityTexture = 1f;
-                        }
-
-                        if ((sprites[i] as MousePointer).currentMouseState.LeftButton == ButtonState.Pressed)
-                        {
-                            mouseOverOpacityTexture = 2f; 
+                            isClicked = false;
                         }
                     }
-                    else if (mouseOverOpacityTexture > 0)
+                    else if ((sprites[i] as MousePointer).currentMouseState.LeftButton == ButtonState.Released && !(this.HitBox.Intersects((sprites[i] as MousePointer).HitBox)))
                     {
-                        mouseOverOpacityTexture -= .2f;
+                        isClicked = false;
                     }
-                    if (mouseOverOpacityTexture < 0)
+                    else
                     {
-                        mouseOverOpacityTexture = 0f;
+                        opacity = 1f;
                     }
                 }
             }
@@ -83,7 +87,13 @@ namespace ExplorerOpenGL.Model.Sprites
 
         protected virtual void OnMouseOver(object triggerer)
         {
-            MouseOver?.Invoke(this, triggerer); 
+            MouseOver?.Invoke(this, triggerer);
+            isMouseOver = true;
+        }
+        protected virtual void OnMouseLeave(object triggerer)
+        {
+            MouseLeave?.Invoke(this, triggerer);
+            isMouseOver = false; 
         }
 
         public override void Draw(SpriteBatch spriteBatch)

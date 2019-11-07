@@ -31,7 +31,7 @@ namespace ExplorerOpenGL
             Content.RootDirectory = "Content";
             graphics.PreferredBackBufferHeight = Height;
             graphics.PreferredBackBufferWidth = Width;
-            IsMouseVisible = true; 
+            IsMouseVisible = false; 
             graphics.IsFullScreen = false;
         }
 
@@ -52,14 +52,18 @@ namespace ExplorerOpenGL
 
             Texture2D player = Content.Load<Texture2D>("player");
             Texture2D playerfeet = Content.Load<Texture2D>("playerfeet");
+            Texture2D Sight = Content.Load<Texture2D>("sight");
 
             _sprites = new List<Sprite>();
 
             controler = new Controler(fonts, _sprites, graphics, Content, spriteBatch);
 
-            _sprites.Add(new MousePointer());
-
-
+            _sprites.Add(new MousePointer(Sight));
+            _sprites.Add(new Wall(controler.TextureManager.CreateBorderedTexture(500, 70, 5, 5, paint => Color.SandyBrown, paint => Color.Brown))
+            {
+                Position = new Vector2(100, 100),
+            });
+            
             _sprites.Add(new Player(player, playerfeet, (MousePointer)_sprites[0])
             {
                 Position = new Vector2(200, 200),
@@ -71,19 +75,21 @@ namespace ExplorerOpenGL
                     Right = Keys.D,
                 }
             });
-
-
-            Window.ClientSizeChanged += controler.UpdateDisplay;
+            Window.ClientSizeChanged += UpdateDisplay;
             Window.AllowUserResizing = true;
 
             controler.KeyboardUtils.KeyPressed += OnKeyPressed;
             controler.KeyboardUtils.KeyRealeased += OnKeyRealeased;
         }
+        public void UpdateDisplay(object sender, EventArgs e)
+        {
+            GameWindow window = sender as GameWindow;
+            Vector2 Bounds = new Vector2(window.ClientBounds.Width, window.ClientBounds.Height);
+        }
 
         private void OnKeyRealeased(Keys[] keys)
         {
-            controler.DebugManager.AddEvent(new KeysArray(keys));
-
+            controler.DebugManager.AddEvent("Key realeased : " + new KeysArray(keys));
         }
 
         private void OnKeyPressed(Keys[] keys)
@@ -101,7 +107,7 @@ namespace ExplorerOpenGL
                 stream.Dispose(); 
             }
 
-            controler.DebugManager.AddEvent(new KeysArray(keys)); 
+            controler.DebugManager.AddEvent("Key pressed : " + new KeysArray(keys)); 
         }
 
 
@@ -158,6 +164,27 @@ namespace ExplorerOpenGL
 
             spriteBatch.End(); 
             base.Draw(gameTime);
+
+            /*
+             * // Somewhere accessible
+const int TargetWidth = 480;
+const int TargetHeight = 270;
+Matrix Scale;
+
+// Somewhere in initialisation
+float scaleX = device.PreferredBackBufferWidth / TargetWidth;
+float scaleY = device.PreferredBackBufferHeight / TargetHeight;
+Scale = Matrix.CreateScale(new Vector3(scaleX, scaleY, 1));
+
+// Somewhere with drawing
+protected override void Draw(GameTime gameTime)
+{
+    SpriteBatch.Begin(SpriteSortMode.Immediate, null, null, null, null, null, Scale);
+    Root.Draw(SpriteBatch, gameTime);
+    SpriteBatch.End();
+
+    base.Draw(gameTime);
+}*/
         }
     }
 }

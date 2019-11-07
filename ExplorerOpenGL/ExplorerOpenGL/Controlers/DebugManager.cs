@@ -85,11 +85,15 @@ namespace ExplorerOpenGL.Controlers
             }
         }
 
-        public void AddEvent(object input)
+        public void AddEvent(object e)
         {
-            if(input is KeysArray)
+            if(e is KeysArray)
             {
-                EventLogList.Add(new LogElement(input.ToString())); 
+                EventLogList.Add(new LogElement(e.ToString())); 
+            }
+            if(e is string)
+            {
+                EventLogList.Add(new LogElement(e as string));
             }
         }
 

@@ -17,17 +17,19 @@ namespace ExplorerOpenGL.Model.Sprites
         protected Texture2D _texture;
         protected float Radian { get; set; }
         public Rectangle HitBox { get {
-                if (_texture != null) return new Rectangle((int)Position.X, (int)Position.Y, _texture.Width, _texture.Height);
+                if (_texture != null) return new Rectangle((int)Position.X - (int)origin.X, (int)Position.Y - (int)origin.Y, _texture.Width, _texture.Height);
                 else return new Rectangle((int)Position.X, (int)Position.Y, 1, 1); 
             } }
         protected Vector2 origin;
         public SpriteEffects Effects { get; set; }
         public float  layerDepth { get; set; }
         protected float scale { get; set; }
+        protected float opacity { get; set; }
 
         public Sprite()
         {
             scale = 1;
+            opacity = 1f; 
         }
 
         public virtual void Update(GameTime gameTime, List<Sprite> sprites, Controler controler)
@@ -38,7 +40,7 @@ namespace ExplorerOpenGL.Model.Sprites
         public virtual void Draw(SpriteBatch spriteBatch)
         {
             if(_texture != null)
-                spriteBatch.Draw(_texture, Position, null, Color.White, Radian, origin, scale, Effects, layerDepth);
+                spriteBatch.Draw(_texture, Position, null, Color.White * opacity, Radian, origin, scale, Effects, layerDepth);
         }
     }
 }

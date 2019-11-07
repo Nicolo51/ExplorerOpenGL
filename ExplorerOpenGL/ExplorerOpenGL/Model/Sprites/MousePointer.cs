@@ -13,12 +13,12 @@ namespace ExplorerOpenGL.Model.Sprites
     public class MousePointer : Sprite
     {
         public MouseState currentMouseState { get; set; }
-        MouseState prevMouseState;
+        public MouseState prevMouseState { get; set; }
 
         public MousePointer(Texture2D texture)
             : base()
         {
-
+            _texture = texture;
         }
         public MousePointer()
         {
