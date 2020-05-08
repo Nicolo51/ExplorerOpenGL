@@ -15,22 +15,13 @@ namespace ExplorerOpenGL.Controlers
     {
         public Dictionary<string, SpriteFont> Fonts { get; set; }
         public Dictionary<string, Texture2D> Textures { get; set; }
-
         TextureManager textureManager;
-        
-
         public List<LogElement> EventLogList { get; private set; }
-
         public Texture2D backgroundTexture { get; private set; }
-
         public Color TextColor { get; set; }
         public Vector2 MaxLogVec { get; set; } //???
-
         float scale = 1f;
-
         Texture2D OutlineDebugMessageTexture; 
-
-        //To Debug
         StringBuilder debugMessage;
         MousePointer debugMouse;
         GraphicsDeviceManager graphics; 

@@ -1,6 +1,7 @@
 ﻿using ExplorerOpenGL.Controlers;
 using ExplorerOpenGL.Model;
 using ExplorerOpenGL.Model.Sprites;
+using ExplorerOpenGL.View;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -20,6 +21,8 @@ namespace ExplorerOpenGL
         GraphicsDeviceManager graphics;
         SpriteBatch spriteBatch;
         List<Sprite> _sprites;
+        Camera camera; 
+
 
         const int Height = 730;
         const int Width = 1360; 
@@ -37,6 +40,7 @@ namespace ExplorerOpenGL
 
         protected override void Initialize()
         {
+            camera = new Camera(new Vector2(Width, Height)); 
             base.Initialize();
         }
 
@@ -63,8 +67,8 @@ namespace ExplorerOpenGL
             {
                 Position = new Vector2(100, 100),
             });
-            
-            _sprites.Add(new Player(player, playerfeet, (MousePointer)_sprites[0])
+
+            Sprite Player = new Player(player, playerfeet, (MousePointer)_sprites[0])
             {
                 Position = new Vector2(200, 200),
                 input = new Input()
@@ -74,7 +78,11 @@ namespace ExplorerOpenGL
                     Left = Keys.Q,
                     Right = Keys.D,
                 }
-            });
+            }; 
+
+            _sprites.Add(Player);
+            camera.Follow(Player); 
+
             Window.ClientSizeChanged += UpdateDisplay;
             Window.AllowUserResizing = true;
 
@@ -137,7 +145,8 @@ namespace ExplorerOpenGL
                 _sprites[i].Update(gameTime, _sprites, controler);
             }
             // TODO: Add your update logic here
-            controler.Update(_sprites); 
+            controler.Update(_sprites);
+            camera.Update(); 
 
             base.Update(gameTime);
         }
@@ -150,19 +159,24 @@ namespace ExplorerOpenGL
         {
             GraphicsDevice.Clear(Color.CornflowerBlue);
             if (_sprites == null)
-                return; 
-            spriteBatch.Begin(SpriteSortMode.BackToFront);
+                return;
+            spriteBatch.Begin(SpriteSortMode.BackToFront, transformMatrix: camera.Transform) ;
 
 
-            foreach(var sprite in _sprites)
+            for (int i = 1; i < _sprites.Count; i ++)
             {
-                sprite.Draw(spriteBatch);
+                _sprites[i].Draw(spriteBatch);
             }
 
-            if(controler.DebugManager.IsDebuging)
-                controler.DebugManager.DebugDraw(spriteBatch); 
+            spriteBatch.End();
+
+            spriteBatch.Begin();
+            _sprites[0].Draw(spriteBatch);
+            if (controler.DebugManager.IsDebuging)
+                controler.DebugManager.DebugDraw(spriteBatch);
 
             spriteBatch.End(); 
+
             base.Draw(gameTime);
 
             /*
