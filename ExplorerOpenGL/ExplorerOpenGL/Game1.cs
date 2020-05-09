@@ -21,7 +21,6 @@ namespace ExplorerOpenGL
         GraphicsDeviceManager graphics;
         SpriteBatch spriteBatch;
         List<Sprite> _sprites;
-        Camera camera; 
 
 
         const int Height = 730;
@@ -40,7 +39,6 @@ namespace ExplorerOpenGL
 
         protected override void Initialize()
         {
-            camera = new Camera(new Vector2(Width, Height)); 
             base.Initialize();
         }
 
@@ -62,7 +60,7 @@ namespace ExplorerOpenGL
 
             controler = new Controler(fonts, _sprites, graphics, Content, spriteBatch);
 
-            _sprites.Add(new MousePointer(Sight));
+            _sprites.Add(new MousePointer(Sight, controler.camera));
             _sprites.Add(new Wall(controler.TextureManager.CreateBorderedTexture(500, 70, 5, 5, paint => Color.SandyBrown, paint => Color.Brown))
             {
                 Position = new Vector2(100, 100),
@@ -81,7 +79,8 @@ namespace ExplorerOpenGL
             }; 
 
             _sprites.Add(Player);
-            camera.Follow(Player); 
+            controler.camera.FollowSprite(Player);
+            controler.camera.LookAt(0, 0); 
 
             Window.ClientSizeChanged += UpdateDisplay;
             Window.AllowUserResizing = true;
@@ -113,6 +112,10 @@ namespace ExplorerOpenGL
                 Stream stream = File.Create(@"C:\Users\Nicolas Descotes\Desktop\image.png");
                 screenshot.SaveAsPng(stream, Width, Height);
                 stream.Dispose(); 
+            }
+            if(controler.KeyboardUtils.IsContaining(keys, Keys.F5))
+            {
+                controler.camera.ToggleFollow(); 
             }
 
             controler.DebugManager.AddEvent("Key pressed : " + new KeysArray(keys)); 
@@ -146,7 +149,7 @@ namespace ExplorerOpenGL
             }
             // TODO: Add your update logic here
             controler.Update(_sprites);
-            camera.Update(); 
+            controler.camera.Update(); 
 
             base.Update(gameTime);
         }
@@ -160,7 +163,7 @@ namespace ExplorerOpenGL
             GraphicsDevice.Clear(Color.CornflowerBlue);
             if (_sprites == null)
                 return;
-            spriteBatch.Begin(SpriteSortMode.BackToFront, transformMatrix: camera.Transform) ;
+            spriteBatch.Begin(SpriteSortMode.BackToFront, transformMatrix: controler.camera.Transform) ;
 
 
             for (int i = 1; i < _sprites.Count; i ++)

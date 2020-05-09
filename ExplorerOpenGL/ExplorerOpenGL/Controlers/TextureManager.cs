@@ -17,8 +17,6 @@ namespace ExplorerOpenGL.Controlers
         private SpriteBatch spriteBatch;
         private RenderManager renderManager; 
 
-
-
         public TextureManager(GraphicsDeviceManager Graphics, ContentManager content, SpriteBatch spriteBatch, RenderManager renderManager)
         {
             Content = content;
@@ -156,8 +154,6 @@ namespace ExplorerOpenGL.Controlers
                 }
             }
             textTexture.SetData(data);
-
-            
 
             data = null;
 

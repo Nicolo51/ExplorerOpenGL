@@ -1,4 +1,5 @@
 ﻿using ExplorerOpenGL.Model.Sprites;
+using ExplorerOpenGL.View;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
@@ -17,7 +18,9 @@ namespace ExplorerOpenGL.Controlers
         public KeyboardUtils KeyboardUtils;
         public DebugManager DebugManager; //instantiate on load
         public TextureManager TextureManager; //instantiate on load 
-        public RenderManager RenderManager; 
+        public RenderManager RenderManager;
+
+        public Camera camera { get; private set; } 
 
         List<Sprite> _sprites;
         Dictionary<string, SpriteFont> fonts;
@@ -25,7 +28,6 @@ namespace ExplorerOpenGL.Controlers
 
         public Controler(Dictionary<string, SpriteFont> Fonts, List<Sprite> sprites, GraphicsDeviceManager Graphics, ContentManager content, SpriteBatch spriteBatch)
         {
-            
             KeyboardUtils = new KeyboardUtils();
             RenderManager = new RenderManager(sprites, Graphics, spriteBatch);
             TextureManager = new TextureManager(Graphics, content, spriteBatch, RenderManager);
@@ -35,7 +37,9 @@ namespace ExplorerOpenGL.Controlers
 
             _sprites = sprites; 
             fonts = Fonts;
-            graphics = Graphics; 
+            graphics = Graphics;
+
+            camera = new Camera(new Vector2(graphics.PreferredBackBufferWidth, graphics.PreferredBackBufferHeight));
         }
 
         public void Update(List<Sprite> sprites)

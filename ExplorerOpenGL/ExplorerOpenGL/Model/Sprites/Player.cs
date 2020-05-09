@@ -32,7 +32,7 @@ namespace ExplorerOpenGL.Model.Sprites
 
         public override void Update(GameTime gameTime, List<Sprite> sprites, Controler controler)
         {
-            Radian = CalculateAngle(Position, mousePointer.Position);
+            Radian = CalculateAngle(Position, mousePointer.InGamePosition);
             //Radian = (float)Math.PI; 
             Move(controler, sprites);
 
