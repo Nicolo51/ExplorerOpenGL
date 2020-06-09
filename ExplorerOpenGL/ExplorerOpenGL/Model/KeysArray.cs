@@ -15,7 +15,6 @@ namespace ExplorerOpenGL.Model
         {
             this.Keys = Keys;
         }
-
         public override string ToString()
         {
             StringBuilder sb = new StringBuilder();

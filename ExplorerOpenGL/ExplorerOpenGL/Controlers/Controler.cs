@@ -7,7 +7,9 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Security.Policy;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace ExplorerOpenGL.Controlers
@@ -19,7 +21,9 @@ namespace ExplorerOpenGL.Controlers
         public DebugManager DebugManager; //instantiate on load
         public TextureManager TextureManager; //instantiate on load 
         public RenderManager RenderManager;
-
+        public CommunicationClient CommunicationClient;
+        public Player player { get; private set; }
+        public int IDClient { get; private set; }
         public Camera camera { get; private set; } 
 
         List<Sprite> _sprites;
@@ -31,6 +35,7 @@ namespace ExplorerOpenGL.Controlers
             KeyboardUtils = new KeyboardUtils();
             RenderManager = new RenderManager(sprites, Graphics, spriteBatch);
             TextureManager = new TextureManager(Graphics, content, spriteBatch, RenderManager);
+            CommunicationClient = new CommunicationClient(); 
             DebugManager = new DebugManager(TextureManager, Fonts, Graphics);
             KeyboardUtils.KeyPressed += DebugManager.AddEvent;
             KeyboardUtils.KeyRealeased += DebugManager.AddEvent;
@@ -55,6 +60,6 @@ namespace ExplorerOpenGL.Controlers
             }
 
         }
-        
+
     }
 }

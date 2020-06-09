@@ -8,6 +8,7 @@ using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Runtime.CompilerServices;
 using System.Threading;
 
 namespace ExplorerOpenGL
@@ -21,7 +22,7 @@ namespace ExplorerOpenGL
         GraphicsDeviceManager graphics;
         SpriteBatch spriteBatch;
         List<Sprite> _sprites;
-
+        Player player; 
 
         const int Height = 730;
         const int Width = 1360; 
@@ -61,12 +62,14 @@ namespace ExplorerOpenGL
             controler = new Controler(fonts, _sprites, graphics, Content, spriteBatch);
 
             _sprites.Add(new MousePointer(Sight, controler.camera));
-            _sprites.Add(new Wall(controler.TextureManager.CreateBorderedTexture(500, 70, 5, 5, paint => Color.SandyBrown, paint => Color.Brown))
+            new Thread(() =>
             {
-                Position = new Vector2(100, 100),
-            });
-
-            Sprite Player = new Player(player, playerfeet, (MousePointer)_sprites[0])
+                _sprites.Add(new Wall(controler.TextureManager.LoadNoneContentLoadedTexture(@"D:\Mes documents\Images\Wlop\2018 September 1\2_Invitation_4k.jpg"))
+                {
+                    Position = new Vector2(100, 100),
+                });
+            }).Start(); 
+            Player Player = new Player(player, playerfeet, (MousePointer)_sprites[0])
             {
                 Position = new Vector2(200, 200),
                 input = new Input()
@@ -76,7 +79,8 @@ namespace ExplorerOpenGL
                     Left = Keys.Q,
                     Right = Keys.D,
                 }
-            }; 
+            };
+            this.player = Player; 
 
             _sprites.Add(Player);
             controler.camera.FollowSprite(Player);
@@ -117,8 +121,12 @@ namespace ExplorerOpenGL
             {
                 controler.camera.ToggleFollow(); 
             }
-
-            controler.DebugManager.AddEvent("Key pressed : " + new KeysArray(keys)); 
+            if (controler.KeyboardUtils.IsContaining(keys, Keys.F1))
+            {
+                controler.CommunicationClient.Start(player);
+            }
+            controler.DebugManager.AddEvent("Key pressed : " + new KeysArray(keys));
+            
         }
 
 

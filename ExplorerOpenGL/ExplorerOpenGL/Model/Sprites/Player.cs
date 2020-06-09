@@ -1,23 +1,29 @@
 ﻿using ExplorerOpenGL.Controlers;
+using ExplorerOpenGLInterfaces;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Runtime.Serialization;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace ExplorerOpenGL.Model.Sprites
 {
-    public class Player : Sprite
+    [DataContract]
+    public class Player : Sprite, IPlayer
     {
         private MousePointer mousePointer;
         public Input input;
         private PlayerFeet playerFeet;
         private float Velocity;
-        private Vector2 Direction; 
 
+        
+        public Vector2 Direction;
+
+        [DataMember]
         public Player(Texture2D texture, Texture2D playerFeetTexture, MousePointer mousepointer)
             : base()
         {
@@ -33,7 +39,6 @@ namespace ExplorerOpenGL.Model.Sprites
         public override void Update(GameTime gameTime, List<Sprite> sprites, Controler controler)
         {
             Radian = CalculateAngle(Position, mousePointer.InGamePosition);
-            //Radian = (float)Math.PI; 
             Move(controler, sprites);
 
             base.Update(gameTime, sprites, controler);
@@ -86,11 +91,11 @@ namespace ExplorerOpenGL.Model.Sprites
 
                         if ((Direction.X > 0 && this.IsTouchingLeft(sprite)) ||
                             (Direction.X < 0 & this.IsTouchingRight(sprite)))
-                            this.Direction.X = 0;
+                            Direction.X = 0;
 
                         if ((Direction.Y > 0 && this.IsTouchingTop(sprite)) ||
                             (Direction.Y < 0 & this.IsTouchingBottom(sprite)))
-                            this.Direction.Y = 0;
+                            Direction.Y = 0;
                     }
                 }
                 Position += Direction * Velocity;
@@ -137,5 +142,17 @@ namespace ExplorerOpenGL.Model.Sprites
               this.HitBox.Left < sprite.HitBox.Right;
         }
 
+        public IPlayer GetOnlineInfo()
+        {
+            return null;
+        }
+        public Vector2 getDirection()
+        {
+            return this.Direction; 
+        }
+        public Vector2 getPosition()
+        {
+            return this.Position; 
+        }
     }
 }
