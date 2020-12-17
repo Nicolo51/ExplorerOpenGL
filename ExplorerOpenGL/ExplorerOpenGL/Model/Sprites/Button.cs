@@ -56,14 +56,15 @@ namespace ExplorerOpenGL.Model.Sprites
                 {
                     if (this.HitBox.Intersects((sprites[i] as MousePointer).HitBox))
                     {
+                        isMouseOver = true; 
                         if (((sprites[i] as MousePointer).currentMouseState.LeftButton == ButtonState.Pressed && (sprites[i] as MousePointer).prevMouseState.LeftButton == ButtonState.Released) || isClicked)
                         {
                             isClicked = true;
-                            opacity = 0.5f;
+                            //opacity = 0.5f;
                             if ((sprites[i] as MousePointer).currentMouseState.LeftButton == ButtonState.Released)
                             {
                                 //faire la commande au moment ou le bouton est clické et relaché
-                                opacity = 1f; 
+                                //opacity = 1f; 
                             }
                         }
                         if ((sprites[i] as MousePointer).currentMouseState.LeftButton == ButtonState.Released)
@@ -73,6 +74,7 @@ namespace ExplorerOpenGL.Model.Sprites
                     }
                     else if ((sprites[i] as MousePointer).currentMouseState.LeftButton == ButtonState.Released && !(this.HitBox.Intersects((sprites[i] as MousePointer).HitBox)))
                     {
+                        isMouseOver = false;
                         isClicked = false;
                     }
                     else
@@ -99,7 +101,11 @@ namespace ExplorerOpenGL.Model.Sprites
         public override void Draw(SpriteBatch spriteBatch)
         {
             base.Draw(spriteBatch);
-            spriteBatch.Draw(mouseOverTexture, Position, null, Color.White * mouseOverOpacityTexture, Radian, origin, scale, Effects, layerDepth);
+            if(isMouseOver)
+                spriteBatch.Draw(mouseOverTexture, Position, null, Color.White, Radian, origin, scale, Effects, layerDepth);
+            else
+                spriteBatch.Draw(_texture, Position, null, Color.White, Radian, origin, scale, Effects, layerDepth);
+
             spriteBatch.DrawString(font, Text, Position, Color.White);
         }
     }

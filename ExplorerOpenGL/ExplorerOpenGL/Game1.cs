@@ -53,22 +53,21 @@ namespace ExplorerOpenGL
                 {"Default", Content.Load<SpriteFont>("Fonts/Default") },
             };
 
-            Texture2D player = Content.Load<Texture2D>("player");
-            Texture2D playerfeet = Content.Load<Texture2D>("playerfeet");
-            Texture2D Sight = Content.Load<Texture2D>("sight");
-
             _sprites = new List<Sprite>();
 
             controler = new Controler(fonts, _sprites, graphics, Content, spriteBatch);
+            Texture2D player = controler.TextureManager.LoadTexture("player");
+            Texture2D playerfeet = controler.TextureManager.LoadTexture("playerfeet");
+            Texture2D Sight = controler.TextureManager.LoadTexture("sight");
 
             _sprites.Add(new MousePointer(Sight, controler.camera));
-            new Thread(() =>
-            {
-                _sprites.Add(new Wall(controler.TextureManager.LoadNoneContentLoadedTexture(@"D:\Mes documents\Images\Wlop\2018 September 1\2_Invitation_4k.jpg"))
-                {
-                    Position = new Vector2(100, 100),
-                });
-            }).Start(); 
+            //new Thread(() =>
+            //{
+            //    _sprites.Add(new Wall(controler.TextureManager.LoadNoneContentLoadedTexture(@"D:\Mes documents\Images\Wlop\2018 September 1\2_Invitation_4k.jpg"))
+            //    {
+            //        Position = new Vector2(100, 100),
+            //    });
+            //}).Start(); 
             Player Player = new Player(player, playerfeet, (MousePointer)_sprites[0])
             {
                 Position = new Vector2(200, 200),
@@ -83,6 +82,7 @@ namespace ExplorerOpenGL
             this.player = Player; 
 
             _sprites.Add(Player);
+            _sprites.Add(new Button(controler.TextureManager.CreateTexture(200, 200, paint => Color.Black), controler.TextureManager.CreateTexture(200, 200, paint => Color.Red), fonts["Default"])); 
             controler.camera.FollowSprite(Player);
             controler.camera.LookAt(0, 0); 
 
@@ -113,7 +113,7 @@ namespace ExplorerOpenGL
             {
                 Texture2D screenshot = controler.RenderManager.RenderSceneToTexture();
 
-                Stream stream = File.Create(@"C:\Users\Nicolas Descotes\Desktop\image.png");
+                Stream stream = File.Create(@"C:\Users\nicol\Desktop\image.png");
                 screenshot.SaveAsPng(stream, Width, Height);
                 stream.Dispose(); 
             }
@@ -123,10 +123,13 @@ namespace ExplorerOpenGL
             }
             if (controler.KeyboardUtils.IsContaining(keys, Keys.F1))
             {
-                controler.CommunicationClient.Start(player);
+                using(StreamReader sr = new StreamReader("ip.txt"))
+                {
+                    string ip = sr.ReadLine();
+                    controler.NetwokManager.Connect(ip);
+                }
             }
             controler.DebugManager.AddEvent("Key pressed : " + new KeysArray(keys));
-            
         }
 
 
@@ -156,7 +159,7 @@ namespace ExplorerOpenGL
                 _sprites[i].Update(gameTime, _sprites, controler);
             }
             // TODO: Add your update logic here
-            controler.Update(_sprites);
+            controler.Update(_sprites, gameTime);
             controler.camera.Update(); 
 
             base.Update(gameTime);
@@ -173,6 +176,7 @@ namespace ExplorerOpenGL
                 return;
             spriteBatch.Begin(SpriteSortMode.BackToFront, transformMatrix: controler.camera.Transform) ;
 
+            controler.NetwokManager.Draw(spriteBatch); 
 
             for (int i = 1; i < _sprites.Count; i ++)
             {

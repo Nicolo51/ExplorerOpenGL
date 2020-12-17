@@ -16,7 +16,8 @@ namespace ExplorerOpenGL.Model.Sprites
         public MouseState currentMouseState { get; private set; }
         public MouseState prevMouseState { get; private set; }
         private Camera _camera;
-        public  Vector2 InGamePosition { get; set; }
+        public Vector2 InWindowPosition { get; private set; }
+            
 
         public MousePointer(Texture2D texture, Camera camera)
             : base()
@@ -36,15 +37,20 @@ namespace ExplorerOpenGL.Model.Sprites
                 prevMouseState = currentMouseState; 
             }
             currentMouseState = Mouse.GetState();
-            Position = new Vector2(currentMouseState.Position.X, currentMouseState.Position.Y);
-            InGamePosition = new Vector2((_camera.Position.X - _camera.Bounds.X / 2 + currentMouseState.Position.X), (_camera.Position.Y - _camera.Bounds.Y / 2 + currentMouseState.Position.Y)); 
+            InWindowPosition = new Vector2(currentMouseState.Position.X, currentMouseState.Position.Y);
+            Position = new Vector2((_camera.Position.X - _camera.Bounds.X / 2 + currentMouseState.Position.X), (_camera.Position.Y - _camera.Bounds.Y / 2 + currentMouseState.Position.Y)); 
 
             base.Update(gameTime, sprites, controler);
+        }
+        public override void Draw(SpriteBatch spriteBatch)
+        {
+            spriteBatch.Draw(_texture, InWindowPosition, null, Color.White * opacity, Radian, origin, scale, Effects, layerDepth);
+            base.Draw(spriteBatch);
         }
 
         public override string ToString()
         {
-            return "Position X : " + Position.X + " / "+ InGamePosition.X + "\nPosition Y : " + Position.Y + " / " + InGamePosition.Y;
+            return "Position X : " + Position.X + " / "+ InWindowPosition.X + "\nPosition Y : " + Position.Y + " / " + InWindowPosition.Y;
         }
     }
 }

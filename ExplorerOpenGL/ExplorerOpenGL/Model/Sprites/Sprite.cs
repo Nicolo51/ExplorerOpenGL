@@ -1,6 +1,5 @@
 ﻿using ExplorerOpenGL.Controlers;
 using ExplorerOpenGL.Model;
-using ExplorerOpenGLInterfaces;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -17,7 +16,7 @@ namespace ExplorerOpenGL.Model.Sprites
         public bool IsRemove { get; set; }
         public Vector2 Position;
         protected Texture2D _texture;
-        protected float Radian { get; set; }
+        public float Radian { get; set; }
         public Rectangle HitBox { get {
                 if (_texture != null) return new Rectangle((int)Position.X - (int)origin.X, (int)Position.Y - (int)origin.Y, _texture.Width, _texture.Height);
                 else return new Rectangle((int)Position.X, (int)Position.Y, 1, 1); 
@@ -41,7 +40,7 @@ namespace ExplorerOpenGL.Model.Sprites
 
         public virtual void Draw(SpriteBatch spriteBatch)
         {
-            if(_texture != null)
+            if(_texture != null && !(this is MousePointer))
                 spriteBatch.Draw(_texture, Position, null, Color.White * opacity, Radian, origin, scale, Effects, layerDepth);
         }
     }

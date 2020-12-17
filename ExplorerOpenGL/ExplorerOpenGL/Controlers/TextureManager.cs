@@ -15,10 +15,12 @@ namespace ExplorerOpenGL.Controlers
         private GraphicsDeviceManager graphics;
         private ContentManager Content;
         private SpriteBatch spriteBatch;
-        private RenderManager renderManager; 
+        private RenderManager renderManager;
+        public Dictionary<string, Texture2D> LoadedTextures; 
 
         public TextureManager(GraphicsDeviceManager Graphics, ContentManager content, SpriteBatch spriteBatch, RenderManager renderManager)
         {
+            LoadedTextures = new Dictionary<string, Texture2D>(); 
             Content = content;
             this.renderManager = renderManager; 
             graphics = Graphics;
@@ -95,7 +97,7 @@ namespace ExplorerOpenGL.Controlers
                 }
             }
             texture.SetData(data);
-
+            LoadedTextures.Add(path, texture);
             return texture;
         }
 
@@ -107,7 +109,9 @@ namespace ExplorerOpenGL.Controlers
 
         public Texture2D LoadTexture(string path)
         {
-            return Content.Load<Texture2D>(path);
+            Texture2D texture = Content.Load<Texture2D>(path);
+            LoadedTextures.Add(path, texture);
+            return texture; 
         }
 
         public Texture2D OutlineText(string input, SpriteFont font, Color borderColor, Color textColor, int Thickness)

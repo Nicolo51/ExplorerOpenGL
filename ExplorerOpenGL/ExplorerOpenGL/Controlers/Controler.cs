@@ -16,14 +16,12 @@ namespace ExplorerOpenGL.Controlers
 {
     public class Controler
     {
-        public Vector2 scales { get; set; }
         public KeyboardUtils KeyboardUtils;
         public DebugManager DebugManager; //instantiate on load
         public TextureManager TextureManager; //instantiate on load 
         public RenderManager RenderManager;
-        public CommunicationClient CommunicationClient;
+        public NetwokManager NetwokManager; 
         public Player player { get; private set; }
-        public int IDClient { get; private set; }
         public Camera camera { get; private set; } 
 
         List<Sprite> _sprites;
@@ -35,8 +33,9 @@ namespace ExplorerOpenGL.Controlers
             KeyboardUtils = new KeyboardUtils();
             RenderManager = new RenderManager(sprites, Graphics, spriteBatch);
             TextureManager = new TextureManager(Graphics, content, spriteBatch, RenderManager);
-            CommunicationClient = new CommunicationClient(); 
             DebugManager = new DebugManager(TextureManager, Fonts, Graphics);
+            NetwokManager = new NetwokManager(this); 
+
             KeyboardUtils.KeyPressed += DebugManager.AddEvent;
             KeyboardUtils.KeyRealeased += DebugManager.AddEvent;
 
@@ -47,12 +46,16 @@ namespace ExplorerOpenGL.Controlers
             camera = new Camera(new Vector2(graphics.PreferredBackBufferWidth, graphics.PreferredBackBufferHeight));
         }
 
-        public void Update(List<Sprite> sprites)
+        public void Update(List<Sprite> sprites, GameTime gametime)
         {
-            if(KeyboardUtils != null && TextureManager != null && DebugManager != null)
+            if(KeyboardUtils != null && TextureManager != null && DebugManager != null && NetwokManager != null )
             {
                 KeyboardUtils.Update();
                 DebugManager.Update(sprites);
+                if (NetwokManager.IsConnectedToAServer)
+                {
+                    NetwokManager.Update(gametime, (Player)sprites[1]);
+                }
             }
             else
             {

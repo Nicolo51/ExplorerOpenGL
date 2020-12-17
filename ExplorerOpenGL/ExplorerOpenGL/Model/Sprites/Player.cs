@@ -1,5 +1,4 @@
 ﻿using ExplorerOpenGL.Controlers;
-using ExplorerOpenGLInterfaces;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -12,18 +11,16 @@ using System.Threading.Tasks;
 
 namespace ExplorerOpenGL.Model.Sprites
 {
-    [DataContract]
-    public class Player : Sprite, IPlayer
+    public class Player : Sprite
     {
         private MousePointer mousePointer;
         public Input input;
         private PlayerFeet playerFeet;
         private float Velocity;
-
-        
         public Vector2 Direction;
 
-        [DataMember]
+        public float PlayerFeetRadian { get { return playerFeet.Radian; } }
+
         public Player(Texture2D texture, Texture2D playerFeetTexture, MousePointer mousepointer)
             : base()
         {
@@ -38,7 +35,7 @@ namespace ExplorerOpenGL.Model.Sprites
 
         public override void Update(GameTime gameTime, List<Sprite> sprites, Controler controler)
         {
-            Radian = CalculateAngle(Position, mousePointer.InGamePosition);
+            Radian = CalculateAngle(Position, mousePointer.Position);
             Move(controler, sprites);
 
             base.Update(gameTime, sprites, controler);
@@ -82,10 +79,10 @@ namespace ExplorerOpenGL.Model.Sprites
                     direction += (float)Math.PI;
                 }
                 playerFeet.SetDirection(direction);
-                for(int i = 0; i < sprites.Count; i++)
+                for (int i = 0; i < sprites.Count; i++)
                 {
-                    var sprite = sprites[i]; 
-                    if(sprites[i] is Wall)
+                    var sprite = sprites[i];
+                    if (sprites[i] is Wall)
                     {
                         Debug.WriteLine(this.Direction);
 
@@ -100,7 +97,7 @@ namespace ExplorerOpenGL.Model.Sprites
                 }
                 Position += Direction * Velocity;
                 playerFeet.Position = Position;
-            }            
+            }
         }
 
 
@@ -142,17 +139,10 @@ namespace ExplorerOpenGL.Model.Sprites
               this.HitBox.Left < sprite.HitBox.Right;
         }
 
-        public IPlayer GetOnlineInfo()
+        public string GetJSON()
         {
-            return null;
-        }
-        public Vector2 getDirection()
-        {
-            return this.Direction; 
-        }
-        public Vector2 getPosition()
-        {
-            return this.Position; 
+            string output = Position.ToString(); 
+            return output;
         }
     }
 }

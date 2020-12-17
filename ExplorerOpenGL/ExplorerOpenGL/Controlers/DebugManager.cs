@@ -17,7 +17,6 @@ namespace ExplorerOpenGL.Controlers
         public Dictionary<string, Texture2D> Textures { get; set; }
         TextureManager textureManager;
         public List<LogElement> EventLogList { get; private set; }
-        public Texture2D backgroundTexture { get; private set; }
         public Color TextColor { get; set; }
         public Vector2 MaxLogVec { get; set; } //???
         float scale = 1f;
@@ -31,7 +30,6 @@ namespace ExplorerOpenGL.Controlers
         public DebugManager(TextureManager textureManager,  Dictionary<string, SpriteFont> fonts, GraphicsDeviceManager graphics)
         {
             this.textureManager = textureManager;
-            this.backgroundTexture = backgroundTexture; 
             this.graphics = graphics; 
             Fonts = fonts; 
             debugMessage = new StringBuilder(); 
@@ -78,6 +76,10 @@ namespace ExplorerOpenGL.Controlers
 
         public void AddEvent(object e)
         {
+            if(EventLogList.Count > 10)
+            {
+                EventLogList.RemoveAt(0); 
+            }
             if(e is KeysArray)
             {
                 EventLogList.Add(new LogElement(e.ToString())); 

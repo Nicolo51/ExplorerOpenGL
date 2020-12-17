@@ -14,7 +14,7 @@ namespace ExplorerOpenGL.Model
         private float velocity; 
         public LogElement(string Text)
         {
-            opacity = 10f;
+            opacity = 20f;
             IsRemove = false;
             this.Text = Text;
             velocity = 0.1f;
