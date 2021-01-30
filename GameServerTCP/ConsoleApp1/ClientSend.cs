@@ -1,4 +1,4 @@
-﻿using ExplorerOpenGL.Model.Sprites;
+﻿using GameServerTCP;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -6,14 +6,14 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ExplorerOpenGL.Controlers.Networking
+namespace Client
 {
     public class ClientSend
     {
         public delegate void SendProtocol(object obj, int idHandler);
         public static Dictionary<int, SendProtocol> protocolHandlers = new Dictionary<int, SendProtocol>()
         {
-            {(int)ClientPackets.TcpChatMessage, SendTcpChatMessage},
+            {(int)ClientPackets.TcpIssuedCommand, SendTcpChatMessage},
             {(int)ClientPackets.UdpUpdatePlayer, UdpUpdatePlayer},
         };
 
@@ -31,10 +31,10 @@ namespace ExplorerOpenGL.Controlers.Networking
 
         public static void WelcomeReceived()
         {
-            using (Packet packet = new Packet((int)ClientPackets.welcomeReceived))
+            using (Packet packet = new Packet((int)ClientPackets.WelcomeReceived))
             {
                 packet.Write(Client.myId);
-                packet.Write("Nicolas");
+                packet.Write(Client.name);
                 packet.Write("Hello from server");
                 SendTcpData(packet);
             }
@@ -42,7 +42,7 @@ namespace ExplorerOpenGL.Controlers.Networking
 
         public static void UDPTestReceived()
         {
-            using (Packet _packet = new Packet((int)ClientPackets.udpTestRecieved))
+            using (Packet _packet = new Packet((int)ClientPackets.UdpTestReceived))
             {
                 _packet.Write("Received a UDP packet.");
 
@@ -52,26 +52,13 @@ namespace ExplorerOpenGL.Controlers.Networking
 
         public static void UdpUpdatePlayer(object obj, int idHandler)
         {
-            if (obj is Player) 
-            {
-                
-                Player player = (obj as Player); 
-                using (Packet packet = new Packet((int)ClientPackets.UdpUpdatePlayer))
-                {
-                    packet.Write(player.Position.X);
-                    packet.Write(player.Position.Y);
-                    packet.Write(player.PlayerFeetRadian);
-                    packet.Write(player.Radian);
-                    //Debug.WriteLine(player.Position);
-                    SendUdpData(packet);
-                }
-            }
+           
         }
         public static void SendTcpChatMessage(object obj, int idHandler)
         {
-            if(obj is string)
+            if (obj is string)
             {
-                using (Packet packet = new Packet((int)ClientPackets.TcpChatMessage))
+                using (Packet packet = new Packet((int)ClientPackets.TcpIssuedCommand))
                 {
                     packet.Write(Client.myId);
                     packet.Write(obj as string);
@@ -80,9 +67,9 @@ namespace ExplorerOpenGL.Controlers.Networking
             }
             else
             {
-                throw new Exception("SendTcpMessage need a string as paramter"); 
+                throw new Exception("SendTcpMessage need a string as paramter");
             }
-            
+
         }
 
         public static void SendMessage(object obj, int idHandler)

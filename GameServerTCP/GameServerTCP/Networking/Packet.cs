@@ -1,28 +1,30 @@
-﻿using System;
+﻿using GameServerTCP.GameData;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace ExplorerOpenGL.Controlers.Networking
+namespace GameServerTCP
 {
     /// <summary>Sent from server to client.</summary>
     public enum ServerPackets
     {
-        welcome = 1,
-        udpTest = 2,
+        Welcome = 1,
+        UdpTest = 2,
         TcpMessage = 3,
         UdpMessage = 4,
         UdpUpdatePlayers = 5,
         TcpAddPlayer = 6,
         TcpPlayersSync = 7,
         TcpChatMessage = 8,
+        TcpTeleportPlayer = 9
     }
 
     /// <summary>Sent from client to server.</summary>
     public enum ClientPackets
     {
-        welcomeReceived = 1,
-        udpTestRecieved = 2,
-        TcpChatMessage = 3,
+        WelcomeReceived = 1,
+        UdpTestReceived = 2,
+        TcpIssuedCommand = 3,
         UdpUpdatePlayer = 4,
         UdpMessageRecieved = 5,
     }
@@ -168,6 +170,11 @@ namespace ExplorerOpenGL.Controlers.Networking
             byte[] buf = Encoding.UTF8.GetBytes(_value);
             Write(buf.Length);
             buffer.AddRange(buf); // Add the string itself
+        }
+
+        public void Write(Vector2 _value)
+        {
+            buffer.AddRange(_value.ToBytes());
         }
         #endregion
 

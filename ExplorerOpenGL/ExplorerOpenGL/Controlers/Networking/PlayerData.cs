@@ -11,6 +11,7 @@ namespace ExplorerOpenGL.Controlers.Networking
     public class PlayerData
     {
         public int ID { get; private set; }
+        public string Name { get; set; }
         public Vector2 ServerPosition { get; set; }
         public Vector2 InGamePosition { get; set; }
         public float LookAtRadian { get; set; }
@@ -28,10 +29,17 @@ namespace ExplorerOpenGL.Controlers.Networking
         public SpriteEffects Effects { get; set; }
         public float layerDepth { get; private set; }
 
+        public PlayerData(int id, string name)
+        {
+            this.Name = name; 
+            scale = 1f;
+            opacity = 1f; 
+            ID = id;
+        }
         public PlayerData(int id)
         {
             scale = 1f;
-            opacity = 1f; 
+            opacity = 1f;
             ID = id;
         }
 

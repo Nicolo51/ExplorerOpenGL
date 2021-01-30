@@ -76,15 +76,30 @@ namespace ExplorerOpenGL.Controlers
 
         public void AddEvent(object e)
         {
-            if(EventLogList.Count > 10)
+            if (EventLogList.Count > 10)
             {
-                EventLogList.RemoveAt(0); 
+                EventLogList.RemoveAt(0);
             }
-            if(e is KeysArray)
+            if (e is KeysArray)
             {
-                EventLogList.Add(new LogElement(e.ToString())); 
+                EventLogList.Add(new LogElement(e.ToString()));
             }
-            if(e is string)
+            if (e is string)
+            {
+                EventLogList.Add(new LogElement(e as string));
+            }
+        }
+        public void AddEvent(object e, KeyboardUtils keyboardUtils)
+        {
+            if (EventLogList.Count > 10)
+            {
+                EventLogList.RemoveAt(0);
+            }
+            if (e is KeysArray)
+            {
+                EventLogList.Add(new LogElement(e.ToString()));
+            }
+            if (e is string)
             {
                 EventLogList.Add(new LogElement(e as string));
             }
@@ -95,9 +110,9 @@ namespace ExplorerOpenGL.Controlers
             ClearDebugMember();
             foreach(var sprite in _sprites)
             {
-                if(sprite is MousePointer)
+                if(sprite is MousePointer pointer)
                 {
-                    debugMouse = (MousePointer)sprite; 
+                    debugMouse = pointer; 
                 }
             }
         }

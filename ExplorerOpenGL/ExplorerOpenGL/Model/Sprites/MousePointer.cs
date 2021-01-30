@@ -15,19 +15,16 @@ namespace ExplorerOpenGL.Model.Sprites
     {
         public MouseState currentMouseState { get; private set; }
         public MouseState prevMouseState { get; private set; }
-        private Camera _camera;
         public Vector2 InWindowPosition { get; private set; }
             
 
-        public MousePointer(Texture2D texture, Camera camera)
+        public MousePointer(Texture2D texture)
             : base()
         {
-            _camera = camera; 
             _texture = texture;
         }
-        public MousePointer(Camera camera)
+        public MousePointer()
         {
-            _camera = camera; 
         }
 
         public override void Update(GameTime gameTime, List<Sprite> sprites, Controler controler)
@@ -38,19 +35,19 @@ namespace ExplorerOpenGL.Model.Sprites
             }
             currentMouseState = Mouse.GetState();
             InWindowPosition = new Vector2(currentMouseState.Position.X, currentMouseState.Position.Y);
-            Position = new Vector2((_camera.Position.X - _camera.Bounds.X / 2 + currentMouseState.Position.X), (_camera.Position.Y - _camera.Bounds.Y / 2 + currentMouseState.Position.Y)); 
+            Position = new Vector2((controler.Camera.Position.X - controler.Camera.Bounds.X / 2 + currentMouseState.Position.X), (controler.Camera.Position.Y - controler.Camera.Bounds.Y / 2 + currentMouseState.Position.Y)); 
 
             base.Update(gameTime, sprites, controler);
         }
         public override void Draw(SpriteBatch spriteBatch)
         {
-            spriteBatch.Draw(_texture, InWindowPosition, null, Color.White * opacity, Radian, origin, scale, Effects, layerDepth);
+            spriteBatch.Draw(_texture, Position, null, Color.White * opacity, Radian, origin, scale, Effects, layerDepth);
             base.Draw(spriteBatch);
         }
 
         public override string ToString()
         {
-            return "Position X : " + Position.X + " / "+ InWindowPosition.X + "\nPosition Y : " + Position.Y + " / " + InWindowPosition.Y;
+            return "InWindowPos : " + InWindowPosition.X + " / "+ InWindowPosition.Y + "\nInGamePos : " + Position.X + " / " + Position.Y;
         }
     }
 }

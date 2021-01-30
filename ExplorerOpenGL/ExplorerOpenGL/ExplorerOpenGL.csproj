@@ -64,9 +64,11 @@
     <Compile Include="Model\RMenum.cs" />
     <Compile Include="Model\Sides.cs" />
     <Compile Include="Model\Sprites\Button.cs" />
+    <Compile Include="Model\Sprites\Chat.cs" />
     <Compile Include="Model\Sprites\MousePointer.cs" />
     <Compile Include="Model\Sprites\Player.cs" />
     <Compile Include="Model\Sprites\PlayerFeet.cs" />
+    <Compile Include="Model\Sprites\TextinputBox.cs" />
     <Compile Include="Model\Sprites\Wall.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

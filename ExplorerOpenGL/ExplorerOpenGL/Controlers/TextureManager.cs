@@ -89,6 +89,8 @@ namespace ExplorerOpenGL.Controlers
 
             Color[] data = new Color[ImageWidth * ImageHeight];
 
+            //Parallel.For(0, ImageWidth, i => Parallel.For(0, ImageHeight, j => { lock (data) { data[ImageWidth * j + i] = SystemDrawingColorToXnaColor(image.GetPixel(i, j)); } }));
+
             for (int i = 0; i < ImageWidth; i++)
             {
                 for (int j = 0; j < ImageHeight; j++)

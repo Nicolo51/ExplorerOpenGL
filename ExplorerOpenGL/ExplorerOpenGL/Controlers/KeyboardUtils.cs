@@ -13,10 +13,12 @@ namespace ExplorerOpenGL.Controlers
         KeyboardState currentKeyboardState;
         KeyboardState previousKeyboardState;
 
-        public delegate void KeyPressedEventHandler(Keys[] keys);
+        public bool IsTextInputFocused;
+
+        public delegate void KeyPressedEventHandler(Keys[] keys, KeyboardUtils keyboardUtils);
         public event KeyPressedEventHandler KeyPressed;
 
-        public delegate void KeyReleasedEventHandler(Keys[] keys);
+        public delegate void KeyReleasedEventHandler(Keys[] keys, KeyboardUtils keyboardUtils);
         public event KeyReleasedEventHandler KeyRealeased;
 
         public bool CapsLock { get { return currentKeyboardState.CapsLock; } }
@@ -26,7 +28,7 @@ namespace ExplorerOpenGL.Controlers
             currentKeyboardState = Keyboard.GetState(); 
         }
 
-        public bool IsContaining(Keys[] keys, Keys seekingKey)
+        public bool Contains(Keys[] keys, Keys seekingKey)
         {
             int index = Array.IndexOf(keys, seekingKey);
             if (index > -1)
@@ -46,7 +48,8 @@ namespace ExplorerOpenGL.Controlers
             Keys[] previousPressedKeys = previousKeyboardState.GetPressedKeys();
 
             Keys[] NewKeys = GetPressedKey(currentPressedKeys, previousPressedKeys).GetArray();
-            Keys[] LostKeys = GetReleasedKey(currentPressedKeys, previousPressedKeys).GetArray() ;
+            Keys[] LostKeys = GetReleasedKey(currentPressedKeys, previousPressedKeys).GetArray();
+
 
             if (NewKeys.Length > 0) 
             {
@@ -108,22 +111,22 @@ namespace ExplorerOpenGL.Controlers
 
         public bool IsKeyDown(Keys key)
         {
-            return currentKeyboardState.IsKeyDown(key);
+            return (IsTextInputFocused ? false : currentKeyboardState.IsKeyDown(key));
         }
 
         public bool IsKeyUp(Keys key)
         {
-            return currentKeyboardState.IsKeyUp(key); 
+            return (IsTextInputFocused ? true : currentKeyboardState.IsKeyUp(key)); 
         } 
 
         protected virtual void OnKeyRelease(Keys[] keys)
         {
-            KeyRealeased?.Invoke(keys);
+            KeyRealeased?.Invoke(keys, this);
         }
 
         protected virtual void OnKeyPressed(Keys[] keys)
         {
-            KeyPressed?.Invoke(keys);
+            KeyPressed?.Invoke(keys, this);
         }
 
 

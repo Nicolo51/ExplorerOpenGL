@@ -12,7 +12,6 @@ namespace ExplorerOpenGL.Controlers
 {
     public class NetwokManager 
     {
-        Client client;
         public bool IsConnectedToAServer { get; private set; }
         SocketAddress socketAddress;
         int serverTickRate; 
@@ -45,6 +44,11 @@ namespace ExplorerOpenGL.Controlers
             {
                 controler.DebugManager.AddEvent("You're already connected to a server.");
             }
+        }
+
+        public void SendMessageToServer(string message)
+        {
+            Client.SendMessage(message, (int)ClientPackets.TcpChatMessage); 
         }
 
         public void Update(GameTime gametime, Player player)
