@@ -2,6 +2,7 @@
 using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -20,6 +21,7 @@ namespace ExplorerOpenGL.Controlers
 
         public delegate void KeyReleasedEventHandler(Keys[] keys, KeyboardUtils keyboardUtils);
         public event KeyReleasedEventHandler KeyRealeased;
+
 
         public bool CapsLock { get { return currentKeyboardState.CapsLock; } }
 
@@ -53,7 +55,9 @@ namespace ExplorerOpenGL.Controlers
 
             if (NewKeys.Length > 0) 
             {
-                OnKeyPressed(NewKeys); 
+                OnKeyPressed(NewKeys);
+
+                
             }
             if (LostKeys.Length > 0) 
             {
@@ -111,12 +115,12 @@ namespace ExplorerOpenGL.Controlers
 
         public bool IsKeyDown(Keys key)
         {
-            return (IsTextInputFocused ? false : currentKeyboardState.IsKeyDown(key));
+            return Keyboard.GetState().IsKeyDown(key);
         }
 
         public bool IsKeyUp(Keys key)
         {
-            return (IsTextInputFocused ? true : currentKeyboardState.IsKeyUp(key)); 
+            return Keyboard.GetState().IsKeyUp(key); 
         } 
 
         protected virtual void OnKeyRelease(Keys[] keys)

@@ -61,7 +61,6 @@
     <Compile Include="Model\Input.cs" />
     <Compile Include="Model\KeysArray.cs" />
     <Compile Include="Model\LogElement.cs" />
-    <Compile Include="Model\RMenum.cs" />
     <Compile Include="Model\Sides.cs" />
     <Compile Include="Model\Sprites\Button.cs" />
     <Compile Include="Model\Sprites\Chat.cs" />

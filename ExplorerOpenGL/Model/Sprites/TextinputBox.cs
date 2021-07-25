@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using ExplorerOpenGL.Controlers;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
@@ -16,16 +17,19 @@ namespace ExplorerOpenGL.Model.Sprites
         readonly Dictionary<Keys, KeyCodes> qwerty;
         SpriteFont spriteFont;
         Dictionary<Keys, KeyCodes> inUse;
-        public bool isFocused { get; private set; }
+        public bool isFocused;
         public delegate void ValidateEventHandler(string message);
         public event ValidateEventHandler OnValidation;
+
         public TextinputBox(Texture2D Texture, SpriteFont SpriteFont)
         {
+            MouseClick += OnMouseClick;
             _texture = Texture;
             spriteFont = SpriteFont;
             opacity = 1f;
             layerDepth = .09f;
             isFocused = false;
+            IsClickable = true;
             inputText = new StringBuilder();
             azerty = new Dictionary<Keys, KeyCodes>();
             InitAzerty();
@@ -48,6 +52,7 @@ namespace ExplorerOpenGL.Model.Sprites
             }
                 if (!inUse.ContainsKey(input) || !isFocused)
                 return;
+
             switch (keyAlterer)
             {
                 case KeyAlterer.None:
@@ -62,11 +67,31 @@ namespace ExplorerOpenGL.Model.Sprites
             }
         }
 
+        public override void Update(GameTime gameTime, List<Sprite> sprites, Controler controler)
+        {
+
+            base.Update(gameTime, sprites, controler);
+        }
+
         public override void Draw(SpriteBatch spriteBatch)
         {
             spriteBatch.DrawString(spriteFont, inputText.ToString(), Position, Color.Black, 0f, Vector2.Zero, 1f, SpriteEffects.None, layerDepth - .01f);
             base.Draw(spriteBatch);
         }
+
+        protected virtual void OnMouseClick(object sender, List<Sprite> sprites, Controler controler)
+        {
+            controler.DebugManager.AddEvent("coucou");
+            foreach(var sprite in sprites)
+            {
+                if(sprite is TextinputBox)
+                {
+                    (sprite as TextinputBox).isFocused = false;
+                }
+            }
+            isFocused = true;
+        }
+
         protected virtual void Validate(string message)
         {
             OnValidation?.Invoke(message);
@@ -86,11 +111,11 @@ namespace ExplorerOpenGL.Model.Sprites
             azerty.Add(Keys.D8, new KeyCodes("`_8\\"));
             azerty.Add(Keys.D9, new KeyCodes("ç9^"));
             azerty.Add(Keys.OemPlus, new KeyCodes("=+}"));
-            azerty.Add(Keys.A, new KeyCodes("aA "));
-            azerty.Add(Keys.B, new KeyCodes("bB "));
-            azerty.Add(Keys.C, new KeyCodes("cC "));
+            azerty.Add(Keys.A, new KeyCodes("aA*"));
+            azerty.Add(Keys.B, new KeyCodes("bBù"));
+            azerty.Add(Keys.C, new KeyCodes("cC^"));
             azerty.Add(Keys.D, new KeyCodes("dD "));
-            azerty.Add(Keys.E, new KeyCodes("eE "));
+            azerty.Add(Keys.E, new KeyCodes("eE$"));
             azerty.Add(Keys.F, new KeyCodes("fF "));
             azerty.Add(Keys.G, new KeyCodes("gG "));
             azerty.Add(Keys.H, new KeyCodes("hH "));
@@ -100,8 +125,8 @@ namespace ExplorerOpenGL.Model.Sprites
             azerty.Add(Keys.L, new KeyCodes("lL "));
             azerty.Add(Keys.M, new KeyCodes("mM "));
             azerty.Add(Keys.N, new KeyCodes("nN "));
-            azerty.Add(Keys.O, new KeyCodes("oO "));
-            azerty.Add(Keys.P, new KeyCodes("pP "));
+            azerty.Add(Keys.O, new KeyCodes("oOµ"));
+            azerty.Add(Keys.P, new KeyCodes("pP%"));
             azerty.Add(Keys.Q, new KeyCodes("qQ "));
             azerty.Add(Keys.R, new KeyCodes("rR "));
             azerty.Add(Keys.S, new KeyCodes("sS "));

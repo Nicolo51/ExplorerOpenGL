@@ -99,6 +99,11 @@ namespace ExplorerOpenGL.Controlers
             DebugManager.AddEvent("Key realeased : " + new KeysArray(keys), keyboardUtils);
         }
 
+        public void AddSprite(Sprite sprite)
+        {
+            _sprites.Add(sprite); 
+        }
+
         private void OnKeyPressed(Keys[] keys, KeyboardUtils keyboardUtils)
         {
             if (KeyboardUtils.Contains(keys, Keys.OemQuestion))

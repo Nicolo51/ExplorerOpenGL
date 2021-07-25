@@ -111,9 +111,10 @@ namespace GameServerTCP
             packetHandlers = new Dictionary<int, PackHandler>()
             {
                 {(int)ClientPackets.WelcomeReceived, ServerHandle.WelcomeReceived },
-                {(int)ClientPackets.UdpTestReceived, ServerHandle.UDPTestReceived },
+                {(int)ClientPackets.UdpTest, ServerHandle.UDPTestReceived },
                 {(int)ClientPackets.TcpIssuedCommand, ServerHandle.TcpCommandReceived },
                 {(int)ClientPackets.UdpUpdatePlayer, ServerHandle.UdpUpdatePlayer },
+                {(int)ClientPackets.UdpMessage, ServerHandle.UdpMessageReceived },
             };
         }
     }

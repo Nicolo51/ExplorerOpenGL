@@ -99,8 +99,9 @@ namespace ExplorerOpenGL.Model.Sprites
             KeyAlterer keyAlterer = KeyAlterer.None;
             if (keyboardUtils.IsKeyDown(Keys.RightAlt))
                 keyAlterer = KeyAlterer.AltGr;
-            if (keyboardUtils.IsKeyDown(Keys.RightShift) || keyboardUtils.IsKeyDown(Keys.LeftShift))
+            if (keyboardUtils.IsKeyDown(Keys.RightShift))
                 keyAlterer = KeyAlterer.Cap;
+            
             foreach (Keys k in keys)
             {
                 TextinputBox.AddKeyStroke(k, keyAlterer);
@@ -109,6 +110,7 @@ namespace ExplorerOpenGL.Model.Sprites
 
         public override void Update(GameTime gameTime, List<Sprite> sprites, Controler controler)
         {
+            TextinputBox.Update(gameTime, sprites, controler); 
             if (TextinputBox.isFocused)
                 controler.KeyboardUtils.IsTextInputFocused = true;
             else

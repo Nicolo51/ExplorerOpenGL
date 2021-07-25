@@ -58,21 +58,24 @@ namespace ExplorerOpenGL.Model.Sprites
         private void Move(Controler controler, List<Sprite> sprites)
         {
             Direction = Vector2.Zero;
-            if (controler.KeyboardUtils.IsKeyDown(input.Down))
+            if (!controler.KeyboardUtils.IsTextInputFocused)
             {
-                Direction.Y += 1;
-            }
-            if (controler.KeyboardUtils.IsKeyDown(input.Up))
-            {
-                Direction.Y -= 1;
-            }
-            if (controler.KeyboardUtils.IsKeyDown(input.Right))
-            {
-                Direction.X += 1;
-            }
-            if (controler.KeyboardUtils.IsKeyDown(input.Left))
-            {
-                Direction.X -= 1;
+                if (controler.KeyboardUtils.IsKeyDown(input.Down))
+                {
+                    Direction.Y += 1;
+                }
+                if (controler.KeyboardUtils.IsKeyDown(input.Up))
+                {
+                    Direction.Y -= 1;
+                }
+                if (controler.KeyboardUtils.IsKeyDown(input.Right))
+                {
+                    Direction.X += 1;
+                }
+                if (controler.KeyboardUtils.IsKeyDown(input.Left))
+                {
+                    Direction.X -= 1;
+                }
             }
 
             if (Direction != Vector2.Zero)

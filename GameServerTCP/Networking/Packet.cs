@@ -23,10 +23,10 @@ namespace GameServerTCP
     public enum ClientPackets
     {
         WelcomeReceived = 1,
-        UdpTestReceived = 2,
+        UdpTest = 2,
         TcpIssuedCommand = 3,
         UdpUpdatePlayer = 4,
-        UdpMessageRecieved = 5,
+        UdpMessage = 5,
     }
     public class Packet : IDisposable
     {

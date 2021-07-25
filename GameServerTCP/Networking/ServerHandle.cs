@@ -22,6 +22,14 @@ namespace GameServerTCP
             Game.AddPlayer(new Player(clientIdCheck, name));
         }
 
+        public static void UdpMessageReceived(int fromClient, Packet packet)
+        {
+            int id = packet.ReadInt(); 
+            if(id == fromClient)
+                Console.WriteLine(fromClient + "-" + Game.Players[fromClient].Name + " : " + packet.ReadString()); 
+
+        }
+
         public static void UDPTestReceived(int fromClient, Packet packet)
         {
             string msg = packet.ReadString();

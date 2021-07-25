@@ -15,6 +15,7 @@ namespace Client
         {
             {(int)ClientPackets.TcpIssuedCommand, SendTcpChatMessage},
             {(int)ClientPackets.UdpUpdatePlayer, UdpUpdatePlayer},
+            {(int)ClientPackets.UdpMessage, UdpMessage }
         };
 
         private static void SendTcpData(Packet packet)
@@ -35,14 +36,32 @@ namespace Client
             {
                 packet.Write(Client.myId);
                 packet.Write(Client.name);
-                packet.Write("Hello from server");
+                packet.Write("Hello from Client");
                 SendTcpData(packet);
+            }
+        }
+
+        public static void UdpMessage(object obj, int idHandler)
+        {
+            using (Packet _packet = new Packet(idHandler))
+            {
+                if(obj is string)
+                {
+                    _packet.Write(Client.myId);
+                    _packet.Write((string)obj);
+                    SendUdpData(_packet); 
+                }
+                else
+                {
+                    Console.WriteLine("You can't send object that are not strings with this methods"); 
+                    return; 
+                }
             }
         }
 
         public static void UDPTestReceived()
         {
-            using (Packet _packet = new Packet((int)ClientPackets.UdpTestReceived))
+            using (Packet _packet = new Packet((int)ClientPackets.UdpTest))
             {
                 _packet.Write("Received a UDP packet.");
 

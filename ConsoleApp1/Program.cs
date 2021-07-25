@@ -21,9 +21,9 @@ namespace Client
                 string[] query = input.Split(" "); 
                 if(query[0].ToLower() == "udp")
                 {
-                    Client.SendMessage(input, (int)ClientPackets.UdpMessageRecieved); 
+                    Client.SendMessage(input, (int)ClientPackets.UdpMessage); 
                 }
-                if (query[0].ToLower() == "tcp")
+                else if (query[0].ToLower() == "tcp")
                 {
                     Client.SendMessage(input, (int)ClientPackets.TcpIssuedCommand);
                 }
@@ -33,7 +33,6 @@ namespace Client
                 }
                 Console.Write(">");
             } 
-
         }
     }
 }
