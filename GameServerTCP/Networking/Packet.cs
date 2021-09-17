@@ -16,7 +16,7 @@ namespace GameServerTCP
         TcpAddPlayer = 6,
         TcpPlayersSync = 7,
         TcpChatMessage = 8,
-        TcpTeleportPlayer = 9
+        ChangeNameResult = 9,
     }
 
     /// <summary>Sent from client to server.</summary>
@@ -27,7 +27,9 @@ namespace GameServerTCP
         TcpIssuedCommand = 3,
         UdpUpdatePlayer = 4,
         UdpMessage = 5,
+        ChangeNameRequest = 6,
     }
+
     public class Packet : IDisposable
     {
         private List<byte> buffer;

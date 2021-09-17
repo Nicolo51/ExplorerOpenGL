@@ -12,10 +12,12 @@ namespace ExplorerOpenGL.Controlers.Networking
     {
         public UdpClient socket;
         public IPEndPoint endPoint;
-        private SocketAddress socketAddress; 
+        private SocketAddress socketAddress;
+        private Client client; 
 
-        public UDP(SocketAddress socketAddress)
+        public UDP(SocketAddress socketAddress, Client client)
         {
+            this.client = client; 
             this.socketAddress = socketAddress; 
             endPoint = new IPEndPoint(IPAddress.Parse(this.socketAddress.IP), socketAddress.Port);
         }
@@ -37,7 +39,7 @@ namespace ExplorerOpenGL.Controlers.Networking
         {
             try
             {
-                _packet.InsertInt(Client.myId);
+                _packet.InsertInt(client.myId);
                 if (socket != null)
                 {
                     socket.BeginSend(_packet.ToArray(), _packet.Length(), null, null);
@@ -80,7 +82,7 @@ namespace ExplorerOpenGL.Controlers.Networking
             using (Packet _packet = new Packet(_data))
             {
                 int _packetId = _packet.ReadInt();
-                Client.packetHandlers[_packetId](_packet);
+                client.packetHandlers[_packetId](_packet);
             }
         }
 

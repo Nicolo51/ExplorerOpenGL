@@ -77,6 +77,16 @@ namespace GameServerTCP
             }
         }
 
+        public static void TcpChangeNameResult(int toClient, bool response, string name)
+        {
+            using (Packet packet = new Packet((int)ServerPackets.ChangeNameResult))
+            {
+                packet.Write(response);
+                packet.Write(name);
+                SendTcpData(toClient, packet);
+            }
+        }
+
         public static void TcpSpreadChatMessageToAll(Player player, string message)
         {
             using (Packet packet = new Packet((int)ServerPackets.TcpChatMessage))

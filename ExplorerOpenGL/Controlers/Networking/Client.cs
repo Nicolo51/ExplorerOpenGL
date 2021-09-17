@@ -8,45 +8,61 @@ namespace ExplorerOpenGL.Controlers.Networking
 {
     public class Client
     {
-        public static int myId = 0;
-        public static int serverTickRate = 0;
+        public int myId = 0;
+        public int serverTickRate = 0;
 
         public delegate void PacketHandler(Packet packet);
-        public static Dictionary<int, PacketHandler> packetHandlers;
-        public static Dictionary<int, PlayerData> PlayersData;
-        public static TCP tcp;
-        public static UDP udp;
-        public static Controler controler { get; set; } 
-        public static SocketAddress socketAddress { get; private set; } 
+        public Dictionary<int, PacketHandler> packetHandlers;
+        public Dictionary<int, PlayerData> PlayersData;
+        public TCP tcp;
+        public UDP udp;
+        public Controler controler; 
+        public SocketAddress socketAddress { get; private set; }
+        private ClientHandle clientHandle;
+        private ClientSend clientSend; 
 
-        public static void Start(SocketAddress SocketAddress)
+        public Client(Controler controler)
+        {
+            this.controler = controler; 
+            clientSend = new ClientSend(this); 
+            clientHandle = new ClientHandle(this, clientSend, controler); 
+        }
+
+        public void Start(SocketAddress SocketAddress)
         {
             socketAddress = SocketAddress;
             PlayersData = new Dictionary<int, PlayerData>(); 
-            tcp = new TCP(socketAddress);
-            udp = new UDP(socketAddress);
+            tcp = new TCP(socketAddress, this);
+            udp = new UDP(socketAddress, this);
         }
-        public static void ConnectToServer()
+        public void ConnectToServer()
         {
             tcp.Connect();
             InitClientData();
         }
-        public static void SendMessage(object obj, int idHandler)
+        public void SendMessage(object obj, int idHandler)
         {
-            ClientSend.SendMessage(obj, idHandler);
+            clientSend.SendMessage(obj, idHandler);
         }
-        public static void InitClientData()
+
+        public void RequestNameChange(string name)
+        {
+            clientSend.RequestChangeName(name); 
+        }
+        
+        public void InitClientData()
         {
             packetHandlers = new Dictionary<int, PacketHandler>()
             {
-                { (int)ServerPackets.welcome, ClientHandle.OnWelcomeResponse },
-                { (int)ServerPackets.udpTest, ClientHandle.OnUdpTestResponse },
-                { (int)ServerPackets.UdpUpdatePlayers, ClientHandle.OnUdpUpdatePlayers },
-                { (int)ServerPackets.TcpAddPlayer, ClientHandle.OnTcpAddPlayer },
-                { (int)ServerPackets.TcpPlayersSync, ClientHandle.OnTcpPlayersSync },
-                { (int)ServerPackets.TcpMessage, ClientHandle.OnTcpMessage },
-                { (int)ServerPackets.UdpMessage, ClientHandle.OnUdpMessage },
-                { (int)ServerPackets.TcpChatMessage, ClientHandle.OnChatMessage }
+                { (int)ServerPackets.welcome, clientHandle.OnWelcomeResponse },
+                { (int)ServerPackets.udpTest, clientHandle.OnUdpTestResponse },
+                { (int)ServerPackets.UdpUpdatePlayers, clientHandle.OnUdpUpdatePlayers },
+                { (int)ServerPackets.TcpAddPlayer, clientHandle.OnTcpAddPlayer },
+                { (int)ServerPackets.TcpPlayersSync, clientHandle.OnTcpPlayersSync },
+                { (int)ServerPackets.TcpMessage, clientHandle.OnTcpMessage },
+                { (int)ServerPackets.UdpMessage, clientHandle.OnUdpMessage },
+                { (int)ServerPackets.TcpChatMessage, clientHandle.OnChatMessage },
+                { (int)ServerPackets.ChangeNameResult, clientHandle.OnChangeNameResult }, 
             };
             Console.WriteLine("Initialized packets.");
         }

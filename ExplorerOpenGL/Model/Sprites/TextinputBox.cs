@@ -1,4 +1,5 @@
 ﻿using ExplorerOpenGL.Controlers;
+using ExplorerOpenGL.Model.Interfaces;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -10,20 +11,37 @@ using System.Threading.Tasks;
 
 namespace ExplorerOpenGL.Model.Sprites
 {
-    public class TextinputBox : Sprite
+    public class TextinputBox : Sprite, IFocusable
     {
         StringBuilder inputText;
         readonly Dictionary<Keys, KeyCodes> azerty;
         readonly Dictionary<Keys, KeyCodes> qwerty;
         SpriteFont spriteFont;
+        KeyboardUtils keyboardUtils; 
         Dictionary<Keys, KeyCodes> inUse;
+        private int indexStartDrawing; 
         public bool isFocused;
+
+        private int cursorIndex;
+        private Vector2 cursorPosition;
+        private int cursorOpacity;
+        private float cursorTimer; 
+
+        public int width { get { return _texture.Width; } }
+
+        public bool IsFocused { get => IsFocused; set => IsFocused = value; }
+
         public delegate void ValidateEventHandler(string message);
         public event ValidateEventHandler OnValidation;
 
-        public TextinputBox(Texture2D Texture, SpriteFont SpriteFont)
+        public TextinputBox(Texture2D Texture, SpriteFont SpriteFont, KeyboardUtils KeyboardUtils)
         {
-            MouseClick += OnMouseClick;
+            cursorIndex = 0;
+            cursorOpacity = 1;
+            cursorTimer = 0f; 
+
+            indexStartDrawing = 0; 
+            MouseClicked += OnMouseClick;
             _texture = Texture;
             spriteFont = SpriteFont;
             opacity = 1f;
@@ -32,69 +50,100 @@ namespace ExplorerOpenGL.Model.Sprites
             IsClickable = true;
             inputText = new StringBuilder();
             azerty = new Dictionary<Keys, KeyCodes>();
+            keyboardUtils = KeyboardUtils; 
             InitAzerty();
             inUse = azerty;
+        }
+            
+        public void AddChar(char c)
+        {
+            inputText.Insert(cursorIndex, c); 
+            ComputeIndexStartDrawing();
+            cursorIndex++;
+        }
+
+        private int ComputeIndexStartDrawing()
+        {
+            for (indexStartDrawing = 0; spriteFont.MeasureString(inputText.ToString().Substring(indexStartDrawing)).X > width; indexStartDrawing++) ;
+            return indexStartDrawing; 
         }
 
         public void AddKeyStroke(Keys input, KeyAlterer keyAlterer)
         {
-            if(input == Keys.Enter && keyAlterer != KeyAlterer.Cap)
-            {
-                Validate(inputText.ToString());
-                inputText.Clear();
-                isFocused = false;
-                return;
-            }
-            if (input == Keys.Back && inputText.Length > 0)
-            {
-                inputText.Remove(inputText.Length - 1, 1);
-                return;
-            }
-                if (!inUse.ContainsKey(input) || !isFocused)
-                return;
+            //if(input == Keys.Enter && keyAlterer != KeyAlterer.Cap)
+            //{
+            //    Validate(inputText.ToString());
+            //    inputText.Clear();
+            //    isFocused = false;
+            //    return;
+            //}
+            //if (input == Keys.Back && inputText.Length > 0)
+            //{
+            //    inputText.Remove(inputText.Length - 1, 1);
+            //    return;
+            //}
+            //    if (!inUse.ContainsKey(input) || !isFocused)
+            //    return;
 
-            switch (keyAlterer)
-            {
-                case KeyAlterer.None:
-                    inputText.Append(inUse[input].Reg);
-                    break;
-                case KeyAlterer.Cap:
-                    inputText.Append(inUse[input].Cap);
-                    break;
-                case KeyAlterer.AltGr:
-                    inputText.Append(inUse[input].AltGr);
-                    break;
-            }
+            //switch (keyAlterer)
+            //{
+            //    case KeyAlterer.None:
+            //        inputText.Append(inUse[input].Reg);
+            //        break;
+            //    case KeyAlterer.Cap:
+            //        inputText.Append(inUse[input].Cap);
+            //        break;
+            //    case KeyAlterer.AltGr:
+            //        inputText.Append(inUse[input].AltGr);
+            //        break;
+            //}
         }
 
         public override void Update(GameTime gameTime, List<Sprite> sprites, Controler controler)
         {
-
+            //cursorTimer += (float)gameTime.ElapsedGameTime.TotalSeconds; 
+            if(cursorTimer > .9f)
+            {
+                cursorOpacity = (cursorOpacity == 1) ? 0 : 1;
+                cursorTimer = 0f; 
+            }
+            cursorPosition = new Vector2(spriteFont.MeasureString(inputText.ToString().Substring(0, cursorIndex)).X-3, -1) + Position; 
             base.Update(gameTime, sprites, controler);
         }
 
         public override void Draw(SpriteBatch spriteBatch)
         {
-            spriteBatch.DrawString(spriteFont, inputText.ToString(), Position, Color.Black, 0f, Vector2.Zero, 1f, SpriteEffects.None, layerDepth - .01f);
             base.Draw(spriteBatch);
+            spriteBatch.DrawString(spriteFont, cursorIndex.ToString(), Vector2.Zero, Color.Black, 0f, Vector2.Zero, 1f, SpriteEffects.None, layerDepth - .01f);
+            spriteBatch.DrawString(spriteFont, "|", cursorPosition, Color.Black, 0f, Vector2.Zero, cursorOpacity, SpriteEffects.None, layerDepth - .01f);
+            spriteBatch.DrawString(spriteFont, inputText.ToString().Substring(indexStartDrawing), Position, Color.Black, 0f, Vector2.Zero, 1f, SpriteEffects.None, layerDepth - .01f);
         }
 
-        protected virtual void OnMouseClick(object sender, List<Sprite> sprites, Controler controler)
+        public void OnMouseClick(object sender, List<Sprite> sprites, Controler controler)
         {
-            controler.DebugManager.AddEvent("coucou");
-            foreach(var sprite in sprites)
-            {
-                if(sprite is TextinputBox)
-                {
-                    (sprite as TextinputBox).isFocused = false;
-                }
-            }
-            isFocused = true;
+            Focus(sprites.Where(s => s is IFocusable).ToList());
         }
 
-        protected virtual void Validate(string message)
+        public string Validate()
         {
-            OnValidation?.Invoke(message);
+            string output = inputText.ToString();
+            cursorIndex = 0; 
+            inputText.Clear();
+            return output;
+        }
+
+        public void MoveCursor(int i)
+        {
+            if (!isFocused)
+                return;
+            if(cursorIndex + i >= 0 && cursorIndex +i <= inputText.Length)
+                cursorIndex += i; 
+        }
+
+        public void UnFocus()
+        {
+            keyboardUtils.KeyPressed -= ArrowKeyPressed; 
+            IsFocused = false;
         }
 
         private void InitAzerty()
@@ -142,6 +191,59 @@ namespace ExplorerOpenGL.Model.Sprites
             azerty.Add(Keys.OemBackslash, new KeyCodes("<> "));
             azerty.Add(Keys.Enter, new KeyCodes(" \n "));
         }
+
+        public void RemoveChar()
+        {
+            if (inputText.Length > 0)
+            {
+                inputText.Remove(cursorIndex - 1, 1);
+                cursorIndex--;
+                ComputeIndexStartDrawing(); 
+                return;
+            }
+        }
+
+        public void Focus(List<Sprite> sprites)
+        {
+            foreach (Sprite s in sprites)
+            {
+                if (s is IFocusable)
+                    (s as IFocusable).IsFocused = false;
+                else
+                    throw new ArgumentException("You need to send a List<IFocusable to this function>");
+            }
+            isFocused = true;
+            keyboardUtils.KeyPressed += ArrowKeyPressed;
+        }
+
+        private void ArrowKeyPressed(Keys[] keys, KeyboardUtils keyboardUtils)
+        {
+            if (keyboardUtils.Contains(keys, Keys.Left))
+            {
+                MoveCursor(-1); 
+            }
+            if (keyboardUtils.Contains(keys, Keys.Right))
+            {
+                MoveCursor(1);
+            }
+        }
+
+        public bool ToggleFocus(List<Sprite> sprites)
+        {
+            if (!isFocused)
+            {
+                foreach (Sprite s in sprites)
+                {
+                    if (s is IFocusable)
+                        (s as IFocusable).IsFocused = false;
+                    else
+                        throw new ArgumentException("You need to send a List<IFocusable to this function>");
+                }
+            }
+            isFocused = !isFocused;
+            return isFocused; 
+        }
+
     }
     class KeyCodes
     {

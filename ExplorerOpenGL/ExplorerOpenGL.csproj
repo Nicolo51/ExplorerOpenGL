@@ -15,6 +15,7 @@
     <MonoGamePlatform>DesktopGL</MonoGamePlatform>
     <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <WcfConfigValidationEnabled>True</WcfConfigValidationEnabled>
+    <LangVersion>8.0</LangVersion>
     <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
@@ -46,7 +47,7 @@
   <ItemGroup>
     <Compile Include="Controlers\Controler.cs" />
     <Compile Include="Controlers\DebugManager.cs" />
-    <Compile Include="Controlers\NetwokManager.cs" />
+    <Compile Include="Controlers\NetworkManager.cs" />
     <Compile Include="Controlers\Networking\Client.cs" />
     <Compile Include="Controlers\Networking\ClientHandle.cs" />
     <Compile Include="Controlers\Networking\ClientSend.cs" />
@@ -59,11 +60,12 @@
     <Compile Include="Controlers\TextureManager.cs" />
     <Compile Include="Game1.cs" />
     <Compile Include="Model\Input.cs" />
+    <Compile Include="Model\Interfaces\IFocusable.cs" />
     <Compile Include="Model\KeysArray.cs" />
     <Compile Include="Model\LogElement.cs" />
     <Compile Include="Model\Sides.cs" />
     <Compile Include="Model\Sprites\Button.cs" />
-    <Compile Include="Model\Sprites\Chat.cs" />
+    <Compile Include="Model\Sprites\Terminal.cs" />
     <Compile Include="Model\Sprites\MousePointer.cs" />
     <Compile Include="Model\Sprites\Player.cs" />
     <Compile Include="Model\Sprites\PlayerFeet.cs" />
@@ -140,9 +142,7 @@
     <Compile Include="Controlers\KeyboardUtils.cs" />
     <None Include="Content\Fonts\Default.spritefont" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Model\Sprites\MainMenu\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(MSBuildExtensionsPath)\MonoGame\v3.0\MonoGame.Content.Builder.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

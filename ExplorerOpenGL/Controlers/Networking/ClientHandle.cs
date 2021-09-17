@@ -12,80 +12,101 @@ namespace ExplorerOpenGL.Controlers.Networking
 {
     public class ClientHandle
     {
-        public static void OnWelcomeResponse(Packet packet)
+        private Client client; 
+        private ClientSend clientSend;
+        private Controler controler; 
+
+        public ClientHandle(Client client, ClientSend clientSend, Controler controler)
+        {
+            this.client = client;
+            this.controler = controler; 
+            this.clientSend = clientSend; 
+        }
+
+        public void OnWelcomeResponse(Packet packet)
         {
             string msg = packet.ReadString();
             int id = packet.ReadInt();
             int tickRate  = packet.ReadInt();
             Console.WriteLine("Message from the server : " + msg);
-            Client.myId = id;
-            Client.serverTickRate = tickRate; 
-            Client.PlayersData.Add(id, new PlayerData(id)); 
-            ClientSend.WelcomeReceived();
-            Client.udp.Connect(((IPEndPoint)Client.tcp.socket.Client.LocalEndPoint).Port);
+            client.myId = id;
+            client.serverTickRate = tickRate;
+            client.PlayersData.Add(id, new PlayerData(id)); 
+            clientSend.WelcomeReceived();
+            client.udp.Connect(((IPEndPoint)client.tcp.socket.Client.LocalEndPoint).Port);
         }
 
-        public static void OnUdpTestResponse(Packet _packet)
+        public void OnUdpTestResponse(Packet _packet)
         {
             string _msg = _packet.ReadString();
 
             Console.WriteLine($"Received test packet via UDP. Contains message: {_msg}");
-            ClientSend.UDPTestReceived();
+            clientSend.UDPTestReceived();
         }
 
-        public static void OnTcpMessage(Packet _packet)
+        public void OnTcpMessage(Packet _packet)
         {
             string _msg = _packet.ReadString();
 
-            Client.controler.DebugManager.AddEvent($"Received packet via TCP. Contains message: {_msg}");
+            client.controler.DebugManager.AddEvent($"Received packet via TCP. Contains message: {_msg}");
         } 
-        public static void OnUdpMessage(Packet _packet)
+        public void OnUdpMessage(Packet _packet)
         {
             string _msg = _packet.ReadString();
 
-            Client.controler.DebugManager.AddEvent($"Received packet via UDP. Contains message: {_msg}");
+            client.controler.DebugManager.AddEvent($"Received packet via UDP. Contains message: {_msg}");
         }
 
-        public static void OnTcpPlayersSync(Packet packet)
+        public void OnTcpPlayersSync(Packet packet)
         {
             while (packet.ReadBool())
             {
                 int idPlayer = packet.ReadInt();
                 string name = packet.ReadString();
-                if (idPlayer != Client.myId)
+                if (idPlayer != client.myId)
                 {
-                    Client.PlayersData.Add(idPlayer, new PlayerData(idPlayer, name));
+                    client.PlayersData.Add(idPlayer, new PlayerData(idPlayer, name));
                 }
             }
         }
 
-        public static void OnChatMessage(Packet packet)
+        public void OnChatMessage(Packet packet)
         {
             string name = packet.ReadString();
             string msg = packet.ReadString();
-            Client.controler.Chat.AddMessageToChat(msg, name, Color.Black);
+            client.controler.Terminal.AddMessageToTerminal(msg, name, Color.Black);
         }
 
-        public static void OnTcpAddPlayer(Packet packet)
+        public void OnChangeNameResult(Packet packet)
+        {
+            bool result = packet.ReadBool();
+            string name = packet.ReadString();
+            if (result && !string.IsNullOrWhiteSpace(name))
+                controler.Terminal.AddMessageToTerminal("Successfuly change username to : " + name, "Info", Color.Green); 
+            else
+                controler.Terminal.AddMessageToTerminal("Failed to change username", "Error", new Color(181, 22, 11));
+        }
+
+        public void OnTcpAddPlayer(Packet packet)
         {
             int idPlayer = packet.ReadInt();
             string name = packet.ReadString();
-            if (!Client.PlayersData.ContainsKey(idPlayer) && idPlayer != Client.myId)
+            if (!client.PlayersData.ContainsKey(idPlayer) && idPlayer != client.myId)
             {
-                Client.PlayersData.Add(idPlayer, new PlayerData(idPlayer, name)); 
+                client.PlayersData.Add(idPlayer, new PlayerData(idPlayer, name)); 
             }
         }
 
-        public static void OnUdpUpdatePlayers(Packet packet)
+        public void OnUdpUpdatePlayers(Packet packet)
         {
             while (packet.ReadBool())
             {
                 int idPlayer = packet.ReadInt();
-                if (Client.PlayersData.ContainsKey(idPlayer))
+                if (client.PlayersData.ContainsKey(idPlayer))
                 {
-                    Client.PlayersData[idPlayer].ServerPosition = new Vector2(packet.ReadFloat(), packet.ReadFloat());
-                    Client.PlayersData[idPlayer].LookAtRadian = packet.ReadFloat();
-                    Client.PlayersData[idPlayer].FeetRadian = packet.ReadFloat();
+                    client.PlayersData[idPlayer].ServerPosition = new Vector2(packet.ReadFloat(), packet.ReadFloat());
+                    client.PlayersData[idPlayer].LookAtRadian = packet.ReadFloat();
+                    client.PlayersData[idPlayer].FeetRadian = packet.ReadFloat();
                     //Debug.WriteLine(Client.PlayersData[idPlayer].ToString());
                 }
                 else

@@ -15,6 +15,7 @@ namespace ExplorerOpenGL.Controlers.Networking
         TcpAddPlayer = 6,
         TcpPlayersSync = 7,
         TcpChatMessage = 8,
+        ChangeNameResult = 9, 
     }
 
     /// <summary>Sent from client to server.</summary>
@@ -25,6 +26,7 @@ namespace ExplorerOpenGL.Controlers.Networking
         TcpChatMessage = 3,
         UdpUpdatePlayer = 4,
         UdpMessageRecieved = 5,
+        ChangeNameRequest = 6, 
     }
     public class Packet : IDisposable
     {

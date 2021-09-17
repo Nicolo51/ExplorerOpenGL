@@ -8,6 +8,7 @@ using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
 
@@ -55,7 +56,8 @@ namespace ExplorerOpenGL
 
             _sprites = new List<Sprite>();
 
-            controler = new Controler(fonts, _sprites, graphics, Content, spriteBatch, new Vector2(Width, Height));
+            controler = new Controler(Window, fonts, _sprites, graphics, Content, spriteBatch, new Vector2(Width, Height));
+             
             Texture2D player = controler.TextureManager.LoadTexture("player");
             Texture2D playerfeet = controler.TextureManager.LoadTexture("playerfeet");
 
@@ -137,16 +139,22 @@ namespace ExplorerOpenGL
                 return;
             spriteBatch.Begin(SpriteSortMode.BackToFront, transformMatrix: controler.Camera.Transform) ;
 
-            controler.NetwokManager.Draw(spriteBatch); 
+            controler.NetworkManager.Draw(spriteBatch);
 
-            for (int i = 0; i < _sprites.Count; i ++)
+            foreach (Sprite sprite in _sprites.Where(e => !e.IsHUD))
             {
-                _sprites[i].Draw(spriteBatch);
+                sprite.Draw(spriteBatch);
             }
 
             spriteBatch.End();
 
             spriteBatch.Begin();
+
+            foreach (Sprite sprite in _sprites.Where(e => e.IsHUD))
+            {
+                sprite.Draw(spriteBatch);
+            }
+
             if (controler.DebugManager.IsDebuging)
                 controler.DebugManager.DebugDraw(spriteBatch);
 

@@ -27,22 +27,24 @@ namespace ExplorerOpenGL.Model.Sprites
         public float  layerDepth { get; set; }
         protected float scale { get; set; }
         protected float opacity { get; set; }
+        public bool IsHUD { get; set; }
 
         public delegate void MouseOverEventHandler(object sender, List<Sprite> sprites, Controler controler);
-        public event MouseOverEventHandler MouseOver;
+        public event MouseOverEventHandler MouseOvered;
 
         public delegate void MouseLeaveEventHandler(object sender, List<Sprite> sprites, Controler controler);
-        public event MouseLeaveEventHandler MouseLeave;
+        public event MouseLeaveEventHandler MouseLeft;
 
         public delegate void MouseClickEventHandler(object sender, List<Sprite> sprites, Controler controler);
-        public event MouseClickEventHandler MouseClick;
+        public event MouseClickEventHandler MouseClicked;
 
-        private bool isClicked;
+        protected bool isClicked;
         private bool isOver; 
         protected bool IsClickable; 
 
         public Sprite()
         {
+            IsHUD = false; 
             scale = 1;
             opacity = 1f; 
         }
@@ -55,20 +57,37 @@ namespace ExplorerOpenGL.Model.Sprites
 
         private void CheckMouseEvent(List<Sprite> sprites, Controler controler)
         {
-            if (this.HitBox.Intersects(controler.MousePointer.HitBox))
+            if (this.HitBox.Intersects(controler.MousePointer.HitBox) && !this.IsHUD)
             {
                 if (!isOver)
                     OnMouseOver(sprites, controler);
-                
-                isOver = true; 
+
+                isOver = true;
                 if ((controler.MousePointer.currentMouseState.LeftButton == ButtonState.Pressed && controler.MousePointer.prevMouseState.LeftButton == ButtonState.Released) || isClicked)
                 {
                     isClicked = true;
-                    opacity = 0.5f;
                     if (controler.MousePointer.currentMouseState.LeftButton == ButtonState.Released)
                     {
                         OnMouseClick(sprites, controler);
-                        opacity = 1f;
+                    }
+                }
+                if (controler.MousePointer.currentMouseState.LeftButton == ButtonState.Released)
+                {
+                    isClicked = false;
+                }
+            }
+            else if (this.IsHUD && new Rectangle((int)controler.MousePointer.InWindowPosition.X, (int)controler.MousePointer.InWindowPosition.Y, 1, 1).Intersects(this.HitBox))
+            {
+                if (!isOver)
+                    OnMouseOver(sprites, controler);
+
+                isOver = true;
+                if ((controler.MousePointer.currentMouseState.LeftButton == ButtonState.Pressed && controler.MousePointer.prevMouseState.LeftButton == ButtonState.Released) || isClicked)
+                {
+                    isClicked = true;
+                    if (controler.MousePointer.currentMouseState.LeftButton == ButtonState.Released)
+                    {
+                        OnMouseClick(sprites, controler);
                     }
                 }
                 if (controler.MousePointer.currentMouseState.LeftButton == ButtonState.Released)
@@ -78,38 +97,34 @@ namespace ExplorerOpenGL.Model.Sprites
             }
             else if (controler.MousePointer.currentMouseState.LeftButton == ButtonState.Released)
             {
-                if (isOver) 
+                if (isOver)
                 {
                     isClicked = false;
                     OnMouseLeave(sprites, controler);
                     isOver = false;
-                } 
-            }
-            else
-            {
-                opacity = 1f;
+                }
             }
         }
 
-        public void OnMouseOver(List<Sprite> sprites, Controler controler)
+        private void OnMouseOver(List<Sprite> sprites, Controler controler)
         {
-            MouseOver?.Invoke(this, sprites, controler);
+            MouseOvered?.Invoke(this, sprites, controler);
         }
 
-        public void OnMouseLeave(List<Sprite> sprites, Controler controler)
+        private void OnMouseLeave(List<Sprite> sprites, Controler controler)
         {
-            MouseLeave?.Invoke(this, sprites, controler);
+            MouseLeft?.Invoke(this, sprites, controler);
         }
 
-        public void OnMouseClick(List<Sprite> sprites, Controler controler)
+        private void OnMouseClick(List<Sprite> sprites, Controler controler)
         {
-            MouseClick?.Invoke(this, sprites, controler);
+            MouseClicked?.Invoke(this, sprites, controler);
         }
 
         public virtual void Draw(SpriteBatch spriteBatch)
         {
             if(_texture != null && !(this is MousePointer))
-                spriteBatch.Draw(_texture, Position, null, Color.White * opacity, Radian, origin, scale, Effects, layerDepth);
+                spriteBatch.Draw(_texture, Position, null, Color.White * opacity * (isClicked ? .5f : 1f), Radian, origin, scale, Effects, layerDepth);
         }
     }
 }

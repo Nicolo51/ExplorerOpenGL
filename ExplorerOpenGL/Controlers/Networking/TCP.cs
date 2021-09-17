@@ -15,10 +15,12 @@ namespace ExplorerOpenGL.Controlers.Networking
 
         private NetworkStream stream;
         private byte[] receiveBuffer;
-        private SocketAddress socketAddress; 
+        private SocketAddress socketAddress;
+        private Client client; 
         
-        public TCP(SocketAddress socketAddress)
+        public TCP(SocketAddress socketAddress, Client client)
         {
+            this.client = client; 
             this.socketAddress = socketAddress; 
         }
         public void Connect()
@@ -97,7 +99,7 @@ namespace ExplorerOpenGL.Controlers.Networking
                 using (Packet packet = new Packet(packetBytes))
                 {
                     int packetId = packet.ReadInt();
-                    Client.packetHandlers[packetId](packet);
+                    client.packetHandlers[packetId](packet);
                 }
             }
             packetLength = 0;

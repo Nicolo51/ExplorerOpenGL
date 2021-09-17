@@ -57,7 +57,7 @@ namespace GameServerTCP
                         case "/tp":
                             Console.WriteLine("Tp command issued");
                             break;
-                        case "/whisper":
+                        case "/w":
                             Console.WriteLine("Whisper command issued");
                             break;
                         default:
@@ -88,6 +88,24 @@ namespace GameServerTCP
             //ServerSend.UdpUpdatePlayers(fromClient);
             //Console.WriteLine($"Received packet via UDP from ID { fromClient }. Contains message: {msg}");
             //Game.PrintDebug(); 
+        }
+
+        public static void ChangeNameRequest(int fromClient, Packet packet)
+        {
+            if(checkIdIntegrity(fromClient, packet))
+            {
+                string name = packet.ReadString();
+                Game.Players[fromClient].Name = name;
+                ServerSend.TcpChangeNameResult(fromClient, true, name);
+            }
+            else
+                ServerSend.TcpChangeNameResult(fromClient, false, string.Empty);
+        }
+
+        public static bool checkIdIntegrity(int fromClient, Packet packet)
+        {
+            int CheckID = packet.ReadInt();
+            return fromClient == CheckID; 
         }
     }
 }

@@ -80,13 +80,17 @@ namespace ExplorerOpenGL.Controlers
             {
                 EventLogList.RemoveAt(0);
             }
-            if (e is KeysArray)
+            switch (e)
             {
-                EventLogList.Add(new LogElement(e.ToString()));
-            }
-            if (e is string)
-            {
-                EventLogList.Add(new LogElement(e as string));
+                case KeysArray k:
+                    EventLogList.Add(new LogElement(k.ToString()));
+                    break;
+                case string s:
+                    EventLogList.Add(new LogElement(s.ToString()));
+                    break;
+                default:
+                    EventLogList.Add(new LogElement(e.ToString()));
+                    break;
             }
         }
         public void AddEvent(object e, KeyboardUtils keyboardUtils)

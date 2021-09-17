@@ -1,4 +1,7 @@
 ﻿using ExplorerOpenGL.Model;
+using ExplorerOpenGL.Model.Interfaces;
+using ExplorerOpenGL.Model.Sprites;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
@@ -22,8 +25,9 @@ namespace ExplorerOpenGL.Controlers
         public delegate void KeyReleasedEventHandler(Keys[] keys, KeyboardUtils keyboardUtils);
         public event KeyReleasedEventHandler KeyRealeased;
 
+        public delegate void TextInputedEventHandler(TextInputEventArgs e);
+        public event TextInputedEventHandler TextInputed;
 
-        public bool CapsLock { get { return currentKeyboardState.CapsLock; } }
 
         public KeyboardUtils()
         {
@@ -56,14 +60,28 @@ namespace ExplorerOpenGL.Controlers
             if (NewKeys.Length > 0) 
             {
                 OnKeyPressed(NewKeys);
-
-                
             }
             if (LostKeys.Length > 0) 
             {
                 OnKeyRelease(LostKeys); 
             }
 
+        }
+
+        public void OnTextInput(object sender, TextInputEventArgs e, IFocusable t)
+        {
+            switch(e.Key)
+            {
+                case Keys.Back:
+                    t.RemoveChar();
+                    break;
+                case Keys.Escape:
+                    t.UnFocus();
+                    break;
+                default: 
+                    t.AddChar(e.Character);
+                    break; 
+            }
         }
 
         private KeysArray GetReleasedKey(Keys[] currentPressedKeys, Keys[] previousPressedKeys)
@@ -121,14 +139,14 @@ namespace ExplorerOpenGL.Controlers
         public bool IsKeyUp(Keys key)
         {
             return Keyboard.GetState().IsKeyUp(key); 
-        } 
+        }
 
-        protected virtual void OnKeyRelease(Keys[] keys)
+        private void OnKeyRelease(Keys[] keys)
         {
             KeyRealeased?.Invoke(keys, this);
         }
 
-        protected virtual void OnKeyPressed(Keys[] keys)
+        private void OnKeyPressed(Keys[] keys)
         {
             KeyPressed?.Invoke(keys, this);
         }

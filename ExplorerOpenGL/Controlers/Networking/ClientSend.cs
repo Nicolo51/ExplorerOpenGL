@@ -10,37 +10,40 @@ namespace ExplorerOpenGL.Controlers.Networking
 {
     public class ClientSend
     {
-        public delegate void SendProtocol(object obj, int idHandler);
-        public static Dictionary<int, SendProtocol> protocolHandlers = new Dictionary<int, SendProtocol>()
+        private Client client; 
+        public delegate void SendProtocol(object obj);
+        public Dictionary<int, SendProtocol> protocolHandlers; 
+       
+        public ClientSend(Client client)
         {
-            {(int)ClientPackets.TcpChatMessage, SendTcpChatMessage},
-            {(int)ClientPackets.UdpUpdatePlayer, UdpUpdatePlayer},
-        };
-
-        private static void SendTcpData(Packet packet)
-        {
-            packet.WriteLength();
-            Client.tcp.SendData(packet);
+            this.client = client;
+            InitSendData(); 
         }
 
-        private static void SendUdpData(Packet packet)
+        private void SendTcpData(Packet packet)
         {
             packet.WriteLength();
-            Client.udp.SendData(packet);
+            client.tcp.SendData(packet);
         }
 
-        public static void WelcomeReceived()
+        private void SendUdpData(Packet packet)
+        {
+            packet.WriteLength();
+            client.udp.SendData(packet);
+        }
+
+        public void WelcomeReceived()
         {
             using (Packet packet = new Packet((int)ClientPackets.welcomeReceived))
             {
-                packet.Write(Client.myId);
+                packet.Write(client.myId);
                 packet.Write("Nicolas");
                 packet.Write("Hello from server");
                 SendTcpData(packet);
             }
         }
 
-        public static void UDPTestReceived()
+        public void UDPTestReceived()
         {
             using (Packet _packet = new Packet((int)ClientPackets.udpTestRecieved))
             {
@@ -50,7 +53,7 @@ namespace ExplorerOpenGL.Controlers.Networking
             }
         }
 
-        public static void UdpUpdatePlayer(object obj, int idHandler)
+        public void UdpUpdatePlayer(object obj)
         {
             if (obj is Player) 
             {
@@ -67,13 +70,13 @@ namespace ExplorerOpenGL.Controlers.Networking
                 }
             }
         }
-        public static void SendTcpChatMessage(object obj, int idHandler)
+        public void SendTcpChatMessage(object obj)
         {
             if(obj is string)
             {
                 using (Packet packet = new Packet((int)ClientPackets.TcpChatMessage))
                 {
-                    packet.Write(Client.myId);
+                    packet.Write(client.myId);
                     packet.Write(obj as string);
                     SendTcpData(packet);
                 }
@@ -84,10 +87,37 @@ namespace ExplorerOpenGL.Controlers.Networking
             }
             
         }
-
-        public static void SendMessage(object obj, int idHandler)
+        public void RequestChangeName(object obj)
         {
-            protocolHandlers[idHandler](obj, idHandler);
+            if (obj is string)
+            {
+                using (Packet packet = new Packet((int)ClientPackets.ChangeNameRequest))
+                {
+                    packet.Write(client.myId);
+                    packet.Write(obj as string);
+                    SendTcpData(packet);
+                }
+            }
+            else
+            {
+                throw new Exception("RequestChangeName need a string as paramter");
+            }
         }
+
+        public void SendMessage(object obj, int idHandler)
+        {
+            protocolHandlers[idHandler](obj);
+        }
+
+        private void InitSendData()
+        {
+            protocolHandlers = new Dictionary<int, SendProtocol>()
+            {
+                {(int)ClientPackets.TcpChatMessage, SendTcpChatMessage},
+                {(int)ClientPackets.UdpUpdatePlayer, UdpUpdatePlayer},
+                {(int)ClientPackets.ChangeNameRequest, RequestChangeName },
+            };
+        }
+
     }
 }

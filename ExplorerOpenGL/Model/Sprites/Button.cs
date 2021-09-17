@@ -24,9 +24,9 @@ namespace ExplorerOpenGL.Model.Sprites
             : base()
         {
             IsClickable = true;
-            MouseClick += OnMouseClick; 
-            MouseOver += OnMouseOver; 
-            MouseLeave += OnMouseLeave;
+            MouseClicked += OnMouseClick; 
+            MouseOvered += OnMouseOver; 
+            MouseLeft += OnMouseLeft;
 
             this.mouseOverTexture = MouseOverTexture;
             this.font = font; 
@@ -47,26 +47,24 @@ namespace ExplorerOpenGL.Model.Sprites
             base.Update(gameTime, sprites, controler);
         }
 
-        protected virtual void OnMouseOver(object sender, List<Sprite> sprites, Controler controler)
+        private void OnMouseOver(object sender, List<Sprite> sprites, Controler controler)
         {
             isMouseOver = true;
             controler.DebugManager.AddEvent("Over"); 
         }
-        protected virtual void OnMouseLeave(object sender, List<Sprite> sprites, Controler controler)
+        private void OnMouseLeft(object sender, List<Sprite> sprites, Controler controler)
         {
             isMouseOver = false;
             controler.DebugManager.AddEvent("Leave");
         }
-        protected virtual void OnMouseClick(object sender, List<Sprite> sprites, Controler controler)
+        private void OnMouseClick(object sender, List<Sprite> sprites, Controler controler)
         {
             controler.DebugManager.AddEvent("Click");
-            isMouseOver = false;
         }
         public override void Draw(SpriteBatch spriteBatch)
         {
-            base.Draw(spriteBatch);
             if(isMouseOver)
-                spriteBatch.Draw(mouseOverTexture, Position, null, Color.White, Radian, origin, scale, Effects, layerDepth);
+                spriteBatch.Draw(mouseOverTexture, Position, null, Color.White * opacity * (isClicked ? .5f : 1f), Radian, origin, scale, Effects, layerDepth);
             else
                 spriteBatch.Draw(_texture, Position, null, Color.White, Radian, origin, scale, Effects, layerDepth);
 
