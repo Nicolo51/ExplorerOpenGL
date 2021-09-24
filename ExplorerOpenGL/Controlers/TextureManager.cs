@@ -118,7 +118,7 @@ namespace ExplorerOpenGL.Controlers
 
         public Texture2D OutlineText(string input, SpriteFont font, Color borderColor, Color textColor, int Thickness)
         {
-            Texture2D textTexture = renderManager.RenderTextToTexture(input, font, textColor);
+            Texture2D textTexture = renderManager.RenderTextToTexture(input, font, textColor, Thickness) ;
             Vector2 stringDimension = new Vector2(textTexture.Width, textTexture.Height);
             Color[] data = new Color[textTexture.Width* textTexture.Height];
             

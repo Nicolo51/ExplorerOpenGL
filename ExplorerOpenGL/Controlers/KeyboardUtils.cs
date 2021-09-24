@@ -72,6 +72,9 @@ namespace ExplorerOpenGL.Controlers
         {
             switch(e.Key)
             {
+                case Keys.Delete:
+                    t.RemoveChar(true);
+                    break; 
                 case Keys.Back:
                     t.RemoveChar();
                     break;

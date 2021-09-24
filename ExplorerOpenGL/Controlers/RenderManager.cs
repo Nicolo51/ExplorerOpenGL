@@ -62,7 +62,7 @@ namespace ExplorerOpenGL.Controlers
             return texture;
         }
 
-        public Texture2D RenderTextToTexture(string input, SpriteFont font, Color textColor)
+        public Texture2D RenderTextToTexture(string input, SpriteFont font, Color textColor, int outlineOffset)
         {
             StringBuilder temp = new StringBuilder();
             temp.Append(" ");
@@ -76,18 +76,19 @@ namespace ExplorerOpenGL.Controlers
 
             string textToRender = temp.ToString(); 
             Vector2 stringDimension = font.MeasureString(temp.ToString());
-            
-            Texture2D texture = new Texture2D(graphics.GraphicsDevice, (int)stringDimension.X, (int)stringDimension.Y);
+            Vector2 targetBounds = new Vector2(stringDimension.X + outlineOffset * 2, stringDimension.Y + outlineOffset * 2); 
+
+            Texture2D texture = new Texture2D(graphics.GraphicsDevice, (int)targetBounds.X, (int)targetBounds.Y);
 
             RenderTarget2D target = new RenderTarget2D(
                 graphics.GraphicsDevice,
-                (int)stringDimension.X,
-                (int)stringDimension.Y,
+                (int)targetBounds.X,
+                (int)targetBounds.Y,
                 false,
                 graphics.GraphicsDevice.PresentationParameters.BackBufferFormat,
                 DepthFormat.Depth24);
 
-            Color[] data = new Color[(int)stringDimension.X * (int)stringDimension.Y];
+            Color[] data = new Color[(int)targetBounds.X * (int)targetBounds.Y];
 
             spriteBatch.GraphicsDevice.SetRenderTarget(target);
             spriteBatch.GraphicsDevice.DepthStencilState = new DepthStencilState() { DepthBufferEnable = true };
@@ -98,7 +99,7 @@ namespace ExplorerOpenGL.Controlers
                               SamplerState.PointClamp,
                               null, null, null, null);
 
-            spriteBatch.DrawString(font, textToRender, Vector2.Zero, textColor, 0f, Vector2.Zero, 1f, SpriteEffects.None, 0f);
+            spriteBatch.DrawString(font, textToRender, targetBounds / 2, textColor, 0f, stringDimension / 2, 1f, SpriteEffects.None, 0f);
 
             spriteBatch.End();
             target.GetData(data);

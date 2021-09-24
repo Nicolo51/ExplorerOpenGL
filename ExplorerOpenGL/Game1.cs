@@ -82,6 +82,7 @@ namespace ExplorerOpenGL
             this.player = Player;
             controler.Player = this.player;
             _sprites.Add(Player);
+            _sprites.Add(new Button(controler.TextureManager.OutlineText("Jouer", fonts["Default"], Color.Black, new Color(4, 136, 201), 1), controler.TextureManager.OutlineText("Jouer", fonts["Default"], Color.Black, Color.White, 2), null));
             //_sprites.Add(new Wall(controler.TextureManager.CreateTexture(1000, 50, paint => (paint % 2 == 0)? Color.White : Color.Black)));
             //_sprites.Add(new Button(controler.TextureManager.CreateTexture(200, 200, paint => Color.Black), controler.TextureManager.CreateTexture(200, 200, paint => Color.Red), fonts["Default"])); 
             controler.Camera.FollowSprite(Player);

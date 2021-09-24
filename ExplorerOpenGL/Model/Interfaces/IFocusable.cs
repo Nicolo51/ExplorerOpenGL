@@ -14,8 +14,8 @@ namespace ExplorerOpenGL.Model.Interfaces
         public string Validate();
         public void UnFocus();
         public void Focus(List<Sprite> focusables);
-        public bool ToggleFocus(List<Sprite> focusables); 
-        public void RemoveChar();
+        public bool ToggleFocus(List<Sprite> focusables);
+        public void RemoveChar(bool nextChar = false );
         public void MoveCursor(int i);
     }
 }

@@ -18,6 +18,7 @@ namespace ExplorerOpenGL.Model.Sprites
         private SpriteFont font; 
 
         private Texture2D mouseOverTexture;
+        private Vector2 originMouseOver; 
         public bool isMouseOver; 
         
         public Button(Texture2D Texture, Texture2D MouseOverTexture, SpriteFont font)
@@ -29,6 +30,8 @@ namespace ExplorerOpenGL.Model.Sprites
             MouseLeft += OnMouseLeft;
 
             this.mouseOverTexture = MouseOverTexture;
+            this.originMouseOver = new Vector2(mouseOverTexture.Width / 2, mouseOverTexture.Height / 2); 
+            this.origin = new Vector2(Texture.Width / 2, Texture.Height / 2);
             this.font = font; 
             this._texture = Texture;
             Text = String.Empty;
@@ -64,11 +67,12 @@ namespace ExplorerOpenGL.Model.Sprites
         public override void Draw(SpriteBatch spriteBatch)
         {
             if(isMouseOver)
-                spriteBatch.Draw(mouseOverTexture, Position, null, Color.White * opacity * (isClicked ? .5f : 1f), Radian, origin, scale, Effects, layerDepth);
+                spriteBatch.Draw(mouseOverTexture, Position, null, Color.White * opacity * (isClicked ? .5f : 1f), Radian, originMouseOver, scale, Effects, layerDepth);
             else
                 spriteBatch.Draw(_texture, Position, null, Color.White, Radian, origin, scale, Effects, layerDepth);
 
-            spriteBatch.DrawString(font, Text, Position, Color.White);
+            if(!(font == null) || !string.IsNullOrWhiteSpace(Text))
+                spriteBatch.DrawString(font, Text, Position, Color.White);
         }
     }
 }

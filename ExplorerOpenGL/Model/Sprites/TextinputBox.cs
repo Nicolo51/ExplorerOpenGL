@@ -101,13 +101,19 @@ namespace ExplorerOpenGL.Model.Sprites
 
         public override void Update(GameTime gameTime, List<Sprite> sprites, Controler controler)
         {
-            //cursorTimer += (float)gameTime.ElapsedGameTime.TotalSeconds; 
-            if(cursorTimer > .9f)
+            if (isFocused)
             {
-                cursorOpacity = (cursorOpacity == 1) ? 0 : 1;
-                cursorTimer = 0f; 
+                cursorTimer += (float)gameTime.ElapsedGameTime.TotalSeconds;
+                if (cursorTimer > .9f)
+                {
+                    cursorOpacity = (cursorOpacity == 1) ? 0 : 1;
+                    cursorTimer = 0f;
+                }
+                cursorPosition = new Vector2(spriteFont.MeasureString(inputText.ToString().Substring(0, cursorIndex)).X - 3, -1) + Position;
             }
-            cursorPosition = new Vector2(spriteFont.MeasureString(inputText.ToString().Substring(0, cursorIndex)).X-3, -1) + Position; 
+            else
+                cursorOpacity = 0; 
+
             base.Update(gameTime, sprites, controler);
         }
 
@@ -192,12 +198,12 @@ namespace ExplorerOpenGL.Model.Sprites
             azerty.Add(Keys.Enter, new KeyCodes(" \n "));
         }
 
-        public void RemoveChar()
+        public void RemoveChar(bool nextChar)
         {
-            if (inputText.Length > 0)
+            if (inputText.Length > 0 && (!nextChar || cursorIndex < inputText.Length))
             {
-                inputText.Remove(cursorIndex - 1, 1);
-                cursorIndex--;
+                inputText.Remove(cursorIndex - (nextChar ? 0: 1), 1);
+                cursorIndex += nextChar ? 0 : -1;
                 ComputeIndexStartDrawing(); 
                 return;
             }

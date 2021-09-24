@@ -219,9 +219,9 @@ namespace ExplorerOpenGL.Model.Sprites
         {
             TextinputBox.AddChar(c);
         }
-        public void RemoveChar()
+        public void RemoveChar(bool nextChar)
         {
-            TextinputBox.RemoveChar();
+            TextinputBox.RemoveChar(nextChar);
         }
 
         public string Validate()
