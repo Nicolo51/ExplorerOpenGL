@@ -19,7 +19,8 @@ namespace ExplorerOpenGL.Model.Sprites
         SpriteFont spriteFont;
         KeyboardUtils keyboardUtils; 
         Dictionary<Keys, KeyCodes> inUse;
-        private int indexStartDrawing; 
+        private int indexStartDrawing;
+        private int indexEndDrawing;
         public bool isFocused;
 
         private int cursorIndex;
@@ -58,14 +59,14 @@ namespace ExplorerOpenGL.Model.Sprites
         public void AddChar(char c)
         {
             inputText.Insert(cursorIndex, c); 
-            ComputeIndexStartDrawing();
+            ComputeIndexRangeToDraw();
             cursorIndex++;
         }
 
-        private int ComputeIndexStartDrawing()
+        private Vector2 ComputeIndexRangeToDraw()
         {
-            for (indexStartDrawing = 0; spriteFont.MeasureString(inputText.ToString().Substring(indexStartDrawing)).X > width; indexStartDrawing++) ;
-            return indexStartDrawing; 
+            for (indexStartDrawing = 0; spriteFont.MeasureString(inputText.ToString().Substring(indexStartDrawing)).X > width; ) ;
+            return new Vector2(indexStartDrawing, indexEndDrawing); 
         }
 
         public void AddKeyStroke(Keys input, KeyAlterer keyAlterer)
@@ -104,15 +105,19 @@ namespace ExplorerOpenGL.Model.Sprites
             if (isFocused)
             {
                 cursorTimer += (float)gameTime.ElapsedGameTime.TotalSeconds;
-                if (cursorTimer > .9f)
+                //if (cursorTimer > .9f)
+                //{
+                //    cursorOpacity = (cursorOpacity == 1) ? 0 : 1;
+                //    cursorTimer = 0f;
+                //}
+                if(cursorIndex - indexStartDrawing < 2 && cursorIndex > 2)
                 {
-                    cursorOpacity = (cursorOpacity == 1) ? 0 : 1;
-                    cursorTimer = 0f;
+                    indexStartDrawing -= 2; 
                 }
-                cursorPosition = new Vector2(spriteFont.MeasureString(inputText.ToString().Substring(0, cursorIndex)).X - 3, -1) + Position;
+                cursorPosition = new Vector2(spriteFont.MeasureString(inputText.ToString().Substring(indexStartDrawing, cursorIndex - indexStartDrawing)).X - 3, -1) + Position;
             }
             else
-                cursorOpacity = 0; 
+                cursorOpacity = 1; 
 
             base.Update(gameTime, sprites, controler);
         }
@@ -200,7 +205,7 @@ namespace ExplorerOpenGL.Model.Sprites
 
         public void RemoveChar(bool nextChar)
         {
-            if (inputText.Length > 0 && (!nextChar || cursorIndex < inputText.Length))
+            if (inputText.Length > 0 && ((!nextChar && cursorIndex>0) || (nextChar && cursorIndex < inputText.Length)))
             {
                 inputText.Remove(cursorIndex - (nextChar ? 0: 1), 1);
                 cursorIndex += nextChar ? 0 : -1;
