@@ -27,6 +27,7 @@
     <ErrorReport>prompt</ErrorReport>
     <Prefer32Bit>false</Prefer32Bit>
     <WarningLevel>4</WarningLevel>
+    <LangVersion>7.3</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|AnyCPU'">
     <OutputPath>bin\$(MonoGamePlatform)\$(Platform)\$(Configuration)\</OutputPath>
@@ -44,9 +45,17 @@
   <PropertyGroup>
     <ApplicationManifest>app.manifest</ApplicationManifest>
   </PropertyGroup>
+  <PropertyGroup>
+    <StartupObject>ExplorerOpenGL.Program</StartupObject>
+  </PropertyGroup>
   <ItemGroup>
     <Compile Include="Controlers\Controler.cs" />
     <Compile Include="Controlers\DebugManager.cs" />
+    <Compile Include="Controlers\Networking\EventArgs\ChatMessageEventArgs.cs" />
+    <Compile Include="Controlers\Networking\EventArgs\NetworkEventArgs.cs" />
+    <Compile Include="Controlers\Networking\EventArgs\PlayerSyncEventArgs.cs" />
+    <Compile Include="Controlers\Networking\EventArgs\PlayerUpdateEventArgs.cs" />
+    <Compile Include="Controlers\Networking\EventArgs\RequestResponseEventArgs.cs" />
     <Compile Include="Controlers\NetworkManager.cs" />
     <Compile Include="Controlers\Networking\Client.cs" />
     <Compile Include="Controlers\Networking\ClientHandle.cs" />

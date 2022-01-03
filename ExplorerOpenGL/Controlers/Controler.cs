@@ -47,6 +47,7 @@ namespace ExplorerOpenGL.Controlers
 
             window = gameWindow;
             window.TextInput += OnTextInput;
+
             KeyboardUtils.KeyPressed += DebugManager.AddEvent;
             KeyboardUtils.KeyRealeased += DebugManager.AddEvent;
 

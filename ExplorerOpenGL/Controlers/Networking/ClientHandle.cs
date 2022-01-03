@@ -1,4 +1,5 @@
-﻿using ExplorerOpenGL.Model.Sprites;
+﻿using ExplorerOpenGL.Controlers.Networking.EventArgs;
+using ExplorerOpenGL.Model.Sprites;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -14,7 +15,7 @@ namespace ExplorerOpenGL.Controlers.Networking
     {
         private Client client; 
         private ClientSend clientSend;
-        private Controler controler; 
+        private Controler controler;
 
         public ClientHandle(Client client, ClientSend clientSend, Controler controler)
         {
@@ -23,68 +24,129 @@ namespace ExplorerOpenGL.Controlers.Networking
             this.clientSend = clientSend; 
         }
 
-        public void OnWelcomeResponse(Packet packet)
+        public void OnWelcomeReceive(Packet packet)
         {
             string msg = packet.ReadString();
             int id = packet.ReadInt();
             int tickRate  = packet.ReadInt();
-            Console.WriteLine("Message from the server : " + msg);
             client.myId = id;
             client.serverTickRate = tickRate;
             client.PlayersData.Add(id, new PlayerData(id)); 
-            clientSend.WelcomeReceived();
+            clientSend.SendResponseWelcome();
             client.udp.Connect(((IPEndPoint)client.tcp.socket.Client.LocalEndPoint).Port);
+
+            NetworkEventArgs e = new NetworkEventArgs() { Message = msg + $". The size of the packet is {packet.Length()} bytes", MessageType = MessageType.OnWelcomeReceive, Protocol = Protocol.TCP, RequestType = RequestType.Receive };
+            client.PacketReceived(e); 
         }
 
-        public void OnUdpTestResponse(Packet _packet)
+        public void OnUdpTestReceive(Packet packet)
         {
-            string _msg = _packet.ReadString();
+            string msg = packet.ReadString();
 
-            Console.WriteLine($"Received test packet via UDP. Contains message: {_msg}");
-            clientSend.UDPTestReceived();
+            clientSend.SendUDPTest();
+
+            NetworkEventArgs e = new NetworkEventArgs() { Message = msg + $". The size of the packet is {packet.Length()} bytes", MessageType = MessageType.OnUdpTestReceive, Protocol = Protocol.UDP, RequestType = RequestType.Receive };
+            client.PacketReceived(e);
         }
 
-        public void OnTcpMessage(Packet _packet)
+        public void OnTcpMessage(Packet packet)
         {
-            string _msg = _packet.ReadString();
+            string msg = packet.ReadString();
 
-            client.controler.DebugManager.AddEvent($"Received packet via TCP. Contains message: {_msg}");
+            NetworkEventArgs e = new NetworkEventArgs() { Message = msg + $". The size of the packet is {packet.Length()} bytes", MessageType = MessageType.OnTcpMessage, Protocol = Protocol.TCP, RequestType = RequestType.Receive, Packet = packet };
+            client.PacketReceived(e);
         } 
         public void OnUdpMessage(Packet _packet)
         {
-            string _msg = _packet.ReadString();
+            string msg = _packet.ReadString();
 
-            client.controler.DebugManager.AddEvent($"Received packet via UDP. Contains message: {_msg}");
+            client.controler.DebugManager.AddEvent($"Received packet via UDP. Contains message: {msg}");
         }
 
         public void OnTcpPlayersSync(Packet packet)
         {
+            Dictionary<int, PlayerData> playerData = new Dictionary<int, PlayerData>(); 
             while (packet.ReadBool())
             {
                 int idPlayer = packet.ReadInt();
                 string name = packet.ReadString();
                 if (idPlayer != client.myId)
                 {
-                    client.PlayersData.Add(idPlayer, new PlayerData(idPlayer, name));
+                    playerData.Add(idPlayer, new PlayerData(idPlayer, name));
                 }
             }
+            int count = playerData.Count;
+            PlayerSyncEventArgs e = new PlayerSyncEventArgs()
+            {
+                Message = $"{count} were synced to the game. The size of the packet is {packet.Length()} bytes",
+                MessageType = MessageType.OnTcpPlayersSync,
+                PlayerData = playerData,
+                PlayerSyncedCount = count,
+                Protocol = Protocol.TCP,
+                RequestType = RequestType.Receive,
+                Packet = packet, 
+            };
+            client.PacketReceived(e); 
         }
 
         public void OnChatMessage(Packet packet)
         {
-            string name = packet.ReadString();
+            string sender = packet.ReadString();
             string msg = packet.ReadString();
-            client.controler.Terminal.AddMessageToTerminal(msg, name, Color.Black);
+            client.controler.Terminal.AddMessageToTerminal(msg, sender, Color.Black);
+            ChatMessageEventArgs e = new ChatMessageEventArgs()
+            {
+                Sender = sender,
+                Message = $"A message has been receive from {sender}. The size of the packet is {packet.Length()} bytes",
+                Time = DateTime.Now,
+                MessageType = MessageType.OnChatMessage,
+                Protocol = Protocol.TCP,
+                RequestType = RequestType.Receive,
+                SenderColor = Color.Black,
+                TextColor = Color.Black, 
+                Text = msg, 
+                Packet = packet, 
+                
+            };
+            client.PacketReceived(e); 
         }
 
         public void OnChangeNameResult(Packet packet)
         {
-            bool result = packet.ReadBool();
+            int result = packet.ReadInt();
             string name = packet.ReadString();
-            if (result && !string.IsNullOrWhiteSpace(name))
-                controler.Terminal.AddMessageToTerminal("Successfuly change username to : " + name, "Info", Color.Green); 
+            if (result == 200 && !string.IsNullOrWhiteSpace(name))
+            {
+                RequestResponseEventArgs e = new RequestResponseEventArgs()
+                {
+                    Message = $"Successfuly change username to {name}. The size of the packet is {packet.Length()} bytes",
+                    MessageType = MessageType.OnChangeNameResult, 
+                    Packet = packet, 
+                    Protocol = Protocol.TCP, 
+                    RequestStatus = RequestStatus.Success, 
+                    RequestType = RequestType.Receive, 
+                    Request = "ChangeName", 
+                    Response = "200", 
+                    Arguments = new string[] {name}, 
+                };
+                client.PacketReceived(e);
+            }
             else
-                controler.Terminal.AddMessageToTerminal("Failed to change username", "Error", new Color(181, 22, 11));
+            {
+                RequestResponseEventArgs e = new RequestResponseEventArgs()
+                {
+                    Message = $"Failed change username to {name}. The size of the packet is {packet.Length()} bytes",
+                    MessageType = MessageType.OnChangeNameResult,
+                    Packet = packet,
+                    Protocol = Protocol.TCP,
+                    RequestStatus = RequestStatus.Failed,
+                    RequestType = RequestType.Receive,
+                    Request = "ChangeName",
+                    Response = "403",
+                    Arguments = new string[] { name },
+                };
+                client.PacketReceived(e); 
+            }
         }
 
         public void OnTcpAddPlayer(Packet packet)
@@ -93,20 +155,35 @@ namespace ExplorerOpenGL.Controlers.Networking
             string name = packet.ReadString();
             if (!client.PlayersData.ContainsKey(idPlayer) && idPlayer != client.myId)
             {
-                client.PlayersData.Add(idPlayer, new PlayerData(idPlayer, name)); 
+                PlayerSyncEventArgs e = new PlayerSyncEventArgs()
+                {
+                    Message = $"A player as been sync to the game. The size of the packet is {packet.Length()} bytes",
+                    MessageType = MessageType.OnTcpAddPlayer,
+                    Packet = packet,
+                    PlayerData = new Dictionary<int, PlayerData>() { { idPlayer, new PlayerData(idPlayer, name) } },
+                    PlayerSyncedCount = 1,
+                    Protocol = Protocol.TCP,
+                    RequestType = RequestType.Receive,
+                };
+                client.PacketReceived(e);
             }
         }
 
         public void OnUdpUpdatePlayers(Packet packet)
         {
+            List<PlayerData> playerData = new List<PlayerData>(); 
             while (packet.ReadBool())
             {
                 int idPlayer = packet.ReadInt();
                 if (client.PlayersData.ContainsKey(idPlayer))
                 {
-                    client.PlayersData[idPlayer].ServerPosition = new Vector2(packet.ReadFloat(), packet.ReadFloat());
-                    client.PlayersData[idPlayer].LookAtRadian = packet.ReadFloat();
-                    client.PlayersData[idPlayer].FeetRadian = packet.ReadFloat();
+                    playerData.Add(new PlayerData(idPlayer)
+                    {
+                        ServerPosition = new Vector2(packet.ReadFloat(),
+                        packet.ReadFloat()),
+                        LookAtRadian = packet.ReadFloat(),
+                        FeetRadian = packet.ReadFloat()
+                    }); 
                     //Debug.WriteLine(Client.PlayersData[idPlayer].ToString());
                 }
                 else
@@ -114,6 +191,15 @@ namespace ExplorerOpenGL.Controlers.Networking
                     //Debug.WriteLine("Un sync from the server, might lag a little while re syncing ");
                 }
             }
+            PlayerUpdateEventArgs e = new PlayerUpdateEventArgs()
+            {
+                MessageType = MessageType.OnUdpUpdatePlayers,
+                Packet = packet,
+                Protocol = Protocol.UDP,
+                PlayerData = playerData.ToArray(),
+                RequestType = RequestType.Receive,
+            };
+            client.PacketReceived(e); 
         }
     }
 }

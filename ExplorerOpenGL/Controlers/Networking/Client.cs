@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ExplorerOpenGL.Controlers.Networking.EventArgs;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -19,7 +20,13 @@ namespace ExplorerOpenGL.Controlers.Networking
         public Controler controler; 
         public SocketAddress socketAddress { get; private set; }
         private ClientHandle clientHandle;
-        private ClientSend clientSend; 
+        private ClientSend clientSend;
+
+        public delegate void PacketReceivedEventHandler(NetworkEventArgs e);
+        public event PacketReceivedEventHandler OnPacketReceived;
+
+        public delegate void PacketSentEventHandler(NetworkEventArgs e);
+        public event PacketSentEventHandler OnPacketSent;
 
         public Client(Controler controler)
         {
@@ -54,8 +61,8 @@ namespace ExplorerOpenGL.Controlers.Networking
         {
             packetHandlers = new Dictionary<int, PacketHandler>()
             {
-                { (int)ServerPackets.welcome, clientHandle.OnWelcomeResponse },
-                { (int)ServerPackets.udpTest, clientHandle.OnUdpTestResponse },
+                { (int)ServerPackets.welcome, clientHandle.OnWelcomeReceive },
+                { (int)ServerPackets.udpTest, clientHandle.OnUdpTestReceive },
                 { (int)ServerPackets.UdpUpdatePlayers, clientHandle.OnUdpUpdatePlayers },
                 { (int)ServerPackets.TcpAddPlayer, clientHandle.OnTcpAddPlayer },
                 { (int)ServerPackets.TcpPlayersSync, clientHandle.OnTcpPlayersSync },
@@ -65,6 +72,11 @@ namespace ExplorerOpenGL.Controlers.Networking
                 { (int)ServerPackets.ChangeNameResult, clientHandle.OnChangeNameResult }, 
             };
             Console.WriteLine("Initialized packets.");
+        }
+
+        public void PacketReceived(NetworkEventArgs e)
+        {
+            OnPacketReceived?.Invoke(e);
         }
     }
 }

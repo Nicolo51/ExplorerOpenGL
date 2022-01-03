@@ -96,10 +96,10 @@ namespace GameServerTCP
             {
                 string name = packet.ReadString();
                 Game.Players[fromClient].Name = name;
-                ServerSend.TcpChangeNameResult(fromClient, true, name);
+                ServerSend.TcpChangeNameResult(fromClient, 200, name);
             }
             else
-                ServerSend.TcpChangeNameResult(fromClient, false, string.Empty);
+                ServerSend.TcpChangeNameResult(fromClient, 403, string.Empty);
         }
 
         public static bool checkIdIntegrity(int fromClient, Packet packet)

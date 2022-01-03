@@ -16,8 +16,9 @@ namespace ExplorerOpenGL.Controlers.Networking
         private NetworkStream stream;
         private byte[] receiveBuffer;
         private SocketAddress socketAddress;
-        private Client client; 
-        
+        private Client client;
+
+       
         public TCP(SocketAddress socketAddress, Client client)
         {
             this.client = client; 

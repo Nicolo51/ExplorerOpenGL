@@ -179,13 +179,13 @@ namespace ExplorerOpenGL.Model.Sprites
         {
 
             base.Draw(spriteBatch);
-            int j = messages.Count - 1;
-            if (j == -1)
-            { return; }
-            for (int i = 0; i < messages.Count; i++)
+            //int j = messages.Count - 1;
+            //if (j == -1)
+            //{ return; }
+            for (int i = messages.Count - 1; i >= 0; i--)
             {
-                spriteBatch.DrawString(font, messages[j].ToString(), new Vector2(Position.X, Position.Y + _texture.Height - (i*25)), messages[j].Color, 0f, new Vector2(0, 30), 1f, SpriteEffects.None, layerDepth - .01f);
-                j--;
+                spriteBatch.DrawString(font, messages[i].ToString(), new Vector2(Position.X, Position.Y + _texture.Height - ((messages.Count - 1 - i) *25)), messages[i].Color, 0f, new Vector2(0, 30), 1f, SpriteEffects.None, layerDepth - .01f);
+                //j--;
             }
             TextinputBox.Draw(spriteBatch);
         }

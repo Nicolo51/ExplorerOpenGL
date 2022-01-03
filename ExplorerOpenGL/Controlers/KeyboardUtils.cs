@@ -81,6 +81,8 @@ namespace ExplorerOpenGL.Controlers
                 case Keys.Escape:
                     t.UnFocus();
                     break;
+                case Keys.Enter:
+                    break; 
                 default: 
                     t.AddChar(e.Character);
                     break; 
@@ -153,7 +155,5 @@ namespace ExplorerOpenGL.Controlers
         {
             KeyPressed?.Invoke(keys, this);
         }
-
-
     }
 }

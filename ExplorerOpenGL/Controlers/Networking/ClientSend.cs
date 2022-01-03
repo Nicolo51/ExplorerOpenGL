@@ -1,4 +1,5 @@
-﻿using ExplorerOpenGL.Model.Sprites;
+﻿using ExplorerOpenGL.Controlers.Networking.EventArgs;
+using ExplorerOpenGL.Model.Sprites;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -12,8 +13,8 @@ namespace ExplorerOpenGL.Controlers.Networking
     {
         private Client client; 
         public delegate void SendProtocol(object obj);
-        public Dictionary<int, SendProtocol> protocolHandlers; 
-       
+        public Dictionary<int, SendProtocol> protocolHandlers;
+
         public ClientSend(Client client)
         {
             this.client = client;
@@ -32,18 +33,18 @@ namespace ExplorerOpenGL.Controlers.Networking
             client.udp.SendData(packet);
         }
 
-        public void WelcomeReceived()
+        public void SendResponseWelcome()
         {
             using (Packet packet = new Packet((int)ClientPackets.welcomeReceived))
             {
                 packet.Write(client.myId);
                 packet.Write("Nicolas");
-                packet.Write("Hello from server");
+                packet.Write("Hello client here");
                 SendTcpData(packet);
             }
         }
 
-        public void UDPTestReceived()
+        public void SendUDPTest()
         {
             using (Packet _packet = new Packet((int)ClientPackets.udpTestRecieved))
             {

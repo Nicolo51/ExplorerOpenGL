@@ -77,7 +77,7 @@ namespace GameServerTCP
             }
         }
 
-        public static void TcpChangeNameResult(int toClient, bool response, string name)
+        public static void TcpChangeNameResult(int toClient, int response, string name)
         {
             using (Packet packet = new Packet((int)ServerPackets.ChangeNameResult))
             {

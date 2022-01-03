@@ -209,7 +209,7 @@ namespace ExplorerOpenGL.Model.Sprites
             {
                 inputText.Remove(cursorIndex - (nextChar ? 0: 1), 1);
                 cursorIndex += nextChar ? 0 : -1;
-                ComputeIndexStartDrawing(); 
+                //ComputeIndexStartDrawing(); 
                 return;
             }
         }

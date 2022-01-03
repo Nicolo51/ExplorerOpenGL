@@ -1,4 +1,5 @@
 ﻿using ExplorerOpenGL.Controlers.Networking;
+using ExplorerOpenGL.Controlers.Networking.EventArgs;
 using ExplorerOpenGL.Model.Sprites;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -35,16 +36,18 @@ namespace ExplorerOpenGL.Controlers
         {
             if (!IsConnectedToAServer)
             {
-                controler.DebugManager.AddEvent($"Connecting to {ip}");
+                terminal.AddMessageToTerminal($"Connecting to {ip}...", "System", Color.White);
                 socketAddress = new SocketAddress(ip, 25789);
                 client.Start(new SocketAddress(ip, 25789));
                 client.ConnectToServer();
                 IsConnectedToAServer = true;
-                controler.DebugManager.AddEvent("Connected !");
+                client.OnPacketReceived += OnPacketReceived; 
+                client.OnPacketSent += OnPacketSent;
+                terminal.AddMessageToTerminal($"Connected !", "System", Color.Green);
             }
             else
             {
-                controler.DebugManager.AddEvent("You're already connected to a server.");
+                terminal.AddMessageToTerminal("You're already connected to a server." , "System", Color.Red);
             }
         }
 
@@ -57,6 +60,22 @@ namespace ExplorerOpenGL.Controlers
         {
             if(!string.IsNullOrWhiteSpace(name))
             client.RequestNameChange(name); 
+        }
+
+        public void OnPacketReceived(NetworkEventArgs e)
+        {
+            if (!string.IsNullOrWhiteSpace(e.Message))
+            {
+                terminal.AddMessageToTerminal(e.Message, "System", Color.White);
+            }
+        }
+
+        public void OnPacketSent(NetworkEventArgs e)
+        {
+            if (string.IsNullOrWhiteSpace(e.Message))
+            {
+                terminal.AddMessageToTerminal(e.Message, "System", Color.White);
+            }
         }
 
         public void Update(GameTime gametime, Player player)

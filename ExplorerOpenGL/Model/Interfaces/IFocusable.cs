@@ -9,13 +9,13 @@ namespace ExplorerOpenGL.Model.Interfaces
 {
     public interface IFocusable
     {
-        public bool IsFocused { get; set; }
-        public void AddChar(char c);
-        public string Validate();
-        public void UnFocus();
-        public void Focus(List<Sprite> focusables);
-        public bool ToggleFocus(List<Sprite> focusables);
-        public void RemoveChar(bool nextChar = false );
-        public void MoveCursor(int i);
+         bool IsFocused { get; set; }
+         void AddChar(char c);
+         string Validate();
+         void UnFocus();
+         void Focus(List<Sprite> focusables);
+         bool ToggleFocus(List<Sprite> focusables);
+         void RemoveChar(bool nextChar = false );
+         void MoveCursor(int i);
     }
 }
