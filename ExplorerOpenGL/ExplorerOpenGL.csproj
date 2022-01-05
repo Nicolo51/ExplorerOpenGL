@@ -53,6 +53,7 @@
     <Compile Include="Controlers\DebugManager.cs" />
     <Compile Include="Controlers\Networking\EventArgs\ChatMessageEventArgs.cs" />
     <Compile Include="Controlers\Networking\EventArgs\NetworkEventArgs.cs" />
+    <Compile Include="Controlers\Networking\EventArgs\PlayerConnectEventArgs.cs" />
     <Compile Include="Controlers\Networking\EventArgs\PlayerDisconnectionEventArgs.cs" />
     <Compile Include="Controlers\Networking\EventArgs\PlayerSyncEventArgs.cs" />
     <Compile Include="Controlers\Networking\EventArgs\PlayerUpdateEventArgs.cs" />

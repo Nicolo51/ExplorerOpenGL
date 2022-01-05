@@ -58,6 +58,7 @@ namespace GameServerTCP
                     Disconnection?.Invoke();
                     return; 
                 }
+                Console.WriteLine("lala");
                 Console.WriteLine(e.Message);
             }
         }

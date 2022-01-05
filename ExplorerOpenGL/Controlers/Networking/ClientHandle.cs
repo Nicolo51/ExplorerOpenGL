@@ -170,13 +170,13 @@ namespace ExplorerOpenGL.Controlers.Networking
             string name = packet.ReadString();
             if (!client.PlayersData.ContainsKey(idPlayer) && idPlayer != client.myId)
             {
-                PlayerSyncEventArgs e = new PlayerSyncEventArgs()
+                PlayerConnectEventArgs e = new PlayerConnectEventArgs()
                 {
-                    Message = $"A player as been sync to the game.",
+                    Message = $"{name} joined the game.",
                     MessageType = MessageType.OnTcpAddPlayer,
                     Packet = packet,
-                    PlayerData = new List<PlayerData>() { new PlayerData(idPlayer, name) } ,
-                    PlayerSyncedCount = 1,
+                    Name = name, 
+                    ID = idPlayer, 
                     Protocol = Protocol.TCP,
                     RequestType = RequestType.Receive,
                 };
