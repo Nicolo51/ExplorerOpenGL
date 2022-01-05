@@ -13,6 +13,10 @@ namespace GameServerTCP
         private byte[] receivebuffer;
         public NetworkStream stream;
         private Packet receivedData;
+
+        public delegate void DisconnectionEventHandler();
+        public event DisconnectionEventHandler Disconnection; 
+
         public TCPData(int id)
         {
             this.id = id; 
@@ -45,6 +49,15 @@ namespace GameServerTCP
             }
             catch (Exception e)
             {
+                //socket.Close();
+                if(e.Source == "System.Net.Sockets")
+                {
+                    socket.Close();
+                    stream.Dispose();
+                    socket.Dispose();
+                    Disconnection?.Invoke();
+                    return; 
+                }
                 Console.WriteLine(e.Message);
             }
         }

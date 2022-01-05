@@ -14,7 +14,8 @@ namespace GameServerTCP
         {
             this.id = id;
             tcp = new TCPData(id);
-            udp = new UDPData(id); 
+            udp = new UDPData(id);
+            tcp.Disconnection += OnDisconnection; 
         }
 
         public void SendData(Packet packet)
@@ -29,6 +30,13 @@ namespace GameServerTCP
             {
                 Console.WriteLine(e.Message);
             }
+        }
+
+        private void OnDisconnection()
+        {
+            tcp = new TCPData(id);
+            udp = new UDPData(id);
+            GameData.Game.RemovePlayer(id); 
         }
     }
 }

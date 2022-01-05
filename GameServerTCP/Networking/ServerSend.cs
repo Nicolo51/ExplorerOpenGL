@@ -56,6 +56,15 @@ namespace GameServerTCP
             }
         }
 
+        public static void DisconnectPlayer(int id)
+        {
+            using (Packet packet = new Packet((int)ServerPackets.DisconnectPlayer))
+            {
+                packet.Write(id);
+                SendTcpDataToAll(packet); 
+            }
+        }
+
         public static void UdpUpdatePlayers(int toClient)
         {
             using (Packet packet = new Packet((int)ServerPackets.UdpUpdatePlayers))

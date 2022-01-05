@@ -35,6 +35,14 @@ namespace GameServerTCP.GameData
             //Change position on the server...
         }
 
+        public static void RemovePlayer(int id)
+        {
+            string playerName = Players[id].Name;  
+            Players.Remove(id);
+            ServerSend.DisconnectPlayer(id);
+            Console.WriteLine(playerName + " left the game");
+        }
+
         private static void gameTick(object state)
         {
             //Console.WriteLine("tik tok");

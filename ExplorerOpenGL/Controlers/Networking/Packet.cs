@@ -15,7 +15,8 @@ namespace ExplorerOpenGL.Controlers.Networking
         TcpAddPlayer = 6,
         TcpPlayersSync = 7,
         TcpChatMessage = 8,
-        ChangeNameResult = 9, 
+        ChangeNameResult = 9,
+        DisconnectPlayer = 10
     }
 
     /// <summary>Sent from client to server.</summary>

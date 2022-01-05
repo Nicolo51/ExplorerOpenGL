@@ -55,7 +55,7 @@ namespace ExplorerOpenGL.Model.Sprites
             }
             return output;
         }
-        private void Move(Controler controler, List<Sprite> sprites)
+        protected virtual void Move(Controler controler, List<Sprite> sprites)
         {
             Direction = Vector2.Zero;
             if (!controler.KeyboardUtils.IsTextInputFocused)

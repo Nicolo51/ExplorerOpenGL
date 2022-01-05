@@ -138,7 +138,7 @@ namespace ExplorerOpenGL
             GraphicsDevice.Clear(Color.CornflowerBlue);
             if (_sprites == null)
                 return;
-            spriteBatch.Begin(SpriteSortMode.BackToFront, transformMatrix: controler.Camera.Transform) ;
+            spriteBatch.Begin(SpriteSortMode.BackToFront, transformMatrix: controler.Camera.Transform);
 
             controler.NetworkManager.Draw(spriteBatch);
 

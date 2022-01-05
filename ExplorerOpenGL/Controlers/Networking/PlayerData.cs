@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using ExplorerOpenGL.Model.Sprites;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
@@ -8,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace ExplorerOpenGL.Controlers.Networking
 {
-    public class PlayerData
+    public class PlayerData : Sprite
     {
         public int ID { get; private set; }
         public string Name { get; set; }
@@ -43,6 +44,12 @@ namespace ExplorerOpenGL.Controlers.Networking
             ID = id;
         }
 
+        public override void Update(GameTime gameTime, List<Sprite> sprites, Controler controler)
+        {
+            //controler.NetworkManager.
+            base.Update(gameTime, sprites, controler);
+        }
+
         private Vector2 getOrigin(Texture2D texture)
         {
             return new Vector2(texture.Width / 2, texture.Height / 2);
@@ -53,7 +60,7 @@ namespace ExplorerOpenGL.Controlers.Networking
             return $"ID:{ID}, Position:{ServerPosition.ToString()}, LookAtRadian:{LookAtRadian}, FeetRadian:{FeetRadian}"; 
         }
 
-        public void Draw(SpriteBatch spriteBatch)
+        public override void Draw(SpriteBatch spriteBatch)
         {
             spriteBatch.Draw(playerFeetTexture, ServerPosition, null, Color.White * opacity, FeetRadian, getOrigin(playerFeetTexture), scale, Effects, layerDepth);
             spriteBatch.Draw(playerTexture, ServerPosition, null, Color.White * opacity, LookAtRadian, getOrigin(playerTexture), scale*.5f, Effects, layerDepth+.01f); 

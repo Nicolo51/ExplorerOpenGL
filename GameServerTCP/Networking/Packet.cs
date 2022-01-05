@@ -17,6 +17,7 @@ namespace GameServerTCP
         TcpPlayersSync = 7,
         TcpChatMessage = 8,
         ChangeNameResult = 9,
+        DisconnectPlayer = 10
     }
 
     /// <summary>Sent from client to server.</summary>
@@ -28,6 +29,7 @@ namespace GameServerTCP
         UdpUpdatePlayer = 4,
         UdpMessage = 5,
         ChangeNameRequest = 6,
+
     }
 
     public class Packet : IDisposable
