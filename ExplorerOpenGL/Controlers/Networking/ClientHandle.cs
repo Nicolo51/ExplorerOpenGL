@@ -65,14 +65,14 @@ namespace ExplorerOpenGL.Controlers.Networking
 
         public void OnTcpPlayersSync(Packet packet)
         {
-            Dictionary<int, PlayerData> playerData = new Dictionary<int, PlayerData>(); 
+            List<PlayerData> playerData = new List<PlayerData>(); 
             while (packet.ReadBool())
             {
                 int idPlayer = packet.ReadInt();
                 string name = packet.ReadString();
                 if (idPlayer != client.myId)
                 {
-                    playerData.Add(idPlayer, new PlayerData(idPlayer, name));
+                    playerData.Add(new PlayerData(idPlayer, name));
                 }
             }
             int count = playerData.Count;
@@ -93,7 +93,6 @@ namespace ExplorerOpenGL.Controlers.Networking
         {
             string sender = packet.ReadString();
             string msg = packet.ReadString();
-            client.controler.Terminal.AddMessageToTerminal(msg, sender, Color.Black);
             ChatMessageEventArgs e = new ChatMessageEventArgs()
             {
                 Sender = sender,
@@ -160,7 +159,7 @@ namespace ExplorerOpenGL.Controlers.Networking
                     Message = $"A player as been sync to the game. The size of the packet is {packet.Length()} bytes",
                     MessageType = MessageType.OnTcpAddPlayer,
                     Packet = packet,
-                    PlayerData = new Dictionary<int, PlayerData>() { { idPlayer, new PlayerData(idPlayer, name) } },
+                    PlayerData = new List<PlayerData>() { new PlayerData(idPlayer, name) } ,
                     PlayerSyncedCount = 1,
                     Protocol = Protocol.TCP,
                     RequestType = RequestType.Receive,

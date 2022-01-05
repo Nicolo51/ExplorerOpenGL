@@ -11,11 +11,11 @@ namespace GameServerTCP
             Game.Start(); 
             GameServer.Start(25789);
             string input; 
-            while((input = Console.ReadLine()).ToLower() != "exit")
+            while((input = Console.ReadLine()).ToLower().Trim() != "exit")
             {
                 string[] query = input.Split(" ");
                 string commande = query[0];
-                switch (commande.ToLower())
+                switch (commande.ToLower().Trim())
                 {
                     case "udp":
                         int udpid = Int32.Parse(query[1]);
@@ -53,7 +53,6 @@ namespace GameServerTCP
                         break;
                 }
             }
-            Console.ReadLine();
         }
     }
 }

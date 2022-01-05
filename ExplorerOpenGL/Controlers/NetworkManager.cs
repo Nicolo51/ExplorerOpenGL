@@ -59,14 +59,36 @@ namespace ExplorerOpenGL.Controlers
         public void RequestNameChange(string name)
         {
             if(!string.IsNullOrWhiteSpace(name))
-            client.RequestNameChange(name); 
+                client.RequestNameChange(name); 
         }
 
         public void OnPacketReceived(NetworkEventArgs e)
         {
-            if (!string.IsNullOrWhiteSpace(e.Message))
+            switch (e)
             {
-                terminal.AddMessageToTerminal(e.Message, "System", Color.White);
+                case PlayerUpdateEventArgs puea:
+                    foreach(PlayerData pd in puea.PlayerData)
+                    {
+                        client.PlayersData[pd.ID].ServerPosition = pd.ServerPosition; 
+                        client.PlayersData[pd.ID].LookAtRadian = pd.LookAtRadian; 
+                        client.PlayersData[pd.ID].FeetRadian = pd.FeetRadian;
+                    }
+                    break;
+                case ChatMessageEventArgs cmea:
+                    client.controler.Terminal.AddMessageToTerminal(cmea.Text, cmea.Sender, cmea.TextColor);
+                    break;
+                case PlayerSyncEventArgs psea:
+                    foreach(PlayerData pd in psea.PlayerData)
+                    {
+                        client.PlayersData.Add(pd.ID, new PlayerData(pd.ID, pd.Name));
+                    }
+                    break;
+                case RequestResponseEventArgs rrea:
+                    terminal.AddMessageToTerminal(rrea.Message, "System", Color.White);
+                    break;
+                default:
+                    terminal.AddMessageToTerminal(e.Message, "System", Color.White);
+                    break; 
             }
         }
 

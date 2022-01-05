@@ -9,7 +9,7 @@ namespace ExplorerOpenGL.Controlers.Networking.EventArgs
     public class PlayerSyncEventArgs : NetworkEventArgs
     {
         public int PlayerSyncedCount { get; set; }
-        public Dictionary<int, PlayerData> PlayerData { get; set; }
+        public List<PlayerData> PlayerData { get; set; }
 
     }
 }
