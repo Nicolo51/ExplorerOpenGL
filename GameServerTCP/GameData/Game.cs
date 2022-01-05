@@ -39,7 +39,7 @@ namespace GameServerTCP.GameData
         {
             string playerName = Players[id].Name;  
             Players.Remove(id);
-            ServerSend.DisconnectPlayer(id);
+            ServerSend.DisconnectPlayer(id, playerName);
             Console.WriteLine(playerName + " left the game");
         }
 

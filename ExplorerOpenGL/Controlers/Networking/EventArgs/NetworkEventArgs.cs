@@ -39,6 +39,7 @@ namespace ExplorerOpenGL.Controlers.Networking.EventArgs
         OnChangeNameResult = 10,
         OnTcpAddPlayer = 11,
         OnUdpUpdatePlayers = 12, 
+        OnDisconnection = 13, 
     }
 
     public enum Protocol : int

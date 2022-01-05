@@ -70,6 +70,7 @@ namespace ExplorerOpenGL.Controlers.Networking
                 { (int)ServerPackets.UdpMessage, clientHandle.OnUdpMessage },
                 { (int)ServerPackets.TcpChatMessage, clientHandle.OnChatMessage },
                 { (int)ServerPackets.ChangeNameResult, clientHandle.OnChangeNameResult }, 
+                { (int)ServerPackets.DisconnectPlayer, clientHandle.OnDisconnectPlayer },
             };
             Console.WriteLine("Initialized packets.");
         }

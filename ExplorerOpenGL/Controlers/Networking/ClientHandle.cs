@@ -35,7 +35,7 @@ namespace ExplorerOpenGL.Controlers.Networking
             clientSend.SendResponseWelcome();
             client.udp.Connect(((IPEndPoint)client.tcp.socket.Client.LocalEndPoint).Port);
 
-            NetworkEventArgs e = new NetworkEventArgs() { Message = msg + $". The size of the packet is {packet.Length()} bytes", MessageType = MessageType.OnWelcomeReceive, Protocol = Protocol.TCP, RequestType = RequestType.Receive };
+            NetworkEventArgs e = new NetworkEventArgs() { Message = msg + $".", MessageType = MessageType.OnWelcomeReceive, Protocol = Protocol.TCP, RequestType = RequestType.Receive };
             client.PacketReceived(e); 
         }
 
@@ -45,7 +45,7 @@ namespace ExplorerOpenGL.Controlers.Networking
 
             clientSend.SendUDPTest();
 
-            NetworkEventArgs e = new NetworkEventArgs() { Message = msg + $". The size of the packet is {packet.Length()} bytes", MessageType = MessageType.OnUdpTestReceive, Protocol = Protocol.UDP, RequestType = RequestType.Receive };
+            NetworkEventArgs e = new NetworkEventArgs() { Message = msg + $".", MessageType = MessageType.OnUdpTestReceive, Protocol = Protocol.UDP, RequestType = RequestType.Receive };
             client.PacketReceived(e);
         }
 
@@ -53,14 +53,14 @@ namespace ExplorerOpenGL.Controlers.Networking
         {
             string msg = packet.ReadString();
 
-            NetworkEventArgs e = new NetworkEventArgs() { Message = msg + $". The size of the packet is {packet.Length()} bytes", MessageType = MessageType.OnTcpMessage, Protocol = Protocol.TCP, RequestType = RequestType.Receive, Packet = packet };
+            NetworkEventArgs e = new NetworkEventArgs() { Message = msg + $".", MessageType = MessageType.OnTcpMessage, Protocol = Protocol.TCP, RequestType = RequestType.Receive, Packet = packet };
             client.PacketReceived(e);
         } 
         public void OnUdpMessage(Packet _packet)
         {
             string msg = _packet.ReadString();
 
-            client.controler.DebugManager.AddEvent($"Received packet via UDP. Contains message: {msg}");
+            client.controler.DebugManager.AddEvent($"Received packet via UDP.Contains message: {msg}");
         }
 
         public void OnTcpPlayersSync(Packet packet)
@@ -78,13 +78,29 @@ namespace ExplorerOpenGL.Controlers.Networking
             int count = playerData.Count;
             PlayerSyncEventArgs e = new PlayerSyncEventArgs()
             {
-                Message = $"{count} were synced to the game. The size of the packet is {packet.Length()} bytes",
+                Message = $"{count} were synced to the game.",
                 MessageType = MessageType.OnTcpPlayersSync,
                 PlayerData = playerData,
                 PlayerSyncedCount = count,
                 Protocol = Protocol.TCP,
                 RequestType = RequestType.Receive,
                 Packet = packet, 
+            };
+            client.PacketReceived(e); 
+        }
+
+        public void OnDisconnectPlayer(Packet packet)
+        {
+            int idPlayer = packet.ReadInt();
+            string playerName = packet.ReadString();
+            PlayerDisconnectionEventArgs e = new PlayerDisconnectionEventArgs() {
+                Message = $"{playerName} left the game.",
+                MessageType = MessageType.OnDisconnection,
+                ID = idPlayer, 
+                Name = playerName, 
+                Protocol = Protocol.TCP,
+                RequestType = RequestType.Receive,
+                Packet = packet,
             };
             client.PacketReceived(e); 
         }
@@ -96,7 +112,7 @@ namespace ExplorerOpenGL.Controlers.Networking
             ChatMessageEventArgs e = new ChatMessageEventArgs()
             {
                 Sender = sender,
-                Message = $"A message has been receive from {sender}. The size of the packet is {packet.Length()} bytes",
+                Message = $"A message has been receive from {sender}.",
                 Time = DateTime.Now,
                 MessageType = MessageType.OnChatMessage,
                 Protocol = Protocol.TCP,
@@ -118,7 +134,7 @@ namespace ExplorerOpenGL.Controlers.Networking
             {
                 RequestResponseEventArgs e = new RequestResponseEventArgs()
                 {
-                    Message = $"Successfuly change username to {name}. The size of the packet is {packet.Length()} bytes",
+                    Message = $"Successfuly change username to {name}.",
                     MessageType = MessageType.OnChangeNameResult, 
                     Packet = packet, 
                     Protocol = Protocol.TCP, 
@@ -134,7 +150,7 @@ namespace ExplorerOpenGL.Controlers.Networking
             {
                 RequestResponseEventArgs e = new RequestResponseEventArgs()
                 {
-                    Message = $"Failed change username to {name}. The size of the packet is {packet.Length()} bytes",
+                    Message = $"Failed change username to {name}.",
                     MessageType = MessageType.OnChangeNameResult,
                     Packet = packet,
                     Protocol = Protocol.TCP,
@@ -156,7 +172,7 @@ namespace ExplorerOpenGL.Controlers.Networking
             {
                 PlayerSyncEventArgs e = new PlayerSyncEventArgs()
                 {
-                    Message = $"A player as been sync to the game. The size of the packet is {packet.Length()} bytes",
+                    Message = $"A player as been sync to the game.",
                     MessageType = MessageType.OnTcpAddPlayer,
                     Packet = packet,
                     PlayerData = new List<PlayerData>() { new PlayerData(idPlayer, name) } ,

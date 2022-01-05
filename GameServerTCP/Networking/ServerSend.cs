@@ -56,11 +56,12 @@ namespace GameServerTCP
             }
         }
 
-        public static void DisconnectPlayer(int id)
+        public static void DisconnectPlayer(int id, string playerName)
         {
             using (Packet packet = new Packet((int)ServerPackets.DisconnectPlayer))
             {
                 packet.Write(id);
+                packet.Write(playerName);
                 SendTcpDataToAll(packet); 
             }
         }

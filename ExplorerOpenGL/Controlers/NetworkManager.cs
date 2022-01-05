@@ -86,6 +86,10 @@ namespace ExplorerOpenGL.Controlers
                 case RequestResponseEventArgs rrea:
                     terminal.AddMessageToTerminal(rrea.Message, "System", Color.White);
                     break;
+                case PlayerDisconnectionEventArgs pdea:
+                    client.PlayersData.Remove(pdea.ID);
+                    terminal.AddMessageToTerminal(pdea.Message, "System", Color.White);
+                    break;
                 default:
                     terminal.AddMessageToTerminal(e.Message, "System", Color.White);
                     break; 
