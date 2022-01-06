@@ -90,6 +90,10 @@ namespace ExplorerOpenGL.Controlers
                     client.PlayersData.Remove(pdea.ID);
                     terminal.AddMessageToTerminal(pdea.Message, "System", Color.White);
                     break;
+                case PlayerConnectEventArgs pcea:
+                    client.PlayersData.Add(pcea.ID, new PlayerData(pcea.ID, pcea.Name));
+                    terminal.AddMessageToTerminal(pcea.Message, "System", Color.White);
+                    break;
                 default:
                     terminal.AddMessageToTerminal(e.Message, "System", Color.White);
                     break; 

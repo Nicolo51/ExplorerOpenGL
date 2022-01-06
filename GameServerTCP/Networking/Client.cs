@@ -28,6 +28,7 @@ namespace GameServerTCP
             }
             catch(Exception e)
             {
+                tcp.socket = null;
                 Console.WriteLine(e.Message);
             }
         }
