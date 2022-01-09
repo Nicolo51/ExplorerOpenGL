@@ -24,7 +24,13 @@ namespace GameServerTCP
             {
                 packet.Write(idClient);
                 packet.Write(Game.Players[idClient].Name);
-                SendTcpDataToAll(packet);
+                packet.WriteLength();
+                for (int i = 1; i <= GameServer.maxPlayer; i++)
+                {
+                    if (idClient == GameServer.clients[i].id)
+                        continue; 
+                    GameServer.clients[i].SendData(packet);
+                }
             }
         }
 
