@@ -28,14 +28,20 @@ namespace GameServerTCP
             }
             catch(Exception e)
             {
-                tcp.socket = null;
+                if (e.Source == "System.Net.Sockets")
+                {
+                    tcp.DisconnectClient(); 
+                }
                 Console.WriteLine(e.Message);
             }
         }
 
+
+
         private void OnDisconnection()
         {
             tcp = new TCPData(id);
+            tcp.Disconnection += OnDisconnection;
             udp = new UDPData(id);
             GameData.Game.RemovePlayer(id); 
         }

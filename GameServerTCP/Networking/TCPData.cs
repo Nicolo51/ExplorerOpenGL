@@ -52,13 +52,9 @@ namespace GameServerTCP
                 //socket.Close();
                 if(e.Source == "System.Net.Sockets")
                 {
-                    socket.Close();
-                    stream.Dispose();
-                    socket.Dispose();
-                    Disconnection?.Invoke();
+                    DisconnectClient(); 
                     return; 
                 }
-                Console.WriteLine("lala");
                 Console.WriteLine(e.Message);
             }
         }
@@ -97,6 +93,14 @@ namespace GameServerTCP
                 return true;
             }
             return false;
+        }
+
+        public void DisconnectClient()
+        {
+            socket.Close();
+            stream.Dispose();
+            socket.Dispose();
+            Disconnection?.Invoke();
         }
     }
 }
