@@ -1,5 +1,4 @@
 ﻿using ExplorerOpenGL.Model;
-using ExplorerOpenGL.Model.Interfaces;
 using ExplorerOpenGL.Model.Sprites;
 using ExplorerOpenGL.View;
 using Microsoft.Xna.Framework;
@@ -28,6 +27,7 @@ namespace ExplorerOpenGL.Controlers
         public Vector2 Bounds; 
         public Player Player { get; set; }
         public Terminal Terminal { get; private set; }
+        public TextinputBox TerminalTexintput; 
         public Camera Camera { get; private set; } 
         public MousePointer MousePointer { get; private set; }
 
@@ -36,13 +36,16 @@ namespace ExplorerOpenGL.Controlers
         Dictionary<string, SpriteFont> fonts;
         GraphicsDeviceManager graphics;
 
+        public bool IsTextInputBoxFocused; 
+
         public Controler(GameWindow gameWindow, Dictionary<string, SpriteFont> Fonts, List<Sprite> sprites, GraphicsDeviceManager Graphics, ContentManager content, SpriteBatch spriteBatch, Vector2 Bounds)
         {
+            IsTextInputBoxFocused = false; 
             KeyboardUtils = new KeyboardUtils();
             RenderManager = new RenderManager(sprites, Graphics, spriteBatch);
             TextureManager = new TextureManager(Graphics, content, spriteBatch, RenderManager);
             DebugManager = new DebugManager(TextureManager, Fonts, Graphics);
-            Terminal = new Terminal(TextureManager.CreateTexture(700, 500, paint => Color.Black), Fonts["Default"], this, new TextinputBox(TextureManager.CreateTexture(700, 35, paint => Color.Red), Fonts["Default"], KeyboardUtils));
+            Terminal = new Terminal(TextureManager.CreateTexture(700, 30, paint => Color.Black), Fonts["Default"], this) { Position = new Vector2(0, 195)};
             NetworkManager = new NetworkManager(this, Terminal);
 
             window = gameWindow;
@@ -57,17 +60,16 @@ namespace ExplorerOpenGL.Controlers
             graphics = Graphics;
 
             Camera = new Camera(new Vector2(graphics.PreferredBackBufferWidth, graphics.PreferredBackBufferHeight));
+            TerminalTexintput = new TextinputBox(TextureManager.CreateTexture(700, 35, paint => Color.Black * .8f), Fonts["Default"], KeyboardUtils, true) { IsHUD = true, Position = new Vector2(0, 695), Opacity = 0f, };
+            TerminalTexintput.Validated += Terminal.OnTextinputValidation;
+            KeyboardUtils.KeyPressed += TerminalTexintput.KeyboardListener;
 
-            KeyboardUtils.KeyPressed += Terminal.KeyboardListener;
-            Terminal.TextinputBox.OnValidation += OnQueried; 
-
-            MousePointer = new MousePointer(TextureManager.LoadTexture("sight"));
+            MousePointer = new MousePointer(TextureManager.LoadTexture("cursor"));
             _sprites.Add(Terminal);
+            _sprites.Add(TerminalTexintput);
             _sprites.Add(MousePointer);
             InitKeyEvent(); 
         }
-
-        
 
         private void OnQueried(string message)
         {
@@ -115,10 +117,7 @@ namespace ExplorerOpenGL.Controlers
         {
             if (KeyboardUtils.Contains(keys, Keys.Enter))
             {
-                if(!(Terminal as IFocusable).ToggleFocus(_sprites.Where(s => s is IFocusable).ToList()))
-                {
-                    (Terminal as IFocusable).Validate(); 
-                }
+                TerminalTexintput.ToggleFocus(_sprites.Where(s => s is TextinputBox).ToList(), true); 
             }
             if (KeyboardUtils.Contains(keys, Keys.OemQuestion))
             {
@@ -157,9 +156,18 @@ namespace ExplorerOpenGL.Controlers
         }
         internal void OnTextInput(object sender, TextInputEventArgs e)
         {
-            IFocusable itemFocus = (IFocusable)_sprites.Where(s => s is IFocusable).FirstOrDefault(t => (t as IFocusable).IsFocused);
+            if (e.Character == '/' && !TerminalTexintput.IsFocused)
+            {
+                TerminalTexintput.Clear(); 
+                TerminalTexintput.Focus(_sprites.Where(s => s is TextinputBox).ToList());
+            }
+            TextinputBox itemFocus = (TextinputBox)_sprites.Where(s => s is TextinputBox).FirstOrDefault(t => (t as TextinputBox).IsFocused);
             if (itemFocus == null)
-                return; 
+            {
+                IsTextInputBoxFocused = false; 
+                return;
+            }
+            IsTextInputBoxFocused = true;
             KeyboardUtils.OnTextInput(sender, e, itemFocus);
         }
 

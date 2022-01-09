@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Net.Sockets;
 using System.Text;
@@ -100,6 +101,7 @@ namespace ExplorerOpenGL.Controlers.Networking
                 using (Packet packet = new Packet(packetBytes))
                 {
                     int packetId = packet.ReadInt();
+                    Debug.WriteLine(packetId);
                     client.packetHandlers[packetId](packet);
                 }
             }

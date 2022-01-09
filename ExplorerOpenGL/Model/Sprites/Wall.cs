@@ -10,7 +10,7 @@ namespace ExplorerOpenGL.Model.Sprites
     public class Wall : Sprite
     {
         public Wall(Texture2D texture)
-            :base()
+            :base(texture)
         {
             _texture = texture;
         }

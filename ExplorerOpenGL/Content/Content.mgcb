@@ -44,7 +44,7 @@
 /processorParam:TextureFormat=Color
 /build:playerfeet.png
 
-#begin sight.png
+#begin cursor.png
 /importer:TextureImporter
 /processor:TextureProcessor
 /processorParam:ColorKeyColor=255,0,255,255
@@ -54,5 +54,5 @@
 /processorParam:ResizeToPowerOfTwo=False
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
-/build:sight.png
+/build:cursor.png
 

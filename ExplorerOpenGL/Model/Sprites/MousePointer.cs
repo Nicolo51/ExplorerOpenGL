@@ -19,9 +19,11 @@ namespace ExplorerOpenGL.Model.Sprites
             
 
         public MousePointer(Texture2D texture)
-            : base()
+            : base(texture)
         {
             _texture = texture;
+            SourceRectangle = new Rectangle(0, 0, 75, 75);
+            scale = .5f;
         }
         public MousePointer()
         {
@@ -41,7 +43,7 @@ namespace ExplorerOpenGL.Model.Sprites
         }
         public override void Draw(SpriteBatch spriteBatch)
         {
-            spriteBatch.Draw(_texture, Position, null, Color.White * opacity, Radian, origin, scale, Effects, layerDepth);
+            spriteBatch.Draw(_texture, Position, SourceRectangle, Color.White * Opacity, Radian, origin, scale, Effects, layerDepth);
             base.Draw(spriteBatch);
         }
 

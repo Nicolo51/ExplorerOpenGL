@@ -1,5 +1,4 @@
 ﻿using ExplorerOpenGL.Model;
-using ExplorerOpenGL.Model.Interfaces;
 using ExplorerOpenGL.Model.Sprites;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
@@ -16,8 +15,6 @@ namespace ExplorerOpenGL.Controlers
     {
         KeyboardState currentKeyboardState;
         KeyboardState previousKeyboardState;
-
-        public bool IsTextInputFocused;
 
         public delegate void KeyPressedEventHandler(Keys[] keys, KeyboardUtils keyboardUtils);
         public event KeyPressedEventHandler KeyPressed;
@@ -68,7 +65,7 @@ namespace ExplorerOpenGL.Controlers
 
         }
 
-        public void OnTextInput(object sender, TextInputEventArgs e, IFocusable t)
+        public void OnTextInput(object sender, TextInputEventArgs e, TextinputBox t)
         {
             switch(e.Key)
             {

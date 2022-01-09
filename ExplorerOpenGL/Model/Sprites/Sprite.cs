@@ -18,15 +18,16 @@ namespace ExplorerOpenGL.Model.Sprites
         public Vector2 Position;
         protected Texture2D _texture;
         public float Radian { get; set; }
+        public Rectangle SourceRectangle { get; set; }
         public Rectangle HitBox { get {
-                if (_texture != null) return new Rectangle((int)Position.X - (int)origin.X, (int)Position.Y - (int)origin.Y, _texture.Width, _texture.Height);
+                if (_texture != null) return new Rectangle((int)Position.X - (int)origin.X, (int)Position.Y - (int)origin.Y, (int)(SourceRectangle.Width * scale), (int)(SourceRectangle.Height * scale));
                 else return new Rectangle((int)Position.X, (int)Position.Y, 1, 1); 
             } }
         protected Vector2 origin;
         public SpriteEffects Effects { get; set; }
         public float  layerDepth { get; set; }
         protected float scale { get; set; }
-        protected float opacity { get; set; }
+        public float Opacity { get; set; }
         public bool IsHUD { get; set; }
 
         public delegate void MouseOverEventHandler(object sender, List<Sprite> sprites, Controler controler);
@@ -46,7 +47,16 @@ namespace ExplorerOpenGL.Model.Sprites
         {
             IsHUD = false; 
             scale = 1;
-            opacity = 1f; 
+            Opacity = 1f; 
+        }
+
+        public Sprite(Texture2D texture)
+        {
+            _texture = texture;
+            SourceRectangle = new Rectangle(0, 0, texture.Width, texture.Height);
+            IsHUD = false;
+            scale = 1;
+            Opacity = 1f;
         }
 
         public virtual void Update(GameTime gameTime, List<Sprite> sprites, Controler controler)
@@ -124,7 +134,7 @@ namespace ExplorerOpenGL.Model.Sprites
         public virtual void Draw(SpriteBatch spriteBatch)
         {
             if(_texture != null && !(this is MousePointer))
-                spriteBatch.Draw(_texture, Position, null, Color.White * opacity * (isClicked ? .5f : 1f), Radian, origin, scale, Effects, layerDepth);
+                spriteBatch.Draw(_texture, Position, null, Color.White * Opacity * (isClicked ? .5f : 1f), Radian, origin, scale, Effects, layerDepth);
         }
     }
 }

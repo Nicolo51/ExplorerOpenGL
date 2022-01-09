@@ -64,6 +64,8 @@ namespace ExplorerOpenGL.Controlers
 
         public void OnPacketReceived(NetworkEventArgs e)
         {
+            if(!(e is PlayerUpdateEventArgs))
+                controler.DebugManager.AddEvent(e.Message);
             switch (e)
             {
                 case PlayerUpdateEventArgs puea:

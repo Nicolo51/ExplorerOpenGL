@@ -23,14 +23,13 @@ namespace ExplorerOpenGL.Model.Sprites
         public float PlayerFeetRadian { get { return playerFeet.Radian; } }
 
         public Player(Texture2D texture, Texture2D playerFeetTexture, MousePointer mousepointer, string name)
-            : base()
+            : base(texture)
         {
             this.Name = name; 
             Direction = new Vector2(0, 0);
             playerFeet = new PlayerFeet(playerFeetTexture);
             playerFeet.layerDepth = .9f;
             this.mousePointer = mousepointer;
-            _texture = texture;
             origin = new Vector2(texture.Width / 2, texture.Height / 2);
             Velocity = 5;
             layerDepth = .9f;
@@ -58,7 +57,7 @@ namespace ExplorerOpenGL.Model.Sprites
         protected virtual void Move(Controler controler, List<Sprite> sprites)
         {
             Direction = Vector2.Zero;
-            if (!controler.KeyboardUtils.IsTextInputFocused)
+            if (!controler.TerminalTexintput.IsFocused)
             {
                 if (controler.KeyboardUtils.IsKeyDown(input.Down))
                 {

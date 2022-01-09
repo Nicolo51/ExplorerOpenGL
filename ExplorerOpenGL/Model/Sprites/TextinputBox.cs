@@ -1,5 +1,4 @@
 ﻿using ExplorerOpenGL.Controlers;
-using ExplorerOpenGL.Model.Interfaces;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -11,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace ExplorerOpenGL.Model.Sprites
 {
-    public class TextinputBox : Sprite, IFocusable
+    public class TextinputBox : Sprite 
     {
         StringBuilder inputText;
         readonly Dictionary<Keys, KeyCodes> azerty;
@@ -21,7 +20,6 @@ namespace ExplorerOpenGL.Model.Sprites
         Dictionary<Keys, KeyCodes> inUse;
         private int indexStartDrawing;
         private int indexEndDrawing;
-        public bool isFocused;
 
         private int cursorIndex;
         private Vector2 cursorPosition;
@@ -30,24 +28,27 @@ namespace ExplorerOpenGL.Model.Sprites
 
         public int width { get { return _texture.Width; } }
 
-        public bool IsFocused { get => IsFocused; set => IsFocused = value; }
+        public bool IsFocused { get; private set; }
+        public bool DoEraseWhenUnfocused { get; private set; }
 
-        public delegate void ValidateEventHandler(string message);
-        public event ValidateEventHandler OnValidation;
+        public delegate void ValidateEventHandler(string message, TextinputBox textinput);
+        public event ValidateEventHandler Validated;
 
-        public TextinputBox(Texture2D Texture, SpriteFont SpriteFont, KeyboardUtils KeyboardUtils)
+        public TextinputBox(Texture2D texture, SpriteFont SpriteFont, KeyboardUtils KeyboardUtils, bool eraseWhenUnfocused)
+            :base(texture)
         {
+            DoEraseWhenUnfocused = eraseWhenUnfocused; 
             cursorIndex = 0;
             cursorOpacity = 1;
             cursorTimer = 0f; 
 
             indexStartDrawing = 0; 
             MouseClicked += OnMouseClick;
-            _texture = Texture;
+            _texture = texture;
             spriteFont = SpriteFont;
-            opacity = 1f;
+            Opacity = 1f;
             layerDepth = .09f;
-            isFocused = false;
+            IsFocused = false;
             IsClickable = true;
             inputText = new StringBuilder();
             azerty = new Dictionary<Keys, KeyCodes>();
@@ -55,14 +56,28 @@ namespace ExplorerOpenGL.Model.Sprites
             InitAzerty();
             inUse = azerty;
         }
-            
+        
+        public void Clear()
+        {
+            inputText.Clear(); 
+        }
+
         public void AddChar(char c)
         {
             inputText.Insert(cursorIndex, c); 
             ComputeIndexRangeToDraw();
             cursorIndex++;
         }
+        public void KeyboardListener(Keys[] keys, KeyboardUtils keyboardUtils)
+        {
+            if (!IsFocused)
+                return;
 
+            if (keyboardUtils.Contains(keys, Keys.Left))
+                MoveCursor(-1);
+            if (keyboardUtils.Contains(keys, Keys.Right))
+                MoveCursor(1);
+        }
         private Vector2 ComputeIndexRangeToDraw()
         {
             for (indexStartDrawing = 0; spriteFont.MeasureString(inputText.ToString().Substring(indexStartDrawing)).X > width; ) ;
@@ -102,7 +117,7 @@ namespace ExplorerOpenGL.Model.Sprites
 
         public override void Update(GameTime gameTime, List<Sprite> sprites, Controler controler)
         {
-            if (isFocused)
+            if (IsFocused)
             {
                 cursorTimer += (float)gameTime.ElapsedGameTime.TotalSeconds;
                 //if (cursorTimer > .9f)
@@ -126,26 +141,28 @@ namespace ExplorerOpenGL.Model.Sprites
         {
             base.Draw(spriteBatch);
             spriteBatch.DrawString(spriteFont, cursorIndex.ToString(), Vector2.Zero, Color.Black, 0f, Vector2.Zero, 1f, SpriteEffects.None, layerDepth - .01f);
-            spriteBatch.DrawString(spriteFont, "|", cursorPosition, Color.Black, 0f, Vector2.Zero, cursorOpacity, SpriteEffects.None, layerDepth - .01f);
-            spriteBatch.DrawString(spriteFont, inputText.ToString().Substring(indexStartDrawing), Position, Color.Black, 0f, Vector2.Zero, 1f, SpriteEffects.None, layerDepth - .01f);
+            spriteBatch.DrawString(spriteFont, "|", cursorPosition, Color.White, 0f, Vector2.Zero, cursorOpacity, SpriteEffects.None, layerDepth - .01f);
+            spriteBatch.DrawString(spriteFont, inputText.ToString().Substring(indexStartDrawing), Position, Color.White, 0f, Vector2.Zero, 1f, SpriteEffects.None, layerDepth - .01f);
         }
 
         public void OnMouseClick(object sender, List<Sprite> sprites, Controler controler)
         {
-            Focus(sprites.Where(s => s is IFocusable).ToList());
+            Focus(sprites.Where(s => s is TextinputBox).ToList());
         }
 
         public string Validate()
         {
             string output = inputText.ToString();
-            cursorIndex = 0; 
+            cursorIndex = 0;
+            cursorPosition.X = 0; 
             inputText.Clear();
+            Validated?.Invoke(output.Trim(), this);
             return output;
         }
 
         public void MoveCursor(int i)
         {
-            if (!isFocused)
+            if (!IsFocused)
                 return;
             if(cursorIndex + i >= 0 && cursorIndex +i <= inputText.Length)
                 cursorIndex += i; 
@@ -153,7 +170,10 @@ namespace ExplorerOpenGL.Model.Sprites
 
         public void UnFocus()
         {
-            keyboardUtils.KeyPressed -= ArrowKeyPressed; 
+            keyboardUtils.KeyPressed -= ArrowKeyPressed;
+            Opacity = 0f;
+            if (DoEraseWhenUnfocused)
+                inputText.Clear(); 
             IsFocused = false;
         }
 
@@ -203,7 +223,12 @@ namespace ExplorerOpenGL.Model.Sprites
             azerty.Add(Keys.Enter, new KeyCodes(" \n "));
         }
 
-        public void RemoveChar(bool nextChar)
+        internal void SlashPressed()
+        {
+            throw new NotImplementedException();
+        }
+
+        public void RemoveChar(bool nextChar = false)
         {
             if (inputText.Length > 0 && ((!nextChar && cursorIndex>0) || (nextChar && cursorIndex < inputText.Length)))
             {
@@ -214,16 +239,15 @@ namespace ExplorerOpenGL.Model.Sprites
             }
         }
 
-        public void Focus(List<Sprite> sprites)
+        public void Focus(List<Sprite> focusables)
         {
-            foreach (Sprite s in sprites)
+            foreach (TextinputBox t in focusables)
             {
-                if (s is IFocusable)
-                    (s as IFocusable).IsFocused = false;
-                else
-                    throw new ArgumentException("You need to send a List<IFocusable to this function>");
+                if(t != this)
+                    t.UnFocus(); 
             }
-            isFocused = true;
+            IsFocused = true;
+            Opacity = 1f; 
             keyboardUtils.KeyPressed += ArrowKeyPressed;
         }
 
@@ -239,20 +263,19 @@ namespace ExplorerOpenGL.Model.Sprites
             }
         }
 
-        public bool ToggleFocus(List<Sprite> sprites)
+        public bool ToggleFocus(List<Sprite> sprites, bool validate = false)
         {
-            if (!isFocused)
+            if (!IsFocused)
             {
-                foreach (Sprite s in sprites)
-                {
-                    if (s is IFocusable)
-                        (s as IFocusable).IsFocused = false;
-                    else
-                        throw new ArgumentException("You need to send a List<IFocusable to this function>");
-                }
+                Focus(sprites);
             }
-            isFocused = !isFocused;
-            return isFocused; 
+            else if (IsFocused)
+            {
+                if (validate)
+                    Validate();
+                UnFocus(); 
+            }
+            return IsFocused; 
         }
 
     }

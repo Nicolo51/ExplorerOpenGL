@@ -1,5 +1,4 @@
 ﻿using ExplorerOpenGL.Controlers;
-using ExplorerOpenGL.Model.Interfaces;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -10,18 +9,19 @@ using System.Text;
 
 namespace ExplorerOpenGL.Model.Sprites
 {
-    public class Terminal : Sprite, IFocusable
+    public class Terminal : Sprite 
     {
         List<ChatElement> messages;
         bool seeAllMessages;
-        public int width { get { return _texture.Width; } }
         bool IsTakingKeyboardInput;
         SpriteFont font;
         public string Name;
         public Color FontColor; 
-        public TextinputBox TextinputBox;
-        private Controler controler; 
-        
+        private Controler controler;
+        private int height;
+        private int width; 
+
+
         private bool IsNewMessage { get 
             {
                 if(messages[messages.Count-1].Opacity <= 0f)
@@ -32,23 +32,20 @@ namespace ExplorerOpenGL.Model.Sprites
             } 
         }
 
-        public bool IsFocused { get => TextinputBox.isFocused ; set => TextinputBox.isFocused = value; }
+        public bool IsFocused { get; set; }
 
-        public Terminal(Texture2D Texture, SpriteFont Font, Controler Controler, TextinputBox textinputBox)
+        public Terminal(Texture2D texture, SpriteFont Font, Controler Controler)
+            :base(texture)
         {
-            TextinputBox = textinputBox;
-            TextinputBox.MouseClicked -= TextinputBox.OnMouseClick;
-            TextinputBox.MouseClicked += OnMouseClick;
-            TextinputBox.IsHUD = true;
+            height = 500; 
+            width = texture.Width;
             Name = "Me";
             this.controler = Controler;
-            //Position = Vector2.Zero; 
-            TextinputBox.Position = new Vector2(0, Texture.Height);
             IsHUD = true; 
             font = Font;
             layerDepth = .1f; 
-            _texture = Texture; 
-            opacity = .5f;
+            _texture = texture; 
+            Opacity = .5f;
             seeAllMessages = true;
             ChatElement InitMessage = new ChatElement()
             {
@@ -56,22 +53,9 @@ namespace ExplorerOpenGL.Model.Sprites
                 Date = DateTime.Now,
                 Message = "Chat Initialized !",
                 Name = "Info",
-                Opacity = 5f,
                 DisplayName = true, 
             }; 
             messages = new List<ChatElement>() { InitMessage };
-            //origin = new Vector2(0, -Texture.Height);
-            TextinputBox.OnValidation += OnValidation;
-        }
-
-        private void OnMouseClick(object sender, List<Sprite> sprites, Controler controler)
-        {
-            Focus(sprites.Where(s => s is IFocusable).ToList());
-        }
-
-        private void OnValidation(string message)
-        {
-            AddMessageToTerminal(message, Name, FontColor); 
         }
 
         public void AddMessageToTerminal(string message, string name, Color color)
@@ -115,7 +99,6 @@ namespace ExplorerOpenGL.Model.Sprites
                     Color = color,
                     Date = DateTime.Now,
                     Message = wrappedMessages[i],
-                    Opacity = 5f,
                     Name = name,
                     DisplayName = (i==0), 
                 };
@@ -125,121 +108,90 @@ namespace ExplorerOpenGL.Model.Sprites
 
         public void AddMessageToTerminal(string message)
         {
-            AddMessageToTerminal(message, Name, Color.Black); 
-        }
-
-        public void ToggleChatInputOn()
-        {
-            IsTakingKeyboardInput = !IsTakingKeyboardInput;
+            AddMessageToTerminal(message, Name, Color.White); 
         }
 
         public void KeyboardListener(Keys[] keys, KeyboardUtils keyboardUtils)
         {
             if (!IsFocused)
-                return; 
+                return;
 
             if (keyboardUtils.Contains(keys, Keys.Left))
-                MoveCursor(-1);
+            {
+                //MoveCursor(-1);
+            }
             if (keyboardUtils.Contains(keys, Keys.Right))
-                MoveCursor(1);
-
+            {
+                //MoveCursor(1);
+            }
         }
 
         public override void Update(GameTime gameTime, List<Sprite> sprites, Controler controler)
         {
-            TextinputBox.Update(gameTime, sprites, controler); 
-            if (TextinputBox.isFocused)
-                controler.KeyboardUtils.IsTextInputFocused = true;
-            else
-                controler.KeyboardUtils.IsTextInputFocused = false; 
-
-            if(controler.KeyboardUtils.IsKeyDown(Keys.H)){
-                seeAllMessages = true;
+            for(int i = 0; i < messages.Count; i++)
+            {
+                ChatElement message = messages[i]; 
+                if (i > messages.Count)
+                    continue;
+                if (message.Timer < 0)
+                    message.Opacity -= .01f;
+                else
+                    message.Timer -= gameTime.ElapsedGameTime.TotalSeconds;
+            }
+            if (controler.KeyboardUtils.IsKeyDown(Keys.H) && !controler.IsTextInputBoxFocused){
+                for (int i = 0; i < messages.Count; i++)
+                {
+                    if (i > messages.Count)
+                        continue;
+                    messages[i].Opacity = .5f;
+                }
             }
             else{
                 seeAllMessages = false; 
             }
 
-            if (IsNewMessage)
-            {
-                for(int i = 0;  i < messages.Count; i++)
-                {
-                    ChatElement message = messages[i]; 
-                    if (!message.IsDisplayed)
-                        continue;
-                    message.Opacity -= 0.05f;
-                    if (message.Opacity < 0f)
-                        message.IsDisplayed = false; 
-                }
-            }
+            //if (IsNewMessage)
+            //{
+            //    for(int i = 0;  i < messages.Count; i++)
+            //    {
+            //        ChatElement message = messages[i]; 
+            //        if (!message.IsDisplayed)
+            //            continue;
+            //        message.Opacity -= 0.05f;
+            //        if (message.Opacity < 0f)
+            //            message.IsDisplayed = false; 
+            //    }
+            //}
             base.Update(gameTime, sprites, controler);
         }
 
         public override void Draw(SpriteBatch spriteBatch)
         {
 
-            base.Draw(spriteBatch);
+            //base.Draw(spriteBatch);
             //int j = messages.Count - 1;
             //if (j == -1)
             //{ return; }
             for (int i = messages.Count - 1; i >= 0; i--)
             {
-                spriteBatch.DrawString(font, messages[i].ToString(), new Vector2(Position.X, Position.Y + _texture.Height - ((messages.Count - 1 - i) *25)), messages[i].Color, 0f, new Vector2(0, 30), 1f, SpriteEffects.None, layerDepth - .01f);
+                spriteBatch.Draw(_texture, new Vector2(Position.X, Position.Y + height - ((messages.Count - 1 - i) * 30)), null, Color.White * messages[i].Opacity, 0f, new Vector2(0, 30), 1f ,  SpriteEffects.None, layerDepth - .01f);
+                spriteBatch.DrawString(font, messages[i].ToString(), new Vector2(Position.X, Position.Y + height - ((messages.Count - 1 - i) *25)), messages[i].Color * messages[i].Opacity * 2, 0f, new Vector2(0, 30), 1f, SpriteEffects.None, layerDepth - .02f);
                 //j--;
             }
-            TextinputBox.Draw(spriteBatch);
         }
-        public bool ToggleFocus(List<Sprite> focusables)
+        
+        public void OnTextinputValidation(string s, TextinputBox t)
         {
-            if (!TextinputBox.isFocused)
+            if (checkQuery(s))
             {
-                foreach (Sprite s in focusables)
-                {
-                    if (s is IFocusable)
-                        (s as IFocusable).IsFocused = false;
-                    else
-                        throw new ArgumentException("You need to send a List<IFocusable to this function>");
-                }
-            }
-            TextinputBox.isFocused = !TextinputBox.isFocused;
-            return TextinputBox.isFocused; 
-        }
-        public void Focus(List<Sprite> focusables)
-        {
-            foreach(Sprite s in focusables)
-            {
-                if (s is IFocusable)
-                    (s as IFocusable).IsFocused = false;
-                else
-                    throw new ArgumentException("You need to send a List<IFocusable to this function>"); 
-            }
-            TextinputBox.isFocused = true; 
-        }
-        public void AddChar(char c)
-        {
-            TextinputBox.AddChar(c);
-        }
-        public void RemoveChar(bool nextChar)
-        {
-            TextinputBox.RemoveChar(nextChar);
-        }
-
-        public string Validate()
-        {
-            string text = TextinputBox.Validate();
-            if (checkQuery(text))
-            {
-                return text; 
+                return; 
             }
             if (controler.NetworkManager.IsConnectedToAServer)
             {
-                controler.NetworkManager.SendMessageToServer(text);
-                UnFocus(); 
-                return text; 
+                controler.NetworkManager.SendMessageToServer(s);
+                return; 
             }
-            AddMessageToTerminal(text);
-            UnFocus(); 
-            return text; 
+            AddMessageToTerminal(s);
         }
 
         private bool checkQuery(string text)
@@ -289,16 +241,6 @@ namespace ExplorerOpenGL.Model.Sprites
                 return; 
             }
         }
-
-        public void UnFocus()
-        {
-            IsFocused = false;
-        }
-
-        public void MoveCursor(int i)
-        {
-            TextinputBox.MoveCursor(i);
-        }
     }
     
     class ChatElement
@@ -308,8 +250,15 @@ namespace ExplorerOpenGL.Model.Sprites
         public DateTime Date;
         public string Name;
         public Color Color;
+        public double Timer; 
         public float Opacity;
         public bool DisplayName;
+        public ChatElement()
+        {
+            Opacity = .5f;
+            Timer = 5f; 
+        }
+
         public override string ToString()
         {
             if(DisplayName)

@@ -21,7 +21,7 @@ namespace ExplorerOpenGL.Controlers.Networking
         public SocketAddress socketAddress { get; private set; }
         private ClientHandle clientHandle;
         private ClientSend clientSend;
-
+        
         public delegate void PacketReceivedEventHandler(NetworkEventArgs e);
         public event PacketReceivedEventHandler OnPacketReceived;
 
