@@ -64,7 +64,8 @@ namespace ExplorerOpenGL.Model.Sprites
         {
             inputText.Clear();
             indexEndDrawing = 0;
-            indexStartDrawing = 0; 
+            indexStartDrawing = 0;
+            cursorIndex = 0; 
         }
 
         public void AddChar(char c)
@@ -107,18 +108,20 @@ namespace ExplorerOpenGL.Model.Sprites
                 indexEndDrawing++;
             }
 
-            float lengthStringToDisplay = spriteFont.MeasureString(inputText.ToString().Substring(indexStartDrawing, indexEndDrawing)).X;
-            float lengthAfterInput = spriteFont.MeasureString(inputText.ToString().Substring(indexStartDrawing, viewChar)).X;
-
-            while(lengthAfterInput > lengthStringToDisplay || lengthAfterInput > width)
+            if (indexStartDrawing + viewChar < inputText.Length)
             {
-                indexStartDrawing++;
-                viewChar--;
-                lengthAfterInput = spriteFont.MeasureString(inputText.ToString().Substring(indexStartDrawing, viewChar)).X;
+                float lengthStringToDisplay = spriteFont.MeasureString(inputText.ToString().Substring(indexStartDrawing, indexEndDrawing)).X;
+                float lengthAfterInput = spriteFont.MeasureString(inputText.ToString().Substring(indexStartDrawing, viewChar)).X;
+
+                while (lengthAfterInput > lengthStringToDisplay || lengthAfterInput > width)
+                {
+                    indexStartDrawing++;
+                    viewChar--;
+                    lengthAfterInput = spriteFont.MeasureString(inputText.ToString().Substring(indexStartDrawing, viewChar)).X;
+                }
+
+                Debug.WriteLine(lengthStringToDisplay + "|" + lengthAfterInput);
             }
-
-            Debug.WriteLine(lengthStringToDisplay + "|" + lengthAfterInput);
-
             //if()
 
 
@@ -151,7 +154,7 @@ namespace ExplorerOpenGL.Model.Sprites
                 viewChar = cursorIndex - indexStartDrawing;
                 if (viewChar < 0)
                 {
-                    indexStartDrawing -= 5;
+                    indexStartDrawing -= 8;
                     if (indexStartDrawing < 0)
                         indexStartDrawing = 0; 
                     ComputeIndexCurrentToDraw(); 
@@ -194,8 +197,12 @@ namespace ExplorerOpenGL.Model.Sprites
         {
             if (!IsFocused)
                 return;
-            if(cursorIndex + i >= 0 && cursorIndex +i <= inputText.Length)
-                cursorIndex += i; 
+            if (cursorIndex + i >= 0 && cursorIndex + i <= inputText.Length)
+            { 
+                cursorIndex += i;
+                cursorOpacity = 1;
+                cursorTimer = 0f;
+            } 
         }
 
         public void UnFocus()
