@@ -101,21 +101,29 @@ namespace ExplorerOpenGL.Model.Sprites
                     indexStartDrawing = 0; 
                 viewChar = 1;
             }
-            for (indexEndDrawing = 0; indexStartDrawing + indexEndDrawing < inputText.Length && spriteFont.MeasureString(inputText.ToString().Substring(indexStartDrawing, indexEndDrawing)).X < width; indexEndDrawing++) ;
+            indexEndDrawing = 0; 
+            while(indexStartDrawing + indexEndDrawing < inputText.Length && spriteFont.MeasureString(inputText.ToString().Substring(indexStartDrawing, indexEndDrawing)).X < width - 30)
+            {
+                indexEndDrawing++;
+            }
 
-            RecursiveMesuring(); 
-            cursorPosition.X = spriteFont.MeasureString(inputText.ToString().Substring(indexStartDrawing)).X - 3;
-            return Vector2.Zero;
-        }
+            float lengthStringToDisplay = spriteFont.MeasureString(inputText.ToString().Substring(indexStartDrawing, indexEndDrawing)).X;
+            float lengthAfterInput = spriteFont.MeasureString(inputText.ToString().Substring(indexStartDrawing, viewChar)).X;
 
-        private void RecursiveMesuring()
-        {
-            if (indexStartDrawing + indexEndDrawing < inputText.Length && spriteFont.MeasureString(inputText.ToString().Substring(indexStartDrawing, indexEndDrawing)).X > width)
+            while(lengthAfterInput > lengthStringToDisplay || lengthAfterInput > width)
             {
                 indexStartDrawing++;
-                RecursiveMesuring();
-                return; 
+                viewChar--;
+                lengthAfterInput = spriteFont.MeasureString(inputText.ToString().Substring(indexStartDrawing, viewChar)).X;
             }
+
+            Debug.WriteLine(lengthStringToDisplay + "|" + lengthAfterInput);
+
+            //if()
+
+
+            cursorPosition.X = spriteFont.MeasureString(inputText.ToString().Substring(indexStartDrawing)).X - 3;
+            return Vector2.Zero;
         }
 
         private Vector2 ComputeIndexStartToDraw()
@@ -141,7 +149,7 @@ namespace ExplorerOpenGL.Model.Sprites
                     indexEndDrawing = inputText.Length; 
                 }
                 viewChar = cursorIndex - indexStartDrawing;
-                if (viewChar < 1)
+                if (viewChar < 0)
                 {
                     indexStartDrawing -= 5;
                     if (indexStartDrawing < 0)
@@ -256,7 +264,7 @@ namespace ExplorerOpenGL.Model.Sprites
                 if (nextChar)
                 {
                     inputText.Remove(cursorIndex, 1);
-                    ComputeIndexEndToDraw(); 
+                    ComputeIndexCurrentToDraw(); 
                 }
                 else
                 {
@@ -265,11 +273,11 @@ namespace ExplorerOpenGL.Model.Sprites
                     viewChar = cursorIndex - indexStartDrawing;
                     if (viewChar < 1)
                     {
-                        ComputeIndexEndToDraw(); 
+                        ComputeIndexCurrentToDraw(); 
                     }
                     else
                     {
-                        ComputeIndexEndToDraw();
+                        ComputeIndexCurrentToDraw();
                     }
                 }
                 return;

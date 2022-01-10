@@ -22,8 +22,9 @@ namespace ExplorerOpenGL.Model.Sprites
             : base(texture)
         {
             _texture = texture;
-            SourceRectangle = new Rectangle(0, 0, 75, 75);
+            SourceRectangle = new Rectangle(300, 0, 75, 75);
             scale = .5f;
+            layerDepth = 0f;
         }
         public MousePointer()
         {

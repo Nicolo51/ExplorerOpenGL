@@ -34,6 +34,7 @@ namespace ExplorerOpenGL.Model.Sprites
             this.origin = new Vector2(texture.Width / 2, texture.Height / 2);
             this.font = font; 
             Text = String.Empty;
+            layerDepth = 0.1f;
         }
 
         public Button()
@@ -52,11 +53,14 @@ namespace ExplorerOpenGL.Model.Sprites
         private void OnMouseOver(object sender, List<Sprite> sprites, Controler controler)
         {
             isMouseOver = true;
+            controler.MousePointer.SourceRectangle = new Rectangle(300, 0, 75, 75);
             controler.DebugManager.AddEvent("Over"); 
         }
         private void OnMouseLeft(object sender, List<Sprite> sprites, Controler controler)
         {
             isMouseOver = false;
+            controler.MousePointer.SourceRectangle = new Rectangle(0, 0, 75, 75);
+
             controler.DebugManager.AddEvent("Leave");
         }
         private void OnMouseClick(object sender, List<Sprite> sprites, Controler controler)
