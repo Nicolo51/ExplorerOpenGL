@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -22,6 +23,7 @@ namespace ExplorerOpenGL.Model.Sprites
         private int indexEndDrawing;
 
         private int cursorIndex;
+        private int viewChar; 
         private Vector2 cursorPosition;
         private int cursorOpacity;
         private float cursorTimer; 
@@ -55,64 +57,72 @@ namespace ExplorerOpenGL.Model.Sprites
             keyboardUtils = KeyboardUtils; 
             InitAzerty();
             inUse = azerty;
+            keyboardUtils.KeyPressed += ArrowKeyPressed;
         }
         
         public void Clear()
         {
-            inputText.Clear(); 
+            inputText.Clear();
+            indexEndDrawing = 0;
+            indexStartDrawing = 0; 
         }
 
         public void AddChar(char c)
         {
+            cursorOpacity = 1;
+            cursorTimer = 0f; 
             inputText.Insert(cursorIndex, c); 
-            ComputeIndexRangeToDraw();
             cursorIndex++;
+            if(cursorIndex != inputText.Length)
+            {
+                ComputeIndexCurrentToDraw(); 
+            }
+            else
+            {
+                ComputeIndexEndToDraw(); 
+            }
         }
-        public void KeyboardListener(Keys[] keys, KeyboardUtils keyboardUtils)
+        
+        private Vector2 ComputeIndexEndToDraw()
         {
-            if (!IsFocused)
-                return;
-
-            if (keyboardUtils.Contains(keys, Keys.Left))
-                MoveCursor(-1);
-            if (keyboardUtils.Contains(keys, Keys.Right))
-                MoveCursor(1);
-        }
-        private Vector2 ComputeIndexRangeToDraw()
-        {
-            for (indexStartDrawing = 0; spriteFont.MeasureString(inputText.ToString().Substring(indexStartDrawing)).X > width; ) ;
-            return new Vector2(indexStartDrawing, indexEndDrawing); 
+            for (indexStartDrawing = 0; spriteFont.MeasureString(inputText.ToString().Substring(indexStartDrawing)).X > width; indexStartDrawing++) ;
+            indexEndDrawing = inputText.Length - indexStartDrawing;
+            cursorPosition.X = spriteFont.MeasureString(inputText.ToString().Substring(indexStartDrawing)).X - 3;
+            return Vector2.Zero; 
         }
 
-        public void AddKeyStroke(Keys input, KeyAlterer keyAlterer)
+        private Vector2 ComputeIndexCurrentToDraw()
         {
-            //if(input == Keys.Enter && keyAlterer != KeyAlterer.Cap)
-            //{
-            //    Validate(inputText.ToString());
-            //    inputText.Clear();
-            //    isFocused = false;
-            //    return;
-            //}
-            //if (input == Keys.Back && inputText.Length > 0)
-            //{
-            //    inputText.Remove(inputText.Length - 1, 1);
-            //    return;
-            //}
-            //    if (!inUse.ContainsKey(input) || !isFocused)
-            //    return;
+            viewChar = cursorIndex - indexStartDrawing;
+            if (viewChar < 1)
+            {
+                indexStartDrawing -= 8;
+                if (indexStartDrawing < 0)
+                    indexStartDrawing = 0; 
+                viewChar = 1;
+            }
+            for (indexEndDrawing = 0; indexStartDrawing + indexEndDrawing < inputText.Length && spriteFont.MeasureString(inputText.ToString().Substring(indexStartDrawing, indexEndDrawing)).X < width; indexEndDrawing++) ;
 
-            //switch (keyAlterer)
-            //{
-            //    case KeyAlterer.None:
-            //        inputText.Append(inUse[input].Reg);
-            //        break;
-            //    case KeyAlterer.Cap:
-            //        inputText.Append(inUse[input].Cap);
-            //        break;
-            //    case KeyAlterer.AltGr:
-            //        inputText.Append(inUse[input].AltGr);
-            //        break;
-            //}
+            RecursiveMesuring(); 
+            cursorPosition.X = spriteFont.MeasureString(inputText.ToString().Substring(indexStartDrawing)).X - 3;
+            return Vector2.Zero;
+        }
+
+        private void RecursiveMesuring()
+        {
+            if (indexStartDrawing + indexEndDrawing < inputText.Length && spriteFont.MeasureString(inputText.ToString().Substring(indexStartDrawing, indexEndDrawing)).X > width)
+            {
+                indexStartDrawing++;
+                RecursiveMesuring();
+                return; 
+            }
+        }
+
+        private Vector2 ComputeIndexStartToDraw()
+        {
+            for (indexEndDrawing = 0; indexStartDrawing + indexEndDrawing + 1 > inputText.Length && spriteFont.MeasureString(inputText.ToString().Substring(indexStartDrawing, indexEndDrawing)).X > width; indexEndDrawing++) ; 
+            cursorPosition.X = spriteFont.MeasureString(inputText.ToString().Substring(indexStartDrawing)).X - 3;
+            return Vector2.Zero;
         }
 
         public override void Update(GameTime gameTime, List<Sprite> sprites, Controler controler)
@@ -120,19 +130,31 @@ namespace ExplorerOpenGL.Model.Sprites
             if (IsFocused)
             {
                 cursorTimer += (float)gameTime.ElapsedGameTime.TotalSeconds;
-                //if (cursorTimer > .9f)
-                //{
-                //    cursorOpacity = (cursorOpacity == 1) ? 0 : 1;
-                //    cursorTimer = 0f;
-                //}
-                if(cursorIndex - indexStartDrawing < 2 && cursorIndex > 2)
+                if (cursorTimer > .9f)
                 {
-                    indexStartDrawing -= 2; 
+                    cursorOpacity = (cursorOpacity == 1) ? 0 : 1;
+                    cursorTimer = 0f;
                 }
-                cursorPosition = new Vector2(spriteFont.MeasureString(inputText.ToString().Substring(indexStartDrawing, cursorIndex - indexStartDrawing)).X - 3, -1) + Position;
+                if(spriteFont.MeasureString(inputText.ToString()).X < width)
+                {
+                    indexStartDrawing = 0;
+                    indexEndDrawing = inputText.Length; 
+                }
+                viewChar = cursorIndex - indexStartDrawing;
+                if (viewChar < 1)
+                {
+                    indexStartDrawing -= 5;
+                    if (indexStartDrawing < 0)
+                        indexStartDrawing = 0; 
+                    ComputeIndexCurrentToDraw(); 
+                    viewChar = 0;
+                    //cursorIndex++;
+                }
+
+                cursorPosition = new Vector2(spriteFont.MeasureString(inputText.ToString().Substring(indexStartDrawing, viewChar)).X - 3, -1) + Position; 
             }
             else
-                cursorOpacity = 1; 
+                cursorOpacity = 0; 
 
             base.Update(gameTime, sprites, controler);
         }
@@ -140,9 +162,9 @@ namespace ExplorerOpenGL.Model.Sprites
         public override void Draw(SpriteBatch spriteBatch)
         {
             base.Draw(spriteBatch);
-            spriteBatch.DrawString(spriteFont, cursorIndex.ToString(), Vector2.Zero, Color.Black, 0f, Vector2.Zero, 1f, SpriteEffects.None, layerDepth - .01f);
+            spriteBatch.DrawString(spriteFont, cursorIndex.ToString() +'|' + viewChar.ToString(), Vector2.Zero, Color.Black, 0f, Vector2.Zero, 1f, SpriteEffects.None, layerDepth - .01f);
             spriteBatch.DrawString(spriteFont, "|", cursorPosition, Color.White, 0f, Vector2.Zero, cursorOpacity, SpriteEffects.None, layerDepth - .01f);
-            spriteBatch.DrawString(spriteFont, inputText.ToString().Substring(indexStartDrawing), Position, Color.White, 0f, Vector2.Zero, 1f, SpriteEffects.None, layerDepth - .01f);
+            spriteBatch.DrawString(spriteFont, inputText.ToString().Substring(indexStartDrawing, indexEndDrawing), Position, Color.White, 0f, Vector2.Zero, 1f, SpriteEffects.None, layerDepth - .01f);
         }
 
         public void OnMouseClick(object sender, List<Sprite> sprites, Controler controler)
@@ -154,8 +176,8 @@ namespace ExplorerOpenGL.Model.Sprites
         {
             string output = inputText.ToString();
             cursorIndex = 0;
-            cursorPosition.X = 0; 
-            inputText.Clear();
+            cursorPosition.X = 0;
+            Clear();
             Validated?.Invoke(output.Trim(), this);
             return output;
         }
@@ -170,10 +192,9 @@ namespace ExplorerOpenGL.Model.Sprites
 
         public void UnFocus()
         {
-            keyboardUtils.KeyPressed -= ArrowKeyPressed;
             Opacity = 0f;
             if (DoEraseWhenUnfocused)
-                inputText.Clear(); 
+                Clear(); 
             IsFocused = false;
         }
 
@@ -232,9 +253,25 @@ namespace ExplorerOpenGL.Model.Sprites
         {
             if (inputText.Length > 0 && ((!nextChar && cursorIndex>0) || (nextChar && cursorIndex < inputText.Length)))
             {
-                inputText.Remove(cursorIndex - (nextChar ? 0: 1), 1);
-                cursorIndex += nextChar ? 0 : -1;
-                //ComputeIndexStartDrawing(); 
+                if (nextChar)
+                {
+                    inputText.Remove(cursorIndex, 1);
+                    ComputeIndexEndToDraw(); 
+                }
+                else
+                {
+                    inputText.Remove(cursorIndex - 1, 1);
+                    cursorIndex -= 1;
+                    viewChar = cursorIndex - indexStartDrawing;
+                    if (viewChar < 1)
+                    {
+                        ComputeIndexEndToDraw(); 
+                    }
+                    else
+                    {
+                        ComputeIndexEndToDraw();
+                    }
+                }
                 return;
             }
         }
@@ -248,11 +285,12 @@ namespace ExplorerOpenGL.Model.Sprites
             }
             IsFocused = true;
             Opacity = 1f; 
-            keyboardUtils.KeyPressed += ArrowKeyPressed;
         }
 
         private void ArrowKeyPressed(Keys[] keys, KeyboardUtils keyboardUtils)
         {
+            if (!IsFocused)
+                return;
             if (keyboardUtils.Contains(keys, Keys.Left))
             {
                 MoveCursor(-1); 

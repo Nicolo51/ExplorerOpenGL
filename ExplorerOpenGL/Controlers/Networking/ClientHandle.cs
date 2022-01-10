@@ -117,8 +117,8 @@ namespace ExplorerOpenGL.Controlers.Networking
                 MessageType = MessageType.OnChatMessage,
                 Protocol = Protocol.TCP,
                 RequestType = RequestType.Receive,
-                SenderColor = Color.Black,
-                TextColor = Color.Black, 
+                SenderColor = Color.White,
+                TextColor = Color.White, 
                 Text = msg, 
                 Packet = packet, 
                 
