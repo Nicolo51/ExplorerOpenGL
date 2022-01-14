@@ -60,7 +60,7 @@ namespace ExplorerOpenGL.Controlers
             graphics = Graphics;
 
             Camera = new Camera(new Vector2(graphics.PreferredBackBufferWidth, graphics.PreferredBackBufferHeight));
-            TerminalTexintput = new TextinputBox(TextureManager.CreateTexture(700, 35, paint => Color.Black * .8f), Fonts["Default"], KeyboardUtils, true) { IsHUD = true, Position = new Vector2(0, 695), Opacity = 0f, };
+            TerminalTexintput = new TextinputBox(TextureManager.CreateTexture(200, 35, paint => Color.Black * .8f), Fonts["Default"], KeyboardUtils, true) { IsHUD = true, Position = new Vector2(0, 695), Opacity = 0f, };
             TerminalTexintput.Validated += Terminal.OnTextinputValidation;
 
             MousePointer = new MousePointer(TextureManager.LoadTexture("cursor"));

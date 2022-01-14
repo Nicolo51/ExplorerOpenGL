@@ -4,10 +4,8 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace ExplorerOpenGL.Model.Sprites
 {
@@ -103,7 +101,7 @@ namespace ExplorerOpenGL.Model.Sprites
                 viewChar = 1;
             }
             indexEndDrawing = 0; 
-            while(indexStartDrawing + indexEndDrawing < inputText.Length && spriteFont.MeasureString(inputText.ToString().Substring(indexStartDrawing, indexEndDrawing)).X < width - 30)
+            while(indexStartDrawing + indexEndDrawing < inputText.Length && spriteFont.MeasureString(inputText.ToString().Substring(indexStartDrawing, indexEndDrawing)).X < width - 15)
             {
                 indexEndDrawing++;
             }
@@ -120,7 +118,6 @@ namespace ExplorerOpenGL.Model.Sprites
                     lengthAfterInput = spriteFont.MeasureString(inputText.ToString().Substring(indexStartDrawing, viewChar)).X;
                 }
 
-                Debug.WriteLine(lengthStringToDisplay + "|" + lengthAfterInput);
             }
             //if()
 
@@ -160,6 +157,18 @@ namespace ExplorerOpenGL.Model.Sprites
                     ComputeIndexCurrentToDraw(); 
                     viewChar = 0;
                     //cursorIndex++;
+                }
+                if(spriteFont.MeasureString(inputText.ToString().Substring(indexStartDrawing, viewChar)).X > width-15)
+                {
+                    indexStartDrawing += 8;
+                    if(indexStartDrawing + indexEndDrawing > inputText.Length)
+                    {
+                        ComputeIndexEndToDraw(); 
+                    }
+                    else
+                    {
+                        ComputeIndexCurrentToDraw();
+                    }
                 }
 
                 cursorPosition = new Vector2(spriteFont.MeasureString(inputText.ToString().Substring(indexStartDrawing, viewChar)).X - 3, -1) + Position; 
@@ -278,13 +287,13 @@ namespace ExplorerOpenGL.Model.Sprites
                     inputText.Remove(cursorIndex - 1, 1);
                     cursorIndex -= 1;
                     viewChar = cursorIndex - indexStartDrawing;
-                    if (viewChar < 1)
+                    if(cursorIndex == inputText.Length)
                     {
-                        ComputeIndexCurrentToDraw(); 
+                        ComputeIndexEndToDraw(); 
                     }
                     else
                     {
-                        ComputeIndexCurrentToDraw();
+                        ComputeIndexCurrentToDraw(); 
                     }
                 }
                 return;
