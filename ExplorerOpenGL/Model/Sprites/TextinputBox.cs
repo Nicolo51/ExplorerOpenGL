@@ -61,16 +61,6 @@ namespace ExplorerOpenGL.Model.Sprites
             keyboardUtils.KeyPressed += ArrowKeyPressed;
         }
 
-        private void OnMouseOver(object sender, MousePointer mousePointer, Controler controler)
-        {
-            throw new NotImplementedException();
-        }
-
-        private void OnMouseLeft(object sender, MousePointer mousePointer, Controler controler)
-        {
-            throw new NotImplementedException();
-        }
-
         public void Clear()
         {
             inputText.Clear();
@@ -216,6 +206,15 @@ namespace ExplorerOpenGL.Model.Sprites
                 return; 
             }
             Focus(controler);
+        }
+
+        private void OnMouseOver(object sender, MousePointer mousePointer, Controler controler)
+        {
+            mousePointer.SetCursorIcon(MousePointerType.Text);
+        }
+        private void OnMouseLeft(object sender, MousePointer mousePointer, Controler controler)
+        {
+            mousePointer.SetCursorIcon(MousePointerType.Default);
         }
 
         public string Validate()

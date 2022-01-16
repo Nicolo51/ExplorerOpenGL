@@ -13,6 +13,7 @@ namespace ExplorerOpenGL.Model.Sprites
 {
     public class MousePointer : Sprite
     {
+        Dictionary<MousePointerType, Rectangle> MousePointerTypes;
         public MouseState currentMouseState { get; private set; }
         public MouseState prevMouseState { get; private set; }
         public Vector2 InWindowPosition { get; private set; }
@@ -25,9 +26,28 @@ namespace ExplorerOpenGL.Model.Sprites
             SourceRectangle = new Rectangle(300, 0, 75, 75);
             scale = .5f;
             layerDepth = 0f;
+            InitMouseTypes();
+            SetCursorIcon(MousePointerType.Default);
         }
         public MousePointer()
         {
+        }
+
+        public void SetCursorIcon(MousePointerType type)
+        {
+            SourceRectangle = MousePointerTypes[type];
+            switch (type)
+            {
+                case MousePointerType.Default: case MousePointerType.SmallCursor:
+                    origin = Vector2.Zero;
+                    break;
+                case MousePointerType.Crosshair:case MousePointerType.Aim:case MousePointerType.SmallCrosshair:case MousePointerType.Text:
+                    origin = new Vector2(SourceRectangle.Width /2, SourceRectangle.Height/2);
+                    break;
+                case MousePointerType.Pointer:
+                    origin = new Vector2(SourceRectangle.Width / 2, 0);
+                    break;
+            }
         }
 
         public override void Update(GameTime gameTime, List<Sprite> sprites, Controler controler)
@@ -52,5 +72,27 @@ namespace ExplorerOpenGL.Model.Sprites
         {
             return "InWindowPos : " + InWindowPosition.X + " / "+ InWindowPosition.Y + "\nInGamePos : " + Position.X + " / " + Position.Y;
         }
+        private void InitMouseTypes()
+        {
+            MousePointerTypes = new Dictionary<MousePointerType, Rectangle>();
+            MousePointerTypes.Add(MousePointerType.Default, new Rectangle(0, 0, 75, 75));
+            MousePointerTypes.Add(MousePointerType.Crosshair, new Rectangle(75, 0, 75, 75));
+            MousePointerTypes.Add(MousePointerType.SmallCursor, new Rectangle(150, 0, 75, 75));
+            MousePointerTypes.Add(MousePointerType.Aim, new Rectangle(225, 0, 75, 75));
+            MousePointerTypes.Add(MousePointerType.Pointer, new Rectangle(300, 0, 75, 75));
+            MousePointerTypes.Add(MousePointerType.SmallCrosshair, new Rectangle(375, 0, 75, 75));
+            MousePointerTypes.Add(MousePointerType.Text, new Rectangle(450, 0, 75, 75));
+        }
+    }
+
+    public enum MousePointerType
+    {
+        Default,
+        Pointer,
+        Crosshair,
+        Text,
+        SmallCursor,
+        SmallCrosshair,
+        Aim,
     }
 }
