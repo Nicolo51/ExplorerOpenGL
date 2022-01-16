@@ -30,13 +30,13 @@ namespace ExplorerOpenGL.Model.Sprites
         public float Opacity { get; set; }
         public bool IsHUD { get; set; }
 
-        public delegate void MouseOverEventHandler(object sender, List<Sprite> sprites, Controler controler);
+        public delegate void MouseOverEventHandler(object sender, MousePointer mousePointer, Controler controler);
         public event MouseOverEventHandler MouseOvered;
 
-        public delegate void MouseLeaveEventHandler(object sender, List<Sprite> sprites, Controler controler);
+        public delegate void MouseLeaveEventHandler(object sender, MousePointer mousePointer, Controler controler);
         public event MouseLeaveEventHandler MouseLeft;
 
-        public delegate void MouseClickEventHandler(object sender, List<Sprite> sprites, Controler controler);
+        public delegate void MouseClickEventHandler(object sender, MousePointer mousePointer, Controler controler, Vector2 clickPosition);
         public event MouseClickEventHandler MouseClicked;
 
         protected bool isClicked;
@@ -67,6 +67,7 @@ namespace ExplorerOpenGL.Model.Sprites
 
         private void CheckMouseEvent(List<Sprite> sprites, Controler controler)
         {
+            MousePointer mousePointer = controler.MousePointer; 
             if (this.HitBox.Intersects(controler.MousePointer.HitBox) && !this.IsHUD)
             {
                 if (!isOver)
@@ -78,7 +79,8 @@ namespace ExplorerOpenGL.Model.Sprites
                     isClicked = true;
                     if (controler.MousePointer.currentMouseState.LeftButton == ButtonState.Released)
                     {
-                        OnMouseClick(sprites, controler);
+                        Vector2 ClickPosition = new Vector2(mousePointer.Position.X - Position.X - origin.X / 2, mousePointer.Position.Y - Position.Y - origin.Y / 2);
+                        OnMouseClick(sprites, controler, ClickPosition);
                     }
                 }
                 if (controler.MousePointer.currentMouseState.LeftButton == ButtonState.Released)
@@ -97,7 +99,8 @@ namespace ExplorerOpenGL.Model.Sprites
                     isClicked = true;
                     if (controler.MousePointer.currentMouseState.LeftButton == ButtonState.Released)
                     {
-                        OnMouseClick(sprites, controler);
+                        Vector2 ClickPosition = new Vector2(mousePointer.InWindowPosition.X - Position.X - origin.X / 2, mousePointer.InWindowPosition.Y - Position.Y - origin.Y / 2);
+                        OnMouseClick(sprites, controler, ClickPosition);
                     }
                 }
                 if (controler.MousePointer.currentMouseState.LeftButton == ButtonState.Released)
@@ -118,17 +121,17 @@ namespace ExplorerOpenGL.Model.Sprites
 
         private void OnMouseOver(List<Sprite> sprites, Controler controler)
         {
-            MouseOvered?.Invoke(this, sprites, controler);
+            MouseOvered?.Invoke(this, controler.MousePointer, controler);
         }
 
         private void OnMouseLeave(List<Sprite> sprites, Controler controler)
         {
-            MouseLeft?.Invoke(this, sprites, controler);
+            MouseLeft?.Invoke(this, controler.MousePointer, controler);
         }
 
-        private void OnMouseClick(List<Sprite> sprites, Controler controler)
+        private void OnMouseClick(List<Sprite> sprites, Controler controler, Vector2 clickPosition)
         {
-            MouseClicked?.Invoke(this, sprites, controler);
+            MouseClicked?.Invoke(this, controler.MousePointer, controler, clickPosition);
         }
 
         public virtual void Draw(SpriteBatch spriteBatch)

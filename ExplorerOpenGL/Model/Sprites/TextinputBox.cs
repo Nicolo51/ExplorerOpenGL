@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 
@@ -37,6 +38,8 @@ namespace ExplorerOpenGL.Model.Sprites
         public TextinputBox(Texture2D texture, SpriteFont SpriteFont, KeyboardUtils KeyboardUtils, bool eraseWhenUnfocused)
             :base(texture)
         {
+            MouseOvered += OnMouseOver;
+            MouseLeft += OnMouseLeft;
             DoEraseWhenUnfocused = eraseWhenUnfocused; 
             cursorIndex = 0;
             cursorOpacity = 1;
@@ -57,7 +60,17 @@ namespace ExplorerOpenGL.Model.Sprites
             inUse = azerty;
             keyboardUtils.KeyPressed += ArrowKeyPressed;
         }
-        
+
+        private void OnMouseOver(object sender, MousePointer mousePointer, Controler controler)
+        {
+            throw new NotImplementedException();
+        }
+
+        private void OnMouseLeft(object sender, MousePointer mousePointer, Controler controler)
+        {
+            throw new NotImplementedException();
+        }
+
         public void Clear()
         {
             inputText.Clear();
@@ -170,13 +183,21 @@ namespace ExplorerOpenGL.Model.Sprites
                         ComputeIndexCurrentToDraw();
                     }
                 }
-
+                CheckSubstring(); 
                 cursorPosition = new Vector2(spriteFont.MeasureString(inputText.ToString().Substring(indexStartDrawing, viewChar)).X - 3, -1) + Position; 
             }
             else
                 cursorOpacity = 0; 
 
             base.Update(gameTime, sprites, controler);
+        }
+
+        private void CheckSubstring()
+        {
+            while (indexStartDrawing + viewChar > inputText.Length)
+                viewChar--;
+            while (indexStartDrawing + indexEndDrawing > inputText.Length)
+                indexEndDrawing--;
         }
 
         public override void Draw(SpriteBatch spriteBatch)
@@ -187,9 +208,14 @@ namespace ExplorerOpenGL.Model.Sprites
             spriteBatch.DrawString(spriteFont, inputText.ToString().Substring(indexStartDrawing, indexEndDrawing), Position, Color.White, 0f, Vector2.Zero, 1f, SpriteEffects.None, layerDepth - .01f);
         }
 
-        public void OnMouseClick(object sender, List<Sprite> sprites, Controler controler)
+        public void OnMouseClick(object sender, MousePointer mousePointer, Controler controler, Vector2 clickPosition)
         {
-            Focus(sprites.Where(s => s is TextinputBox).ToList());
+            if (IsFocused)
+            {
+                SetCursor(clickPosition);
+                return; 
+            }
+            Focus(controler);
         }
 
         public string Validate()
@@ -200,6 +226,16 @@ namespace ExplorerOpenGL.Model.Sprites
             Clear();
             Validated?.Invoke(output.Trim(), this);
             return output;
+        }
+
+        public void SetCursor(Vector2 position)
+        {
+            int index = 0;
+            while ((index + indexStartDrawing < inputText.Length) && (spriteFont.MeasureString(inputText.ToString().Substring(indexStartDrawing, index)).X < position.X))
+            {
+                index++;
+            }
+            cursorIndex = index + indexStartDrawing;
         }
 
         public void MoveCursor(int i)
@@ -300,13 +336,9 @@ namespace ExplorerOpenGL.Model.Sprites
             }
         }
 
-        public void Focus(List<Sprite> focusables)
+        public void Focus(Controler controler)
         {
-            foreach (TextinputBox t in focusables)
-            {
-                if(t != this)
-                    t.UnFocus(); 
-            }
+            controler.UnFocusAll(); 
             IsFocused = true;
             Opacity = 1f; 
         }
@@ -325,11 +357,11 @@ namespace ExplorerOpenGL.Model.Sprites
             }
         }
 
-        public bool ToggleFocus(List<Sprite> sprites, bool validate = false)
+        public bool ToggleFocus(Controler controler, bool validate = false)
         {
             if (!IsFocused)
             {
-                Focus(sprites);
+                Focus(controler);
             }
             else if (IsFocused)
             {
@@ -357,6 +389,7 @@ namespace ExplorerOpenGL.Model.Sprites
         }
 
     }
+
     public enum KeyAlterer
     {
         None = 0,

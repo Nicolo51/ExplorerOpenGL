@@ -50,22 +50,22 @@ namespace ExplorerOpenGL.Model.Sprites
             base.Update(gameTime, sprites, controler);
         }
 
-        private void OnMouseOver(object sender, List<Sprite> sprites, Controler controler)
+        private void OnMouseOver(object sender, MousePointer mousePointer, Controler controler)
         {
             isMouseOver = true;
             controler.MousePointer.SourceRectangle = new Rectangle(300, 0, 75, 75);
             controler.DebugManager.AddEvent("Over"); 
         }
-        private void OnMouseLeft(object sender, List<Sprite> sprites, Controler controler)
+        private void OnMouseLeft(object sender, MousePointer mousePointer, Controler controler)
         {
             isMouseOver = false;
             controler.MousePointer.SourceRectangle = new Rectangle(0, 0, 75, 75);
 
             controler.DebugManager.AddEvent("Leave");
         }
-        private void OnMouseClick(object sender, List<Sprite> sprites, Controler controler)
+        private void OnMouseClick(object sender, MousePointer mousePointer, Controler controler, Vector2 clickPosition)
         {
-            controler.DebugManager.AddEvent("Click");
+            controler.DebugManager.AddEvent("Click at " + clickPosition.ToString());
         }
         public override void Draw(SpriteBatch spriteBatch)
         {

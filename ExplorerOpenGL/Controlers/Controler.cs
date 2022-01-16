@@ -112,11 +112,19 @@ namespace ExplorerOpenGL.Controlers
             _sprites.Add(sprite); 
         }
 
+        public void UnFocusAll()
+        {
+            foreach (TextinputBox t in _sprites.Where(e => e is TextinputBox))
+            {
+                t.UnFocus();
+            }
+        }
+
         private void OnKeyPressed(Keys[] keys, KeyboardUtils keyboardUtils)
         {
             if (KeyboardUtils.Contains(keys, Keys.Enter))
             {
-                TerminalTexintput.ToggleFocus(_sprites.Where(s => s is TextinputBox).ToList(), true); 
+                TerminalTexintput.ToggleFocus(this, true); 
             }
             if (KeyboardUtils.Contains(keys, Keys.OemQuestion))
             {
@@ -158,7 +166,7 @@ namespace ExplorerOpenGL.Controlers
             if (e.Character == '/' && !TerminalTexintput.IsFocused)
             {
                 TerminalTexintput.Clear(); 
-                TerminalTexintput.Focus(_sprites.Where(s => s is TextinputBox).ToList());
+                TerminalTexintput.Focus(this);
             }
             TextinputBox itemFocus = (TextinputBox)_sprites.Where(s => s is TextinputBox).FirstOrDefault(t => (t as TextinputBox).IsFocused);
             if (itemFocus == null)
