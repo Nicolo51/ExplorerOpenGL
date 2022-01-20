@@ -10,22 +10,19 @@ using System.Text;
 
 namespace ExplorerOpenGL.Model.Sprites
 {
-    public class TextinputBox : Sprite 
+    public class TextinputBox : Sprite
     {
         StringBuilder inputText;
-        readonly Dictionary<Keys, KeyCodes> azerty;
-        readonly Dictionary<Keys, KeyCodes> qwerty;
         SpriteFont spriteFont;
-        KeyboardUtils keyboardUtils; 
-        Dictionary<Keys, KeyCodes> inUse;
+        KeyboardUtils keyboardUtils;
         private int indexStartDrawing;
         private int indexEndDrawing;
 
         private int cursorIndex;
-        private int viewChar; 
+        private int viewChar;
         private Vector2 cursorPosition;
         private int cursorOpacity;
-        private float cursorTimer; 
+        private float cursorTimer;
 
         public int width { get { return _texture.Width; } }
 
@@ -36,16 +33,16 @@ namespace ExplorerOpenGL.Model.Sprites
         public event ValidateEventHandler Validated;
 
         public TextinputBox(Texture2D texture, SpriteFont SpriteFont, KeyboardUtils KeyboardUtils, bool eraseWhenUnfocused)
-            :base(texture)
+            : base(texture)
         {
             MouseOvered += OnMouseOver;
             MouseLeft += OnMouseLeft;
-            DoEraseWhenUnfocused = eraseWhenUnfocused; 
+            DoEraseWhenUnfocused = eraseWhenUnfocused;
             cursorIndex = 0;
             cursorOpacity = 1;
-            cursorTimer = 0f; 
+            cursorTimer = 0f;
 
-            indexStartDrawing = 0; 
+            indexStartDrawing = 0;
             MouseClicked += OnMouseClick;
             _texture = texture;
             spriteFont = SpriteFont;
@@ -54,10 +51,7 @@ namespace ExplorerOpenGL.Model.Sprites
             IsFocused = false;
             IsClickable = true;
             inputText = new StringBuilder();
-            azerty = new Dictionary<Keys, KeyCodes>();
-            keyboardUtils = KeyboardUtils; 
-            InitAzerty();
-            inUse = azerty;
+            keyboardUtils = KeyboardUtils;
             keyboardUtils.KeyPressed += ArrowKeyPressed;
         }
 
@@ -66,31 +60,31 @@ namespace ExplorerOpenGL.Model.Sprites
             inputText.Clear();
             indexEndDrawing = 0;
             indexStartDrawing = 0;
-            cursorIndex = 0; 
+            cursorIndex = 0;
         }
 
         public void AddChar(char c)
         {
             cursorOpacity = 1;
-            cursorTimer = 0f; 
-            inputText.Insert(cursorIndex, c); 
+            cursorTimer = 0f;
+            inputText.Insert(cursorIndex, c);
             cursorIndex++;
-            if(cursorIndex != inputText.Length)
+            if (cursorIndex != inputText.Length)
             {
-                ComputeIndexCurrentToDraw(); 
+                ComputeIndexCurrentToDraw();
             }
             else
             {
-                ComputeIndexEndToDraw(); 
+                ComputeIndexEndToDraw();
             }
         }
-        
+
         private Vector2 ComputeIndexEndToDraw()
         {
             for (indexStartDrawing = 0; spriteFont.MeasureString(inputText.ToString().Substring(indexStartDrawing)).X > width; indexStartDrawing++) ;
             indexEndDrawing = inputText.Length - indexStartDrawing;
             cursorPosition.X = spriteFont.MeasureString(inputText.ToString().Substring(indexStartDrawing)).X - 3;
-            return Vector2.Zero; 
+            return Vector2.Zero;
         }
 
         private Vector2 ComputeIndexCurrentToDraw()
@@ -100,11 +94,11 @@ namespace ExplorerOpenGL.Model.Sprites
             {
                 indexStartDrawing -= 8;
                 if (indexStartDrawing < 0)
-                    indexStartDrawing = 0; 
+                    indexStartDrawing = 0;
                 viewChar = 1;
             }
-            indexEndDrawing = 0; 
-            while(indexStartDrawing + indexEndDrawing < inputText.Length && spriteFont.MeasureString(inputText.ToString().Substring(indexStartDrawing, indexEndDrawing)).X < width - 15)
+            indexEndDrawing = 0;
+            while (indexStartDrawing + indexEndDrawing < inputText.Length && spriteFont.MeasureString(inputText.ToString().Substring(indexStartDrawing, indexEndDrawing)).X < width - 15)
             {
                 indexEndDrawing++;
             }
@@ -131,7 +125,7 @@ namespace ExplorerOpenGL.Model.Sprites
 
         private Vector2 ComputeIndexStartToDraw()
         {
-            for (indexEndDrawing = 0; indexStartDrawing + indexEndDrawing + 1 > inputText.Length && spriteFont.MeasureString(inputText.ToString().Substring(indexStartDrawing, indexEndDrawing)).X > width; indexEndDrawing++) ; 
+            for (indexEndDrawing = 0; indexStartDrawing + indexEndDrawing + 1 > inputText.Length && spriteFont.MeasureString(inputText.ToString().Substring(indexStartDrawing, indexEndDrawing)).X > width; indexEndDrawing++) ;
             cursorPosition.X = spriteFont.MeasureString(inputText.ToString().Substring(indexStartDrawing)).X - 3;
             return Vector2.Zero;
         }
@@ -146,38 +140,38 @@ namespace ExplorerOpenGL.Model.Sprites
                     cursorOpacity = (cursorOpacity == 1) ? 0 : 1;
                     cursorTimer = 0f;
                 }
-                if(spriteFont.MeasureString(inputText.ToString()).X < width)
+                if (spriteFont.MeasureString(inputText.ToString()).X < width)
                 {
                     indexStartDrawing = 0;
-                    indexEndDrawing = inputText.Length; 
+                    indexEndDrawing = inputText.Length;
                 }
                 viewChar = cursorIndex - indexStartDrawing;
                 if (viewChar < 0)
                 {
                     indexStartDrawing -= 8;
                     if (indexStartDrawing < 0)
-                        indexStartDrawing = 0; 
-                    ComputeIndexCurrentToDraw(); 
+                        indexStartDrawing = 0;
+                    ComputeIndexCurrentToDraw();
                     viewChar = 0;
                     //cursorIndex++;
                 }
-                if(spriteFont.MeasureString(inputText.ToString().Substring(indexStartDrawing, viewChar)).X > width-15)
+                if (spriteFont.MeasureString(inputText.ToString().Substring(indexStartDrawing, viewChar)).X > width - 15)
                 {
                     indexStartDrawing += 8;
-                    if(indexStartDrawing + indexEndDrawing > inputText.Length)
+                    if (indexStartDrawing + indexEndDrawing > inputText.Length)
                     {
-                        ComputeIndexEndToDraw(); 
+                        ComputeIndexEndToDraw();
                     }
                     else
                     {
                         ComputeIndexCurrentToDraw();
                     }
                 }
-                CheckSubstring(); 
-                cursorPosition = new Vector2(spriteFont.MeasureString(inputText.ToString().Substring(indexStartDrawing, viewChar)).X - 3, -1) + Position; 
+                CheckSubstring();
+                cursorPosition = new Vector2(spriteFont.MeasureString(inputText.ToString().Substring(indexStartDrawing, viewChar)).X - 3, -1) + Position;
             }
             else
-                cursorOpacity = 0; 
+                cursorOpacity = 0;
 
             base.Update(gameTime, sprites, controler);
         }
@@ -193,7 +187,6 @@ namespace ExplorerOpenGL.Model.Sprites
         public override void Draw(SpriteBatch spriteBatch)
         {
             base.Draw(spriteBatch);
-            spriteBatch.DrawString(spriteFont, cursorIndex.ToString() +'|' + viewChar.ToString(), Vector2.Zero, Color.Black, 0f, Vector2.Zero, 1f, SpriteEffects.None, layerDepth - .01f);
             spriteBatch.DrawString(spriteFont, "|", cursorPosition, Color.White, 0f, Vector2.Zero, cursorOpacity, SpriteEffects.None, layerDepth - .01f);
             spriteBatch.DrawString(spriteFont, inputText.ToString().Substring(indexStartDrawing, indexEndDrawing), Position, Color.White, 0f, Vector2.Zero, 1f, SpriteEffects.None, layerDepth - .01f);
         }
@@ -203,7 +196,7 @@ namespace ExplorerOpenGL.Model.Sprites
             if (IsFocused)
             {
                 SetCursor(clickPosition);
-                return; 
+                return;
             }
             Focus(controler);
         }
@@ -242,93 +235,42 @@ namespace ExplorerOpenGL.Model.Sprites
             if (!IsFocused)
                 return;
             if (cursorIndex + i >= 0 && cursorIndex + i <= inputText.Length)
-            { 
+            {
                 cursorIndex += i;
                 cursorOpacity = 1;
                 cursorTimer = 0f;
-            } 
+            }
         }
 
         public void UnFocus()
         {
             Opacity = 0f;
             if (DoEraseWhenUnfocused)
-                Clear(); 
+                Clear();
             IsFocused = false;
-        }
-
-        private void InitAzerty()
-        {
-            azerty.Add(Keys.Space, new KeyCodes("   "));
-            azerty.Add(Keys.D0, new KeyCodes("à0@"));
-            azerty.Add(Keys.D1, new KeyCodes("&1 "));
-            azerty.Add(Keys.D2, new KeyCodes("é2~"));
-            azerty.Add(Keys.D3, new KeyCodes("\"3#"));
-            azerty.Add(Keys.D4, new KeyCodes("\'4{"));
-            azerty.Add(Keys.D5, new KeyCodes("(5["));
-            azerty.Add(Keys.D6, new KeyCodes("-6|"));
-            azerty.Add(Keys.D7, new KeyCodes("è7`"));
-            azerty.Add(Keys.D8, new KeyCodes("`_8\\"));
-            azerty.Add(Keys.D9, new KeyCodes("ç9^"));
-            azerty.Add(Keys.OemPlus, new KeyCodes("=+}"));
-            azerty.Add(Keys.A, new KeyCodes("aA*"));
-            azerty.Add(Keys.B, new KeyCodes("bBù"));
-            azerty.Add(Keys.C, new KeyCodes("cC^"));
-            azerty.Add(Keys.D, new KeyCodes("dD "));
-            azerty.Add(Keys.E, new KeyCodes("eE$"));
-            azerty.Add(Keys.F, new KeyCodes("fF "));
-            azerty.Add(Keys.G, new KeyCodes("gG "));
-            azerty.Add(Keys.H, new KeyCodes("hH "));
-            azerty.Add(Keys.I, new KeyCodes("iI "));
-            azerty.Add(Keys.J, new KeyCodes("jJ "));
-            azerty.Add(Keys.K, new KeyCodes("kK "));
-            azerty.Add(Keys.L, new KeyCodes("lL "));
-            azerty.Add(Keys.M, new KeyCodes("mM "));
-            azerty.Add(Keys.N, new KeyCodes("nN "));
-            azerty.Add(Keys.O, new KeyCodes("oOµ"));
-            azerty.Add(Keys.P, new KeyCodes("pP%"));
-            azerty.Add(Keys.Q, new KeyCodes("qQ "));
-            azerty.Add(Keys.R, new KeyCodes("rR "));
-            azerty.Add(Keys.S, new KeyCodes("sS "));
-            azerty.Add(Keys.T, new KeyCodes("tT "));
-            azerty.Add(Keys.U, new KeyCodes("uU "));
-            azerty.Add(Keys.V, new KeyCodes("vV "));
-            azerty.Add(Keys.W, new KeyCodes("wW "));
-            azerty.Add(Keys.X, new KeyCodes("xX "));
-            azerty.Add(Keys.Y, new KeyCodes("yY "));
-            azerty.Add(Keys.Z, new KeyCodes("zZ "));
-            azerty.Add(Keys.OemComma, new KeyCodes(",? "));
-            azerty.Add(Keys.OemSemicolon, new KeyCodes(";. "));
-            azerty.Add(Keys.OemBackslash, new KeyCodes("<> "));
-            azerty.Add(Keys.Enter, new KeyCodes(" \n "));
-        }
-
-        internal void SlashPressed()
-        {
-            throw new NotImplementedException();
         }
 
         public void RemoveChar(bool nextChar = false)
         {
-            if (inputText.Length > 0 && ((!nextChar && cursorIndex>0) || (nextChar && cursorIndex < inputText.Length)))
+            if (inputText.Length > 0 && ((!nextChar && cursorIndex > 0) || (nextChar && cursorIndex < inputText.Length)))
             {
                 if (nextChar)
                 {
                     inputText.Remove(cursorIndex, 1);
-                    ComputeIndexCurrentToDraw(); 
+                    ComputeIndexCurrentToDraw();
                 }
                 else
                 {
                     inputText.Remove(cursorIndex - 1, 1);
                     cursorIndex -= 1;
                     viewChar = cursorIndex - indexStartDrawing;
-                    if(cursorIndex == inputText.Length)
+                    if (cursorIndex == inputText.Length)
                     {
-                        ComputeIndexEndToDraw(); 
+                        ComputeIndexEndToDraw();
                     }
                     else
                     {
-                        ComputeIndexCurrentToDraw(); 
+                        ComputeIndexCurrentToDraw();
                     }
                 }
                 return;
@@ -337,9 +279,9 @@ namespace ExplorerOpenGL.Model.Sprites
 
         public void Focus(Controler controler)
         {
-            controler.UnFocusAll(); 
+            controler.UnFocusAll();
             IsFocused = true;
-            Opacity = 1f; 
+            Opacity = 1f;
         }
 
         private void ArrowKeyPressed(Keys[] keys, KeyboardUtils keyboardUtils)
@@ -348,7 +290,7 @@ namespace ExplorerOpenGL.Model.Sprites
                 return;
             if (keyboardUtils.Contains(keys, Keys.Left))
             {
-                MoveCursor(-1); 
+                MoveCursor(-1);
             }
             if (keyboardUtils.Contains(keys, Keys.Right))
             {
@@ -366,34 +308,9 @@ namespace ExplorerOpenGL.Model.Sprites
             {
                 if (validate)
                     Validate();
-                UnFocus(); 
+                UnFocus();
             }
-            return IsFocused; 
+            return IsFocused;
         }
-
     }
-    class KeyCodes
-    {
-        public char Reg { get; private set; }
-        public char Cap { get; private set; }
-        public char AltGr { get; private set; }
-
-        public KeyCodes(string regCapAltGr)
-        {
-            if (regCapAltGr.Length > 4)
-                throw new Exception("too much char");
-            Reg = regCapAltGr[0];
-            Cap = regCapAltGr[1];
-            AltGr = regCapAltGr[2];
-        }
-
-    }
-
-    public enum KeyAlterer
-    {
-        None = 0,
-        Cap = 1,
-        AltGr = 2,
-    }
-    
 }

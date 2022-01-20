@@ -23,8 +23,6 @@ namespace ExplorerOpenGL.Controlers.Networking
         public Texture2D TextureName{ get; set; }
         public Vector2 PositionName { get; set; }
         public Vector2 OriginName { get; set; }
-        public Vector2 origin { get ; set; }
-        public float scale;
         public float opacity;
         public bool NameHasChange { get; set; }
         private Vector2 originFeet; 
@@ -33,8 +31,6 @@ namespace ExplorerOpenGL.Controlers.Networking
 
         public int idTexture { get; set; }
         public int idFeetTexture { get; set; }
-        public SpriteEffects Effects { get; set; }
-        public float layerDepth { get; private set; }
 
         public PlayerData(int id, string name)
         {

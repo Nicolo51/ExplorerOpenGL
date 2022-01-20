@@ -17,7 +17,8 @@ namespace ExplorerOpenGL.Model.Sprites
         public MouseState currentMouseState { get; private set; }
         public MouseState prevMouseState { get; private set; }
         public Vector2 InWindowPosition { get; private set; }
-            
+        public override Rectangle HitBox { get { return new Rectangle((int)Position.X, (int)Position.Y, 1, 1); } }
+
 
         public MousePointer(Texture2D texture)
             : base(texture)
@@ -28,6 +29,7 @@ namespace ExplorerOpenGL.Model.Sprites
             layerDepth = 0f;
             InitMouseTypes();
             SetCursorIcon(MousePointerType.Default);
+            IsHUD = true;
         }
         public MousePointer()
         {
@@ -57,8 +59,8 @@ namespace ExplorerOpenGL.Model.Sprites
                 prevMouseState = currentMouseState; 
             }
             currentMouseState = Mouse.GetState();
-            InWindowPosition = new Vector2(currentMouseState.Position.X, currentMouseState.Position.Y);
-            Position = new Vector2((controler.Camera.Position.X - controler.Camera.Bounds.X / 2 + currentMouseState.Position.X), (controler.Camera.Position.Y - controler.Camera.Bounds.Y / 2 + currentMouseState.Position.Y)); 
+            Position = new Vector2(currentMouseState.Position.X, currentMouseState.Position.Y);
+            InWindowPosition = new Vector2((controler.Camera.Position.X - controler.Camera.Bounds.X / 2 + currentMouseState.Position.X), (controler.Camera.Position.Y - controler.Camera.Bounds.Y / 2 + currentMouseState.Position.Y)); 
 
             base.Update(gameTime, sprites, controler);
         }
@@ -70,7 +72,7 @@ namespace ExplorerOpenGL.Model.Sprites
 
         public override string ToString()
         {
-            return "InWindowPos : " + InWindowPosition.X + " / "+ InWindowPosition.Y + "\nInGamePos : " + Position.X + " / " + Position.Y;
+            return "InGamePos : " + InWindowPosition.X + " / "+ InWindowPosition.Y + "\nInWindowPos : " + Position.X + " / " + Position.Y;
         }
         private void InitMouseTypes()
         {
