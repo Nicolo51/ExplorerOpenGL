@@ -60,7 +60,7 @@ namespace ExplorerOpenGL.Controlers
             }
 
             BuildDebugMessage(sprites);
-            OutlineDebugMessageTexture = textureManager.OutlineText(debugMessage.ToString(), Fonts["Default"], Color.Black, Color.White, 2);
+            OutlineDebugMessageTexture = textureManager.OutlineText(debugMessage.ToString(), "Default", Color.Black, Color.White, 2);
         }
 
         public void ToggleDebugMode(List<Sprite> sprites)

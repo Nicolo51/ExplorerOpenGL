@@ -82,25 +82,40 @@ namespace ExplorerOpenGL.Controlers
                 case PlayerSyncEventArgs psea:
                     foreach(PlayerData pd in psea.PlayerData)
                     {
-                        client.PlayersData.Add(pd.ID, new PlayerData(pd.ID, pd.Name));
+                        PlayerData playerDataSync = new PlayerData(pd.ID, pd.Name);
+                        client.PlayersData.Add(pd.ID, playerDataSync);
+                        controler.AddSprite(playerDataSync);
                     }
                     break;
                 case RequestResponseEventArgs rrea:
                     terminal.AddMessageToTerminal(rrea.Message, "System", Color.White);
                     break;
                 case PlayerDisconnectionEventArgs pdea:
+                    controler.RemoveSprite(client.PlayersData[pdea.ID]);
                     client.PlayersData.Remove(pdea.ID);
                     terminal.AddMessageToTerminal(pdea.Message, "System", Color.White);
                     break;
                 case PlayerConnectEventArgs pcea:
-                    client.PlayersData.Add(pcea.ID, new PlayerData(pcea.ID, pcea.Name));
+                    PlayerData playerDataCo = new PlayerData(pcea.ID, pcea.Name);
+                    client.PlayersData.Add(pcea.ID, playerDataCo);
                     terminal.AddMessageToTerminal(pcea.Message, "System", Color.White);
+                    controler.AddSprite(playerDataCo);
                     break;
+                case PlayerChangeNameEventArgs pcnea:
+                    if(pcnea.IDPlayer == client.myId)
+                    {
+                        controler.AddActionToUIThread(controler.Player.ChangeName, pcnea.Name);
+                        return; 
+                    }
+                    client.PlayersData[pcnea.IDPlayer].Name = pcnea.Name;
+                    break; 
                 default:
                     terminal.AddMessageToTerminal(e.Message, "System", Color.White);
                     break; 
             }
         }
+
+        
 
         public void OnPacketSent(NetworkEventArgs e)
         {
@@ -112,30 +127,13 @@ namespace ExplorerOpenGL.Controlers
 
         public void Update(GameTime gametime, Player player)
         {
-            if(clock > timer)
+            if (clock > timer)
             {
                 client.SendMessage(player, (int)ClientPackets.UdpUpdatePlayer); 
                 clock = 0d;
                 return; 
             }
             clock += gametime.ElapsedGameTime.TotalMilliseconds;
-        }
-
-        public void Draw(SpriteBatch spriteBatch)
-        {
-            if (!IsConnectedToAServer)
-                return; 
-            foreach(KeyValuePair<int, PlayerData> entry in client.PlayersData)
-            {
-                if(entry.Value.playerFeetTexture == null || entry.Value.playerTexture == null)
-                {
-                    entry.Value.playerFeetTexture = controler.TextureManager.LoadedTextures["playerfeet"]; 
-                    entry.Value.playerTexture = controler.TextureManager.LoadedTextures["player"];
-                }
-                if (client.myId == entry.Key)
-                    continue; 
-                entry.Value.Draw(spriteBatch); 
-            }
         }
     }
 }

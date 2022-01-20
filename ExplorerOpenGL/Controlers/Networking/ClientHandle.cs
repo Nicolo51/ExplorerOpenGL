@@ -130,19 +130,18 @@ namespace ExplorerOpenGL.Controlers.Networking
         {
             int result = packet.ReadInt();
             string name = packet.ReadString();
+            int IDClient = packet.ReadInt(); 
             if (result == 200 && !string.IsNullOrWhiteSpace(name))
             {
-                RequestResponseEventArgs e = new RequestResponseEventArgs()
+                PlayerChangeNameEventArgs e = new PlayerChangeNameEventArgs()
                 {
                     Message = $"Successfuly change username to {name}.",
-                    MessageType = MessageType.OnChangeNameResult, 
-                    Packet = packet, 
-                    Protocol = Protocol.TCP, 
-                    RequestStatus = RequestStatus.Success, 
-                    RequestType = RequestType.Receive, 
-                    Request = "ChangeName", 
-                    Response = "200", 
-                    Arguments = new string[] {name}, 
+                    MessageType = MessageType.OnChangeNameResult,
+                    Packet = packet,
+                    Protocol = Protocol.TCP,
+                    RequestType = RequestType.Receive,
+                    IDPlayer = IDClient, 
+                    Name = name,
                 };
                 client.PacketReceived(e);
             }

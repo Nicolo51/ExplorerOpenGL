@@ -99,7 +99,8 @@ namespace GameServerTCP
             {
                 packet.Write(response);
                 packet.Write(name);
-                SendTcpData(toClient, packet);
+                packet.Write(toClient);
+                SendTcpDataToAll(packet);
             }
         }
 

@@ -17,15 +17,20 @@ namespace ExplorerOpenGL.Model.Sprites
         public Input input;
         private PlayerFeet playerFeet;
         private float Velocity;
+        private Texture2D TextureName;
+        private Vector2 PositionName;
+        private Vector2 OriginName; 
+        private TextureManager textureManager; 
         public Vector2 Direction;
         public string Name{ get; private set; }
         public int ID { get; private set; }
         public float PlayerFeetRadian { get { return playerFeet.Radian; } }
 
-        public Player(Texture2D texture, Texture2D playerFeetTexture, MousePointer mousepointer, string name)
+        public Player(Texture2D texture, Texture2D playerFeetTexture, MousePointer mousepointer, string name, TextureManager textureManager)
             : base(texture)
         {
-            this.Name = name; 
+            this.textureManager = textureManager;
+            ChangeName(name);
             Direction = new Vector2(0, 0);
             playerFeet = new PlayerFeet(playerFeetTexture);
             playerFeet.layerDepth = .9f;
@@ -40,7 +45,7 @@ namespace ExplorerOpenGL.Model.Sprites
         {
             Radian = CalculateAngle(Position, mousePointer.Position);
             Move(controler, sprites);
-
+            PositionName = new Vector2(Position.X, Position.Y + 50);
             base.Update(gameTime, sprites, controler);
         }
 
@@ -54,6 +59,15 @@ namespace ExplorerOpenGL.Model.Sprites
             }
             return output;
         }
+
+        public void ChangeName(object name)
+        {
+
+            TextureName = textureManager.OutlineText((name as string), "Default", Color.Black, Color.White, 2); 
+            Name = (name as string);
+            OriginName = new Vector2(TextureName.Width / 2, TextureName.Height / 2);
+        }
+
         protected virtual void Move(Controler controler, List<Sprite> sprites)
         {
             Direction = Vector2.Zero;
@@ -108,6 +122,7 @@ namespace ExplorerOpenGL.Model.Sprites
         public override void Draw(SpriteBatch spriteBatch)
         {
             playerFeet.Draw(spriteBatch);
+            spriteBatch.Draw(TextureName, PositionName , null, Color.White, 0f, OriginName, .75f, SpriteEffects.None, layerDepth); 
             base.Draw(spriteBatch);
         }
 

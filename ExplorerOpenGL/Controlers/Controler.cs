@@ -19,6 +19,10 @@ namespace ExplorerOpenGL.Controlers
 {
     public class Controler
     {
+        private List<Action<object>> action;
+        private List<object> actionArg; 
+
+
         public KeyboardUtils KeyboardUtils;
         public DebugManager DebugManager; //instantiate on load
         public TextureManager TextureManager; //instantiate on load 
@@ -40,10 +44,12 @@ namespace ExplorerOpenGL.Controlers
 
         public Controler(GameWindow gameWindow, Dictionary<string, SpriteFont> Fonts, List<Sprite> sprites, GraphicsDeviceManager Graphics, ContentManager content, SpriteBatch spriteBatch, Vector2 Bounds)
         {
-            IsTextInputBoxFocused = false; 
+            IsTextInputBoxFocused = false;
+            action = new List<Action<object>>();
+            actionArg = new List<object>(); 
             KeyboardUtils = new KeyboardUtils();
             RenderManager = new RenderManager(sprites, Graphics, spriteBatch);
-            TextureManager = new TextureManager(Graphics, content, spriteBatch, RenderManager);
+            TextureManager = new TextureManager(Graphics, content, spriteBatch, RenderManager, Fonts);
             DebugManager = new DebugManager(TextureManager, Fonts, Graphics);
             Terminal = new Terminal(TextureManager.CreateTexture(700, 30, paint => Color.Black), Fonts["Default"], this) { Position = new Vector2(0, 185)};
             NetworkManager = new NetworkManager(this, Terminal);
@@ -70,6 +76,13 @@ namespace ExplorerOpenGL.Controlers
             InitKeyEvent(); 
         }
 
+        public void AddActionToUIThread(Action<object> action, object arg)
+        {
+            this.action.Add(action);
+            this.actionArg.Add(arg);
+        }
+
+
         private void OnQueried(string message)
         {
             if (NetworkManager.IsConnectedToAServer && (message = message.Trim()) != String.Empty)
@@ -80,6 +93,10 @@ namespace ExplorerOpenGL.Controlers
 
         public void Update(List<Sprite> sprites, GameTime gametime)
         {
+            for(int i = 0; i < action.Count; i++)
+            {
+                action[i].Invoke(actionArg[i]); 
+            }
             if(KeyboardUtils != null && TextureManager != null && DebugManager != null && NetworkManager != null )
             {
                 KeyboardUtils.Update();
@@ -161,6 +178,12 @@ namespace ExplorerOpenGL.Controlers
         {
 
         }
+
+        public void RemoveSprite(Sprite sprite)
+        {
+            _sprites.Remove(sprite);
+        }
+
         internal void OnTextInput(object sender, TextInputEventArgs e)
         {
             if (e.Character == '/' && !TerminalTexintput.IsFocused)

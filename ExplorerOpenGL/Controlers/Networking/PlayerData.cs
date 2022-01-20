@@ -13,15 +13,21 @@ namespace ExplorerOpenGL.Controlers.Networking
     {
         public int ID { get; private set; }
         public string Name { get; set; }
+        private string RenderName { get; set; }
         public Vector2 ServerPosition { get; set; }
         public Vector2 InGamePosition { get; set; }
         public float LookAtRadian { get; set; }
         public float FeetRadian { get; set; }
         public Texture2D playerTexture { get; set; }
         public Texture2D playerFeetTexture { get; set; }
+        public Texture2D TextureName{ get; set; }
+        public Vector2 PositionName { get; set; }
+        public Vector2 OriginName { get; set; }
         public Vector2 origin { get ; set; }
         public float scale;
         public float opacity;
+        public bool NameHasChange { get; set; }
+        private Vector2 originFeet; 
 
 
 
@@ -32,6 +38,7 @@ namespace ExplorerOpenGL.Controlers.Networking
 
         public PlayerData(int id, string name)
         {
+            NameHasChange = false; 
             this.Name = name; 
             scale = 1f;
             opacity = 1f; 
@@ -39,6 +46,7 @@ namespace ExplorerOpenGL.Controlers.Networking
         }
         public PlayerData(int id)
         {
+            NameHasChange = false;
             scale = 1f;
             opacity = 1f;
             ID = id;
@@ -46,13 +54,36 @@ namespace ExplorerOpenGL.Controlers.Networking
 
         public override void Update(GameTime gameTime, List<Sprite> sprites, Controler controler)
         {
-            //controler.NetworkManager.
+            PositionName = new Vector2(ServerPosition.X, ServerPosition.Y + 50);
+            if(RenderName != Name)
+            {
+                GenerateTexture(controler.TextureManager);
+            }
+            if(playerFeetTexture == null || playerTexture == null)
+            {
+                SetTextures(controler.TextureManager.LoadedTextures["playerfeet"], controler.TextureManager.LoadedTextures["player"]);
+            }
             base.Update(gameTime, sprites, controler);
         }
 
-        private Vector2 getOrigin(Texture2D texture)
+        private void SetTextures(Texture2D texture, Texture2D textureFeet)
         {
-            return new Vector2(texture.Width / 2, texture.Height / 2);
+            playerFeetTexture = textureFeet;
+            playerTexture = texture; 
+            origin = new Vector2(playerTexture.Width / 2, playerTexture.Height / 2);
+            originFeet = new Vector2(playerFeetTexture.Width / 2, playerFeetTexture.Height / 2);
+        }
+
+        private void GenerateTexture(TextureManager tm)
+        {
+            TextureName = tm.OutlineText(Name, "Default", Color.Black, Color.White, 2);
+            OriginName = new Vector2(TextureName.Width / 2, TextureName.Height / 2);
+            RenderName = Name; 
+        }
+
+        public void ChangeName (string name)
+        {
+            Name = name; 
         }
 
         public override string ToString()
@@ -62,9 +93,13 @@ namespace ExplorerOpenGL.Controlers.Networking
 
         public override void Draw(SpriteBatch spriteBatch)
         {
-            spriteBatch.Draw(playerFeetTexture, ServerPosition, null, Color.White * opacity, FeetRadian, getOrigin(playerFeetTexture), scale, Effects, layerDepth);
-            spriteBatch.Draw(playerTexture, ServerPosition, null, Color.White * opacity, LookAtRadian, getOrigin(playerTexture), scale*.5f, Effects, layerDepth+.01f); 
-
+            if (TextureName != null && playerFeetTexture != null && playerTexture != null)
+            {
+                spriteBatch.Draw(TextureName, PositionName, null, Color.White, 0f, OriginName, .75f, SpriteEffects.None, layerDepth);
+                spriteBatch.Draw(playerFeetTexture, ServerPosition, null, Color.White * opacity, FeetRadian, originFeet, scale * .5f, Effects, layerDepth);
+                spriteBatch.Draw(playerTexture, ServerPosition, null, Color.White * opacity, LookAtRadian, origin, scale , Effects, layerDepth + .01f);
+            }
+            
         }
     }
 }

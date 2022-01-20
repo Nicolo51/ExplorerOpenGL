@@ -12,10 +12,7 @@ namespace ExplorerOpenGL.Model.Sprites
     public class Terminal : Sprite 
     {
         List<ChatElement> messages;
-        bool seeAllMessages;
-        bool IsTakingKeyboardInput;
         SpriteFont font;
-        public string Name;
         public Color FontColor; 
         private Controler controler;
         private int height;
@@ -39,14 +36,12 @@ namespace ExplorerOpenGL.Model.Sprites
         {
             height = 500; 
             width = texture.Width;
-            Name = "Me";
             this.controler = Controler;
             IsHUD = true; 
             font = Font;
             layerDepth = .1f; 
             _texture = texture; 
             Opacity = .5f;
-            seeAllMessages = true;
             ChatElement InitMessage = new ChatElement()
             {
                 Color = Color.White,
@@ -108,7 +103,7 @@ namespace ExplorerOpenGL.Model.Sprites
 
         public void AddMessageToTerminal(string message)
         {
-            AddMessageToTerminal(message, Name, Color.White); 
+            AddMessageToTerminal(message, controler.Player.Name, Color.White); 
         }
 
         public void KeyboardListener(Keys[] keys, KeyboardUtils keyboardUtils)
@@ -145,9 +140,6 @@ namespace ExplorerOpenGL.Model.Sprites
                         continue;
                     messages[i].Opacity = .5f;
                 }
-            }
-            else{
-                seeAllMessages = false; 
             }
 
             //if (IsNewMessage)
@@ -235,9 +227,8 @@ namespace ExplorerOpenGL.Model.Sprites
             }
             else
             {
-                
-                Name = commande[1];
-                AddMessageToTerminal("Successfully changed name to : " + Name, "Info", Color.Green);
+                controler.Player.ChangeName(commande[1]);
+                AddMessageToTerminal("Successfully changed name to : " + commande[1], "Info", Color.Green);
                 return; 
             }
         }
@@ -245,7 +236,6 @@ namespace ExplorerOpenGL.Model.Sprites
     
     class ChatElement
     {
-        public bool IsDisplayed; 
         public string Message;
         public DateTime Date;
         public string Name;

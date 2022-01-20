@@ -16,10 +16,12 @@ namespace ExplorerOpenGL.Controlers
         private ContentManager Content;
         private SpriteBatch spriteBatch;
         private RenderManager renderManager;
-        public Dictionary<string, Texture2D> LoadedTextures; 
+        public Dictionary<string, Texture2D> LoadedTextures;
+        Dictionary<string, SpriteFont> fonts;
 
-        public TextureManager(GraphicsDeviceManager Graphics, ContentManager content, SpriteBatch spriteBatch, RenderManager renderManager)
+        public TextureManager(GraphicsDeviceManager Graphics, ContentManager content, SpriteBatch spriteBatch, RenderManager renderManager, Dictionary<string, SpriteFont> fonts)
         {
+            this.fonts = fonts; 
             LoadedTextures = new Dictionary<string, Texture2D>(); 
             Content = content;
             this.renderManager = renderManager; 
@@ -116,9 +118,10 @@ namespace ExplorerOpenGL.Controlers
             return texture; 
         }
 
-        public Texture2D OutlineText(string input, SpriteFont font, Color borderColor, Color textColor, int Thickness)
+        public Texture2D OutlineText(string input, string font, Color borderColor, Color textColor, int Thickness)
         {
-            Texture2D textTexture = renderManager.RenderTextToTexture(input, font, textColor, Thickness) ;
+
+            Texture2D textTexture = renderManager.RenderTextToTexture(input, fonts[font], textColor, Thickness) ;
             Vector2 stringDimension = new Vector2(textTexture.Width, textTexture.Height);
             Color[] data = new Color[textTexture.Width* textTexture.Height];
             

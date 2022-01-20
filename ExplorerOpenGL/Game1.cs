@@ -68,7 +68,7 @@ namespace ExplorerOpenGL
             //        Position = new Vector2(100, 100),
             //    });
             //}).Start();
-            Player Player = new Player(player, playerfeet, controler.MousePointer, "Nicolas")
+            Player Player = new Player(player, playerfeet, controler.MousePointer, "Nicolas", controler.TextureManager)
             {
                 Position = new Vector2(0, 0),
                 input = new Input()
@@ -82,7 +82,7 @@ namespace ExplorerOpenGL
             this.player = Player;
             controler.Player = this.player;
             _sprites.Add(Player);
-            _sprites.Add(new Button(controler.TextureManager.OutlineText("Jouer", fonts["Default"], Color.Black, new Color(4, 136, 201), 1), controler.TextureManager.OutlineText("Jouer", fonts["Default"], Color.Black, Color.White, 2), null));
+            _sprites.Add(new Button(controler.TextureManager.OutlineText("Jouer", "Default", Color.Black, new Color(4, 136, 201), 1), controler.TextureManager.OutlineText("Jouer", "Default", Color.Black, Color.White, 2), null));
             //_sprites.Add(new Wall(controler.TextureManager.CreateTexture(1000, 50, paint => (paint % 2 == 0)? Color.White : Color.Black)));
             //_sprites.Add(new Button(controler.TextureManager.CreateTexture(200, 200, paint => Color.Black), controler.TextureManager.CreateTexture(200, 200, paint => Color.Red), fonts["Default"])); 
             controler.Camera.FollowSprite(Player);
@@ -139,8 +139,6 @@ namespace ExplorerOpenGL
             if (_sprites == null)
                 return;
             spriteBatch.Begin(SpriteSortMode.BackToFront, transformMatrix: controler.Camera.Transform);
-
-            controler.NetworkManager.Draw(spriteBatch);
 
             foreach (Sprite sprite in _sprites.Where(e => !e.IsHUD))
             {
