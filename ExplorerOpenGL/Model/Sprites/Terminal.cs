@@ -42,15 +42,8 @@ namespace ExplorerOpenGL.Model.Sprites
             layerDepth = .1f; 
             _texture = texture; 
             Opacity = .5f;
-            ChatElement InitMessage = new ChatElement()
-            {
-                Color = Color.White,
-                Date = DateTime.Now,
-                Message = "Chat Initialized !",
-                Name = "Info",
-                DisplayName = true, 
-            }; 
-            messages = new List<ChatElement>() { InitMessage };
+            
+            messages = new List<ChatElement>();
         }
 
         public void AddMessageToTerminal(string message, string name, Color color)

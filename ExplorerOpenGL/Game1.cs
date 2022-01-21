@@ -52,6 +52,7 @@ namespace ExplorerOpenGL
             var fonts = new Dictionary<string, SpriteFont>()
             {
                 {"Default", Content.Load<SpriteFont>("Fonts/Default") },
+                {"Menu", Content.Load<SpriteFont>("Fonts/Menu") },
             };
 
             _sprites = new List<Sprite>();
@@ -68,24 +69,23 @@ namespace ExplorerOpenGL
             //        Position = new Vector2(100, 100),
             //    });
             //}).Start();
-            Player Player = new Player(player, playerfeet, controler.MousePointer, "Nicolas", controler.TextureManager)
-            {
-                Position = new Vector2(0, 0),
-                input = new Input()
-                {
-                    Down = Keys.S,
-                    Up = Keys.Z,
-                    Left = Keys.Q,
-                    Right = Keys.D,
-                }
-            };
-            this.player = Player;
-            controler.Player = this.player;
-            _sprites.Add(Player);
-            _sprites.Add(new Button(controler.TextureManager.OutlineText("Jouer", "Default", Color.Black, new Color(4, 136, 201), 1), controler.TextureManager.OutlineText("Jouer", "Default", Color.Black, Color.White, 2), null));
+            //Player Player = new Player(player, playerfeet, controler.MousePointer, "Nicolas", controler.TextureManager)
+            //{
+            //    Position = new Vector2(0, 0),
+            //    input = new Input()
+            //    {
+            //        Down = Keys.S,
+            //        Up = Keys.Z,
+            //        Left = Keys.Q,
+            //        Right = Keys.D,
+            //    }
+            //};
+            //this.player = Player;
+            //controler.Player = this.player;
+            //_sprites.Add(Player);
             //_sprites.Add(new Wall(controler.TextureManager.CreateTexture(1000, 50, paint => (paint % 2 == 0)? Color.White : Color.Black)));
             //_sprites.Add(new Button(controler.TextureManager.CreateTexture(200, 200, paint => Color.Black), controler.TextureManager.CreateTexture(200, 200, paint => Color.Red), fonts["Default"])); 
-            controler.Camera.FollowSprite(Player);
+            //controler.Camera.FollowSprite(Player);
             controler.Camera.LookAt(0, 0); 
 
             Window.ClientSizeChanged += UpdateDisplay;
@@ -147,7 +147,7 @@ namespace ExplorerOpenGL
 
             spriteBatch.End();
 
-            spriteBatch.Begin();
+            spriteBatch.Begin(SpriteSortMode.BackToFront);
 
             foreach (Sprite sprite in _sprites.Where(e => e.IsHUD))
             {

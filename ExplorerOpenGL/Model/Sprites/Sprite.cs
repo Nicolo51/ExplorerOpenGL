@@ -23,7 +23,7 @@ namespace ExplorerOpenGL.Model.Sprites
                 if (_texture != null) return new Rectangle((int)Position.X - (int)origin.X, (int)Position.Y - (int)origin.Y, (int)(SourceRectangle.Width * scale), (int)(SourceRectangle.Height * scale));
                 else return new Rectangle((int)Position.X, (int)Position.Y, 1, 1); 
             } }
-        protected Vector2 origin;
+        public Vector2 origin;
         public SpriteEffects Effects { get; set; }
         public float  layerDepth { get; set; }
         protected float scale { get; set; }

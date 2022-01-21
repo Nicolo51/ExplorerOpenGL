@@ -76,7 +76,7 @@ namespace ExplorerOpenGL.Controlers
 
             string textToRender = temp.ToString(); 
             Vector2 stringDimension = font.MeasureString(temp.ToString());
-            Vector2 targetBounds = new Vector2(stringDimension.X + outlineOffset * 2, stringDimension.Y + outlineOffset * 2); 
+            Vector2 targetBounds = new Vector2(stringDimension.X + outlineOffset * 4, stringDimension.Y + outlineOffset * 4); 
 
             Texture2D texture = new Texture2D(graphics.GraphicsDevice, (int)targetBounds.X, (int)targetBounds.Y);
 
