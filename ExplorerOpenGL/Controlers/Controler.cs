@@ -37,13 +37,14 @@ namespace ExplorerOpenGL.Controlers
 
         private GameWindow window;
         List<Sprite> _sprites;
-        Dictionary<string, SpriteFont> fonts;
+        public Dictionary<string, SpriteFont> Fonts { get; set; }
         GraphicsDeviceManager graphics;
 
         public bool IsTextInputBoxFocused; 
 
         public Controler(GameWindow gameWindow, Dictionary<string, SpriteFont> Fonts, List<Sprite> sprites, GraphicsDeviceManager Graphics, ContentManager content, SpriteBatch spriteBatch, Vector2 Bounds)
         {
+            ScripterManager.InstanceCreated += OnScripteManagerCreation; 
             IsTextInputBoxFocused = false;
             action = new List<Action<object>>();
             actionArg = new List<object>(); 
@@ -62,7 +63,7 @@ namespace ExplorerOpenGL.Controlers
 
             this.Bounds = Bounds; 
             _sprites = sprites; 
-            fonts = Fonts;
+            this.Fonts = Fonts;
             graphics = Graphics;
 
             Camera = new Camera(new Vector2(graphics.PreferredBackBufferWidth, graphics.PreferredBackBufferHeight));
@@ -73,7 +74,14 @@ namespace ExplorerOpenGL.Controlers
             _sprites.Add(Terminal);
             _sprites.Add(TerminalTexintput);
             _sprites.Add(MousePointer);
+
+            ScripterManager.Instance.CreateMenu();
             InitKeyEvent(); 
+        }
+
+        private void OnScripteManagerCreation(object sender, EventArgs e)
+        {
+            ScripterManager.Instance.SetControlerAndComponents(this, _sprites);
         }
 
         public void AddActionToUIThread(Action<object> action, object arg)

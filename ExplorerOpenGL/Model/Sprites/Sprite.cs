@@ -19,11 +19,11 @@ namespace ExplorerOpenGL.Model.Sprites
         protected Texture2D _texture;
         public float Radian { get; set; }
         public Rectangle SourceRectangle { get; set; }
-        public Rectangle HitBox { get {
+        public virtual Rectangle HitBox { get {
                 if (_texture != null) return new Rectangle((int)Position.X - (int)origin.X, (int)Position.Y - (int)origin.Y, (int)(SourceRectangle.Width * scale), (int)(SourceRectangle.Height * scale));
                 else return new Rectangle((int)Position.X, (int)Position.Y, 1, 1); 
             } }
-        protected Vector2 origin;
+        public Vector2 origin;
         public SpriteEffects Effects { get; set; }
         public float  layerDepth { get; set; }
         protected float scale { get; set; }
@@ -68,7 +68,7 @@ namespace ExplorerOpenGL.Model.Sprites
         private void CheckMouseEvent(List<Sprite> sprites, Controler controler)
         {
             MousePointer mousePointer = controler.MousePointer; 
-            if (this.HitBox.Intersects(controler.MousePointer.HitBox) && !this.IsHUD)
+            if (this.HitBox.Intersects(new Rectangle((int)controler.MousePointer.InWindowPosition.X, (int)controler.MousePointer.InWindowPosition.Y, 1, 1)) && !this.IsHUD)
             {
                 if (!isOver)
                     OnMouseOver(sprites, controler);
@@ -88,7 +88,7 @@ namespace ExplorerOpenGL.Model.Sprites
                     isClicked = false;
                 }
             }
-            else if (this.IsHUD && new Rectangle((int)controler.MousePointer.InWindowPosition.X, (int)controler.MousePointer.InWindowPosition.Y, 1, 1).Intersects(this.HitBox))
+            else if (this.IsHUD && controler.MousePointer.HitBox.Intersects(this.HitBox))
             {
                 if (!isOver)
                     OnMouseOver(sprites, controler);

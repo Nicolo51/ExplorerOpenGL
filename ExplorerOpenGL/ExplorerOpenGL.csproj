@@ -69,6 +69,7 @@
     <Compile Include="Controlers\Networking\UDP.cs" />
     <Compile Include="Controlers\Networking\EventArgs\PlayerChangeNameEventArgs.cs" />
     <Compile Include="Controlers\RenderManager.cs" />
+    <Compile Include="Controlers\ScripterManager.cs" />
     <Compile Include="Controlers\TextureManager.cs" />
     <Compile Include="Game1.cs" />
     <Compile Include="Model\Input.cs" />
