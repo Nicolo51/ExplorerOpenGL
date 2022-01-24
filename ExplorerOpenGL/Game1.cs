@@ -90,7 +90,6 @@ namespace ExplorerOpenGL
 
             Window.ClientSizeChanged += UpdateDisplay;
             Window.AllowUserResizing = true;
-
         }
         public void UpdateDisplay(object sender, EventArgs e)
         {
