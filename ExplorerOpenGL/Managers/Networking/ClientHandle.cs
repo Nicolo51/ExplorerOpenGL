@@ -1,4 +1,4 @@
-﻿using ExplorerOpenGL.Controlers.Networking.EventArgs;
+﻿using ExplorerOpenGL.Managers.Networking.EventArgs;
 using ExplorerOpenGL.Model.Sprites;
 using Microsoft.Xna.Framework;
 using System;
@@ -9,18 +9,18 @@ using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ExplorerOpenGL.Controlers.Networking
+namespace ExplorerOpenGL.Managers.Networking
 {
     public class ClientHandle
     {
         private Client client; 
         private ClientSend clientSend;
-        private Controler controler;
+        private DebugManager debugManager;
 
-        public ClientHandle(Client client, ClientSend clientSend, Controler controler)
+        public ClientHandle(Client client, ClientSend clientSend)
         {
             this.client = client;
-            this.controler = controler; 
+            this.debugManager = DebugManager.Instance; 
             this.clientSend = clientSend; 
         }
 
@@ -60,7 +60,7 @@ namespace ExplorerOpenGL.Controlers.Networking
         {
             string msg = _packet.ReadString();
 
-            client.controler.DebugManager.AddEvent($"Received packet via UDP.Contains message: {msg}");
+            debugManager.AddEvent($"Received packet via UDP.Contains message: {msg}");
         }
 
         public void OnTcpPlayersSync(Packet packet)

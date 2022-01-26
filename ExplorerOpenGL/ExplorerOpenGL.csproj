@@ -49,28 +49,29 @@
     <StartupObject>ExplorerOpenGL.Program</StartupObject>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="Controlers\Controler.cs" />
-    <Compile Include="Controlers\DebugManager.cs" />
-    <Compile Include="Controlers\Networking\EventArgs\ChatMessageEventArgs.cs" />
-    <Compile Include="Controlers\Networking\EventArgs\NetworkEventArgs.cs" />
-    <Compile Include="Controlers\Networking\EventArgs\PlayerConnectEventArgs.cs" />
-    <Compile Include="Controlers\Networking\EventArgs\PlayerDisconnectionEventArgs.cs" />
-    <Compile Include="Controlers\Networking\EventArgs\PlayerSyncEventArgs.cs" />
-    <Compile Include="Controlers\Networking\EventArgs\PlayerUpdateEventArgs.cs" />
-    <Compile Include="Controlers\Networking\EventArgs\RequestResponseEventArgs.cs" />
-    <Compile Include="Controlers\NetworkManager.cs" />
-    <Compile Include="Controlers\Networking\Client.cs" />
-    <Compile Include="Controlers\Networking\ClientHandle.cs" />
-    <Compile Include="Controlers\Networking\ClientSend.cs" />
-    <Compile Include="Controlers\Networking\Packet.cs" />
-    <Compile Include="Controlers\Networking\PlayerData.cs" />
-    <Compile Include="Controlers\Networking\SocketAdress.cs" />
-    <Compile Include="Controlers\Networking\TCP.cs" />
-    <Compile Include="Controlers\Networking\UDP.cs" />
-    <Compile Include="Controlers\Networking\EventArgs\PlayerChangeNameEventArgs.cs" />
-    <Compile Include="Controlers\RenderManager.cs" />
-    <Compile Include="Controlers\ScripterManager.cs" />
-    <Compile Include="Controlers\TextureManager.cs" />
+    <Compile Include="Managers\FontManager.cs" />
+    <Compile Include="Managers\GameManager.cs" />
+    <Compile Include="Managers\DebugManager.cs" />
+    <Compile Include="Managers\Networking\EventArgs\ChatMessageEventArgs.cs" />
+    <Compile Include="Managers\Networking\EventArgs\NetworkEventArgs.cs" />
+    <Compile Include="Managers\Networking\EventArgs\PlayerConnectEventArgs.cs" />
+    <Compile Include="Managers\Networking\EventArgs\PlayerDisconnectionEventArgs.cs" />
+    <Compile Include="Managers\Networking\EventArgs\PlayerSyncEventArgs.cs" />
+    <Compile Include="Managers\Networking\EventArgs\PlayerUpdateEventArgs.cs" />
+    <Compile Include="Managers\Networking\EventArgs\RequestResponseEventArgs.cs" />
+    <Compile Include="Managers\NetworkManager.cs" />
+    <Compile Include="Managers\Networking\Client.cs" />
+    <Compile Include="Managers\Networking\ClientHandle.cs" />
+    <Compile Include="Managers\Networking\ClientSend.cs" />
+    <Compile Include="Managers\Networking\Packet.cs" />
+    <Compile Include="Managers\Networking\PlayerData.cs" />
+    <Compile Include="Managers\Networking\SocketAdress.cs" />
+    <Compile Include="Managers\Networking\TCP.cs" />
+    <Compile Include="Managers\Networking\UDP.cs" />
+    <Compile Include="Managers\Networking\EventArgs\PlayerChangeNameEventArgs.cs" />
+    <Compile Include="Managers\RenderManager.cs" />
+    <Compile Include="Managers\ScripterManager.cs" />
+    <Compile Include="Managers\TextureManager.cs" />
     <Compile Include="Game1.cs" />
     <Compile Include="Model\Input.cs" />
     <Compile Include="Model\KeysArray.cs" />
@@ -151,7 +152,7 @@
     </None>
     <None Include="App.config" />
     <None Include="app.manifest" />
-    <Compile Include="Controlers\KeyboardUtils.cs" />
+    <Compile Include="Managers\KeyboardManager.cs" />
     <None Include="Content\Fonts\Default.spritefont" />
   </ItemGroup>
   <ItemGroup>

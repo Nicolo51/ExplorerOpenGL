@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ExplorerOpenGL.Controlers.Networking.EventArgs
+namespace ExplorerOpenGL.Managers.Networking.EventArgs
 {
     public class ChatMessageEventArgs : NetworkEventArgs
     {

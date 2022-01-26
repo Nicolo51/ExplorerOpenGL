@@ -1,4 +1,4 @@
-﻿namespace ExplorerOpenGL.Controlers.Networking.EventArgs
+﻿namespace ExplorerOpenGL.Managers.Networking.EventArgs
 {
     public class PlayerChangeNameEventArgs : NetworkEventArgs
     {

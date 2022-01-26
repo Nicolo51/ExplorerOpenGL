@@ -1,4 +1,4 @@
-﻿using ExplorerOpenGL.Controlers;
+﻿using ExplorerOpenGL.Managers;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -20,11 +20,13 @@ namespace ExplorerOpenGL.Model.Sprites
         private Texture2D TextureName;
         private Vector2 PositionName;
         private Vector2 OriginName; 
-        private TextureManager textureManager; 
         public Vector2 Direction;
         public string Name{ get; private set; }
         public int ID { get; private set; }
         public float PlayerFeetRadian { get { return playerFeet.Radian; } }
+
+        private TextureManager textureManager;
+        private KeyboardManager keyboardManager; 
 
         public Player(Texture2D texture, Texture2D playerFeetTexture, MousePointer mousepointer, string name, TextureManager textureManager)
             : base(texture)
@@ -39,14 +41,16 @@ namespace ExplorerOpenGL.Model.Sprites
             Velocity = 5;
             layerDepth = .9f;
             scale = .5f;
+
+            keyboardManager = KeyboardManager.Instance; 
         }
 
-        public override void Update(GameTime gameTime, List<Sprite> sprites, Controler controler)
+        public override void Update(GameTime gameTime, List<Sprite> sprites)
         {
             Radian = CalculateAngle(Position, mousePointer.Position);
-            Move(controler, sprites);
+            Move(sprites);
             PositionName = new Vector2(Position.X, Position.Y + 50);
-            base.Update(gameTime, sprites, controler);
+            base.Update(gameTime, sprites);
         }
 
         private float CalculateAngle(Vector2 A, Vector2 B)
@@ -68,24 +72,24 @@ namespace ExplorerOpenGL.Model.Sprites
             OriginName = new Vector2(TextureName.Width / 2, TextureName.Height / 2);
         }
 
-        protected virtual void Move(Controler controler, List<Sprite> sprites)
+        protected virtual void Move(List<Sprite> sprites)
         {
             Direction = Vector2.Zero;
-            if (!controler.TerminalTexintput.IsFocused)
+            if (!keyboardManager.IsTextInputBoxFocused)
             {
-                if (controler.KeyboardUtils.IsKeyDown(input.Down))
+                if (keyboardManager.IsKeyDown(input.Down))
                 {
                     Direction.Y += 1;
                 }
-                if (controler.KeyboardUtils.IsKeyDown(input.Up))
+                if (keyboardManager.IsKeyDown(input.Up))
                 {
                     Direction.Y -= 1;
                 }
-                if (controler.KeyboardUtils.IsKeyDown(input.Right))
+                if (keyboardManager.IsKeyDown(input.Right))
                 {
                     Direction.X += 1;
                 }
-                if (controler.KeyboardUtils.IsKeyDown(input.Left))
+                if (keyboardManager.IsKeyDown(input.Left))
                 {
                     Direction.X -= 1;
                 }

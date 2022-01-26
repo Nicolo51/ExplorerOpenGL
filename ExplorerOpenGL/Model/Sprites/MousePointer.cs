@@ -1,4 +1,4 @@
-﻿using ExplorerOpenGL.Controlers;
+﻿using ExplorerOpenGL.Managers;
 using ExplorerOpenGL.View;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -52,7 +52,7 @@ namespace ExplorerOpenGL.Model.Sprites
             }
         }
 
-        public override void Update(GameTime gameTime, List<Sprite> sprites, Controler controler)
+        public override void Update(GameTime gameTime, List<Sprite> sprites)
         {
             if(currentMouseState != null)
             {
@@ -60,9 +60,9 @@ namespace ExplorerOpenGL.Model.Sprites
             }
             currentMouseState = Mouse.GetState();
             Position = new Vector2(currentMouseState.Position.X, currentMouseState.Position.Y);
-            InWindowPosition = new Vector2((controler.Camera.Position.X - controler.Camera.Bounds.X / 2 + currentMouseState.Position.X), (controler.Camera.Position.Y - controler.Camera.Bounds.Y / 2 + currentMouseState.Position.Y)); 
+            InWindowPosition = new Vector2((gameManager.Camera.Position.X - gameManager.Camera.Bounds.X / 2 + currentMouseState.Position.X), (gameManager.Camera.Position.Y - gameManager.Camera.Bounds.Y / 2 + currentMouseState.Position.Y)); 
 
-            base.Update(gameTime, sprites, controler);
+            base.Update(gameTime, sprites);
         }
         public override void Draw(SpriteBatch spriteBatch)
         {

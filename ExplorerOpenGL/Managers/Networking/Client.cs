@@ -1,11 +1,11 @@
-﻿using ExplorerOpenGL.Controlers.Networking.EventArgs;
+﻿using ExplorerOpenGL.Managers.Networking.EventArgs;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ExplorerOpenGL.Controlers.Networking
+namespace ExplorerOpenGL.Managers.Networking
 {
     public class Client
     {
@@ -17,7 +17,7 @@ namespace ExplorerOpenGL.Controlers.Networking
         public Dictionary<int, PlayerData> PlayersData;
         public TCP tcp;
         public UDP udp;
-        public Controler controler; 
+        private GameManager manager; 
         public SocketAddress socketAddress { get; private set; }
         private ClientHandle clientHandle;
         private ClientSend clientSend;
@@ -28,11 +28,11 @@ namespace ExplorerOpenGL.Controlers.Networking
         public delegate void PacketSentEventHandler(NetworkEventArgs e);
         public event PacketSentEventHandler OnPacketSent;
 
-        public Client(Controler controler)
+        public Client(GameManager manager)
         {
-            this.controler = controler; 
+            this.manager = manager; 
             clientSend = new ClientSend(this); 
-            clientHandle = new ClientHandle(this, clientSend, controler); 
+            clientHandle = new ClientHandle(this, clientSend); 
         }
 
         public void Start(SocketAddress SocketAddress)

@@ -6,7 +6,7 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ExplorerOpenGL.Controlers.Networking
+namespace ExplorerOpenGL.Managers.Networking
 {
     public class UDP
     {

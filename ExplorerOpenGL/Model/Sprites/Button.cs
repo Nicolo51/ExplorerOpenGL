@@ -1,4 +1,4 @@
-﻿using ExplorerOpenGL.Controlers;
+﻿using ExplorerOpenGL.Managers;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -35,24 +35,24 @@ namespace ExplorerOpenGL.Model.Sprites
             layerDepth = 0.1f;
         }
 
-        public override void Update(GameTime gameTime, List<Sprite> sprites, Controler controler)
+        public override void Update(GameTime gameTime, List<Sprite> sprites)
         {
            
-            base.Update(gameTime, sprites, controler);
+            base.Update(gameTime, sprites);
         }
 
-        private void OnMouseOver(object sender, MousePointer mousePointer, Controler controler)
+        private void OnMouseOver(object sender, MousePointer mousePointer, GameManager manager)
         {
             isMouseOver = true;
-            controler.MousePointer.SourceRectangle = new Rectangle(300, 0, 75, 75);
+            manager.MousePointer.SourceRectangle = new Rectangle(300, 0, 75, 75);
         }
-        private void OnMouseLeft(object sender, MousePointer mousePointer, Controler controler)
+        private void OnMouseLeft(object sender, MousePointer mousePointer, GameManager manager)
         {
             isMouseOver = false;
-            controler.MousePointer.SourceRectangle = new Rectangle(0, 0, 75, 75);
+            manager.MousePointer.SourceRectangle = new Rectangle(0, 0, 75, 75);
 
         }
-        private void OnMouseClick(object sender, MousePointer mousePointer, Controler controler, Vector2 clickPosition)
+        private void OnMouseClick(object sender, MousePointer mousePointer, GameManager manager, Vector2 clickPosition)
         {
 
         }

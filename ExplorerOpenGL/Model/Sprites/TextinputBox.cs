@@ -1,4 +1,4 @@
-﻿using ExplorerOpenGL.Controlers;
+﻿using ExplorerOpenGL.Managers;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -14,7 +14,7 @@ namespace ExplorerOpenGL.Model.Sprites
     {
         StringBuilder inputText;
         SpriteFont spriteFont;
-        KeyboardUtils keyboardUtils;
+        KeyboardManager keyboardManager;
         private int indexStartDrawing;
         private int indexEndDrawing;
 
@@ -32,7 +32,7 @@ namespace ExplorerOpenGL.Model.Sprites
         public delegate void ValidateEventHandler(string message, TextinputBox textinput);
         public event ValidateEventHandler Validated;
 
-        public TextinputBox(Texture2D texture, SpriteFont SpriteFont, KeyboardUtils KeyboardUtils, bool eraseWhenUnfocused)
+        public TextinputBox(Texture2D texture, SpriteFont SpriteFont,  bool eraseWhenUnfocused)
             : base(texture)
         {
             MouseOvered += OnMouseOver;
@@ -51,8 +51,8 @@ namespace ExplorerOpenGL.Model.Sprites
             IsFocused = false;
             IsClickable = true;
             inputText = new StringBuilder();
-            keyboardUtils = KeyboardUtils;
-            keyboardUtils.KeyPressed += ArrowKeyPressed;
+            keyboardManager = KeyboardManager.Instance;
+            keyboardManager.KeyPressed += ArrowKeyPressed;
         }
 
         public void Clear()
@@ -130,7 +130,7 @@ namespace ExplorerOpenGL.Model.Sprites
             return Vector2.Zero;
         }
 
-        public override void Update(GameTime gameTime, List<Sprite> sprites, Controler controler)
+        public override void Update(GameTime gameTime, List<Sprite> sprites)
         {
             if (IsFocused)
             {
@@ -173,7 +173,7 @@ namespace ExplorerOpenGL.Model.Sprites
             else
                 cursorOpacity = 0;
 
-            base.Update(gameTime, sprites, controler);
+            base.Update(gameTime, sprites);
         }
 
         private void CheckSubstring()
@@ -191,21 +191,21 @@ namespace ExplorerOpenGL.Model.Sprites
             spriteBatch.DrawString(spriteFont, inputText.ToString().Substring(indexStartDrawing, indexEndDrawing), Position, Color.White, 0f, Vector2.Zero, 1f, SpriteEffects.None, layerDepth - .01f);
         }
 
-        public void OnMouseClick(object sender, MousePointer mousePointer, Controler controler, Vector2 clickPosition)
+        public void OnMouseClick(object sender, MousePointer mousePointer, GameManager manager, Vector2 clickPosition)
         {
             if (IsFocused)
             {
                 SetCursor(clickPosition);
                 return;
             }
-            Focus(controler);
+            Focus();
         }
 
-        private void OnMouseOver(object sender, MousePointer mousePointer, Controler controler)
+        private void OnMouseOver(object sender, MousePointer mousePointer, GameManager manager)
         {
             mousePointer.SetCursorIcon(MousePointerType.Text);
         }
-        private void OnMouseLeft(object sender, MousePointer mousePointer, Controler controler)
+        private void OnMouseLeft(object sender, MousePointer mousePointer, GameManager manager)
         {
             mousePointer.SetCursorIcon(MousePointerType.Default);
         }
@@ -277,32 +277,32 @@ namespace ExplorerOpenGL.Model.Sprites
             }
         }
 
-        public void Focus(Controler controler)
+        public void Focus()
         {
-            controler.UnFocusAll();
+            keyboardManager.UnFocusTextInputBox(this);
             IsFocused = true;
             Opacity = 1f;
         }
 
-        private void ArrowKeyPressed(Keys[] keys, KeyboardUtils keyboardUtils)
+        private void ArrowKeyPressed(Keys[] keys, KeyboardManager KeyboardManager)
         {
             if (!IsFocused)
                 return;
-            if (keyboardUtils.Contains(keys, Keys.Left))
+            if (KeyboardManager.Contains(keys, Keys.Left))
             {
                 MoveCursor(-1);
             }
-            if (keyboardUtils.Contains(keys, Keys.Right))
+            if (KeyboardManager.Contains(keys, Keys.Right))
             {
                 MoveCursor(1);
             }
         }
 
-        public bool ToggleFocus(Controler controler, bool validate = false)
+        public bool ToggleFocus(bool validate = false)
         {
             if (!IsFocused)
             {
-                Focus(controler);
+                Focus();
             }
             else if (IsFocused)
             {

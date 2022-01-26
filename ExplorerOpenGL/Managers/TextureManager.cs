@@ -8,26 +8,50 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ExplorerOpenGL.Controlers
+namespace ExplorerOpenGL.Managers
 {
     public class TextureManager
     {
         private GraphicsDeviceManager graphics;
-        private ContentManager Content;
+        private ContentManager content;
         private SpriteBatch spriteBatch;
+
         private RenderManager renderManager;
+
         public Dictionary<string, Texture2D> LoadedTextures;
         Dictionary<string, SpriteFont> fonts;
 
-        public TextureManager(GraphicsDeviceManager Graphics, ContentManager content, SpriteBatch spriteBatch, RenderManager renderManager, Dictionary<string, SpriteFont> fonts)
+        private static TextureManager instance;
+
+        public static event EventHandler Initialized; 
+
+        public static TextureManager Instance
         {
-            this.fonts = fonts; 
-            LoadedTextures = new Dictionary<string, Texture2D>(); 
-            Content = content;
-            this.renderManager = renderManager; 
-            graphics = Graphics;
-            this.spriteBatch = spriteBatch;
+            get
+            {
+                if (instance == null)
+                {
+                    instance = new TextureManager();
+                    Initialized?.Invoke(instance, EventArgs.Empty);
+                    return instance;
+                }
+                return instance;
+            }
         }
+
+        public TextureManager()
+        {
+            LoadedTextures = new Dictionary<string, Texture2D>();
+        }
+
+        public void InitDependencies(GraphicsDeviceManager graphics, ContentManager content, SpriteBatch spriteBatch)
+        {
+            this.content = content;
+            this.spriteBatch = spriteBatch; 
+            this.graphics = graphics;
+            renderManager = RenderManager.Instance;
+        }
+
         public Texture2D CreateTexture(int width, int height, Func<int, Color> paint)
         {
             Texture2D texture = new Texture2D(graphics.GraphicsDevice, width, height);
@@ -113,7 +137,7 @@ namespace ExplorerOpenGL.Controlers
 
         public Texture2D LoadTexture(string path)
         {
-            Texture2D texture = Content.Load<Texture2D>(path);
+            Texture2D texture = content.Load<Texture2D>(path);
             LoadedTextures.Add(path, texture);
             return texture; 
         }

@@ -1,5 +1,5 @@
-﻿using ExplorerOpenGL.Controlers.Networking;
-using ExplorerOpenGL.Controlers.Networking.EventArgs;
+﻿using ExplorerOpenGL.Managers.Networking;
+using ExplorerOpenGL.Managers.Networking.EventArgs;
 using ExplorerOpenGL.Model.Sprites;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -9,7 +9,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ExplorerOpenGL.Controlers
+namespace ExplorerOpenGL.Managers
 {
     public class NetworkManager 
     {
@@ -20,16 +20,36 @@ namespace ExplorerOpenGL.Controlers
         double clock;
         Terminal terminal;
         private Client client; 
-        Controler controler; 
+        GameManager gameManager;
+        DebugManager debugManager;
 
-        public NetworkManager(Controler controler, Terminal Terminal)
+        private static NetworkManager instance;
+        public static event EventHandler Initialized;
+
+        public static NetworkManager Instance { get
+            {
+                if(instance == null)
+                {
+                    instance = new NetworkManager();
+                    Initialized?.Invoke(instance, EventArgs.Empty);
+                    return instance; 
+                }
+                return instance; 
+            }
+        }
+
+        public NetworkManager()
         {
-            client = new Client(controler); 
-            terminal = Terminal; 
-            this.controler = controler;
             IsConnectedToAServer = false;
             timer = 0d;
             clock = 0d; 
+        }
+
+        public void InitDependencies()
+        {
+            gameManager = GameManager.Instance;
+            debugManager = DebugManager.Instance;
+            client = new Client(gameManager);
         }
 
         public void Connect(string ip) //port is 25789
@@ -65,7 +85,7 @@ namespace ExplorerOpenGL.Controlers
         public void OnPacketReceived(NetworkEventArgs e)
         {
             if(!(e is PlayerUpdateEventArgs))
-                controler.DebugManager.AddEvent(e.Message);
+                debugManager.AddEvent(e.Message);
             switch (e)
             {
                 case PlayerUpdateEventArgs puea:
@@ -77,21 +97,21 @@ namespace ExplorerOpenGL.Controlers
                     }
                     break;
                 case ChatMessageEventArgs cmea:
-                    client.controler.Terminal.AddMessageToTerminal(cmea.Text, cmea.Sender, cmea.TextColor);
+                    gameManager.Terminal.AddMessageToTerminal(cmea.Text, cmea.Sender, cmea.TextColor);
                     break;
                 case PlayerSyncEventArgs psea:
                     foreach(PlayerData pd in psea.PlayerData)
                     {
                         PlayerData playerDataSync = new PlayerData(pd.ID, pd.Name);
                         client.PlayersData.Add(pd.ID, playerDataSync);
-                        controler.AddSprite(playerDataSync);
+                        gameManager.AddSprite(playerDataSync, this);
                     }
                     break;
                 case RequestResponseEventArgs rrea:
                     terminal.AddMessageToTerminal(rrea.Message, "System", Color.White);
                     break;
                 case PlayerDisconnectionEventArgs pdea:
-                    controler.RemoveSprite(client.PlayersData[pdea.ID]);
+                    gameManager.RemoveSprite(client.PlayersData[pdea.ID]);
                     client.PlayersData.Remove(pdea.ID);
                     terminal.AddMessageToTerminal(pdea.Message, "System", Color.White);
                     break;
@@ -99,12 +119,12 @@ namespace ExplorerOpenGL.Controlers
                     PlayerData playerDataCo = new PlayerData(pcea.ID, pcea.Name);
                     client.PlayersData.Add(pcea.ID, playerDataCo);
                     terminal.AddMessageToTerminal(pcea.Message, "System", Color.White);
-                    controler.AddSprite(playerDataCo);
+                    gameManager.AddSprite(playerDataCo, this);
                     break;
                 case PlayerChangeNameEventArgs pcnea:
                     if(pcnea.IDPlayer == client.myId)
                     {
-                        controler.AddActionToUIThread(controler.Player.ChangeName, pcnea.Name);
+                        gameManager.AddActionToUIThread(gameManager.Player.ChangeName, pcnea.Name);
                         return; 
                     }
                     client.PlayersData[pcnea.IDPlayer].Name = pcnea.Name;

@@ -7,7 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ExplorerOpenGL.Controlers
+namespace ExplorerOpenGL.Managers
 {
     public class RenderManager
     {
@@ -15,11 +15,29 @@ namespace ExplorerOpenGL.Controlers
         private GraphicsDeviceManager graphics;
         private SpriteBatch spriteBatch; 
 
-        public RenderManager(List<Sprite> sprites, GraphicsDeviceManager graphics, SpriteBatch spriteBatch)
+        private static RenderManager instance;
+        public static event EventHandler Initialized;
+        public static RenderManager Instance {
+            get
+            {
+                if(instance == null)
+                {
+                    instance = new RenderManager();
+                    Initialized?.Invoke(instance, EventArgs.Empty);
+                    return instance;
+                }
+                return instance;
+            }
+        }
+
+        public RenderManager()
         {
-            this.spriteBatch = spriteBatch;
+
+        }
+
+        public void InitDependencies(GraphicsDeviceManager graphics)
+        {
             this.graphics = graphics; 
-            this._sprites = sprites; 
         }
 
         public Texture2D RenderSceneToTexture()

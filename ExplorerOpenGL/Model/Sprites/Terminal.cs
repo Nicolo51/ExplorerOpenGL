@@ -1,4 +1,4 @@
-﻿using ExplorerOpenGL.Controlers;
+﻿using ExplorerOpenGL.Managers;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -14,7 +14,8 @@ namespace ExplorerOpenGL.Model.Sprites
         List<ChatElement> messages;
         SpriteFont font;
         public Color FontColor; 
-        private Controler controler;
+        private KeyboardManager keyboardManager;
+        private NetworkManager networkManager; 
         private int height;
         private int width; 
 
@@ -31,12 +32,13 @@ namespace ExplorerOpenGL.Model.Sprites
 
         public bool IsFocused { get; set; }
 
-        public Terminal(Texture2D texture, SpriteFont Font, Controler Controler)
+        public Terminal(Texture2D texture, SpriteFont Font)
             :base(texture)
         {
+            networkManager = NetworkManager.Instance; 
+            this.keyboardManager = KeyboardManager.Instance;
             height = 500; 
             width = texture.Width;
-            this.controler = Controler;
             IsHUD = true; 
             font = Font;
             layerDepth = .1f; 
@@ -96,25 +98,25 @@ namespace ExplorerOpenGL.Model.Sprites
 
         public void AddMessageToTerminal(string message)
         {
-            AddMessageToTerminal(message, controler.Player.Name, Color.White); 
+            AddMessageToTerminal(message, gameManager.Player.Name, Color.White); 
         }
 
-        public void KeyboardListener(Keys[] keys, KeyboardUtils keyboardUtils)
+        public void KeyboardListener(Keys[] keys, KeyboardManager KeyboardManager)
         {
             if (!IsFocused)
                 return;
 
-            if (keyboardUtils.Contains(keys, Keys.Left))
+            if (KeyboardManager.Contains(keys, Keys.Left))
             {
                 //MoveCursor(-1);
             }
-            if (keyboardUtils.Contains(keys, Keys.Right))
+            if (KeyboardManager.Contains(keys, Keys.Right))
             {
                 //MoveCursor(1);
             }
         }
 
-        public override void Update(GameTime gameTime, List<Sprite> sprites, Controler controler)
+        public override void Update(GameTime gameTime, List<Sprite> sprites)
         {
             for(int i = 0; i < messages.Count; i++)
             {
@@ -126,7 +128,7 @@ namespace ExplorerOpenGL.Model.Sprites
                 else
                     message.Timer -= gameTime.ElapsedGameTime.TotalSeconds;
             }
-            if (controler.KeyboardUtils.IsKeyDown(Keys.H) && !controler.IsTextInputBoxFocused){
+            if (keyboardManager.IsKeyDown(Keys.H) && !keyboardManager.IsTextInputBoxFocused){
                 for (int i = 0; i < messages.Count; i++)
                 {
                     if (i > messages.Count)
@@ -147,7 +149,7 @@ namespace ExplorerOpenGL.Model.Sprites
             //            message.IsDisplayed = false; 
             //    }
             //}
-            base.Update(gameTime, sprites, controler);
+            base.Update(gameTime, sprites);
         }
 
         public override void Draw(SpriteBatch spriteBatch)
@@ -171,9 +173,9 @@ namespace ExplorerOpenGL.Model.Sprites
             {
                 return; 
             }
-            if (controler.NetworkManager.IsConnectedToAServer)
+            if (networkManager.IsConnectedToAServer)
             {
-                controler.NetworkManager.SendMessageToServer(s);
+                networkManager.SendMessageToServer(s);
                 return; 
             }
             AddMessageToTerminal(s);
@@ -213,14 +215,14 @@ namespace ExplorerOpenGL.Model.Sprites
 
         private void changeName(string[] commande)
         {
-            if (controler.NetworkManager.IsConnectedToAServer)
+            if (networkManager.IsConnectedToAServer)
             {
-                controler.NetworkManager.RequestNameChange(commande[1]); 
+                networkManager.RequestNameChange(commande[1]); 
                 return; 
             }
             else
             {
-                controler.Player.ChangeName(commande[1]);
+                gameManager.Player.ChangeName(commande[1]);
                 AddMessageToTerminal("Successfully changed name to : " + commande[1], "Info", Color.Green);
                 return; 
             }

@@ -9,26 +9,61 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ExplorerOpenGL.Controlers
+namespace ExplorerOpenGL.Managers
 {
-    public class KeyboardUtils
+    public class KeyboardManager
     {
+        private GameManager gameManager; 
+
         KeyboardState currentKeyboardState;
         KeyboardState previousKeyboardState;
 
-        public delegate void KeyPressedEventHandler(Keys[] keys, KeyboardUtils keyboardUtils);
+        public delegate void KeyPressedEventHandler(Keys[] keys, KeyboardManager KeyboardManager);
         public event KeyPressedEventHandler KeyPressed;
 
-        public delegate void KeyReleasedEventHandler(Keys[] keys, KeyboardUtils keyboardUtils);
+        public delegate void KeyReleasedEventHandler(Keys[] keys, KeyboardManager KeyboardManager);
         public event KeyReleasedEventHandler KeyRealeased;
 
         public delegate void TextInputedEventHandler(TextInputEventArgs e);
         public event TextInputedEventHandler TextInputed;
 
+        private List<TextinputBox> textinputBoxes;
+        private TextinputBox focusedTextInput; 
+        public bool IsTextInputBoxFocused { get { return (focusedTextInput != null); } }
 
-        public KeyboardUtils()
+        public static event EventHandler Initialized;
+        private static KeyboardManager instance;
+        public static KeyboardManager Instance
         {
-            currentKeyboardState = Keyboard.GetState(); 
+            get
+            {
+                if(instance == null)
+                {
+                    instance = new KeyboardManager();
+                    Initialized?.Invoke(instance, EventArgs.Empty);
+                    return instance; 
+                }
+                return instance;
+            }
+        }
+
+        private KeyboardManager()
+        {
+            currentKeyboardState = Keyboard.GetState();
+        }
+
+        public void InitDependencies()
+        {
+            gameManager = GameManager.Instance;
+            gameManager.SpriteAdded += OnSpriteAdded;
+        }
+
+        private void OnSpriteAdded(Sprite sprite, object issuer)
+        {
+            if(sprite is TextinputBox)
+            {
+                textinputBoxes.Add(sprite as TextinputBox); 
+            }
         }
 
         public bool Contains(Keys[] keys, Keys seekingKey)
@@ -39,6 +74,16 @@ namespace ExplorerOpenGL.Controlers
             return false; 
         }
 
+        public void OnTextInput(object sender, TextInputEventArgs e)
+        {
+            if (e.Character == '/' && !gameManager.TerminalTexintput.IsFocused && focusedTextInput != null)
+            {
+                gameManager.TerminalTexintput.Clear();
+                gameManager.TerminalTexintput.Focus();
+            }
+            if(focusedTextInput != null)
+                ProcessTextInput(e, focusedTextInput);
+        }
         public void Update()
         {
             previousKeyboardState = currentKeyboardState;
@@ -65,7 +110,7 @@ namespace ExplorerOpenGL.Controlers
 
         }
 
-        public void OnTextInput(object sender, TextInputEventArgs e, TextinputBox t)
+        public void ProcessTextInput(TextInputEventArgs e, TextinputBox t)
         {
             switch(e.Key)
             {
@@ -151,6 +196,15 @@ namespace ExplorerOpenGL.Controlers
         private void OnKeyPressed(Keys[] keys)
         {
             KeyPressed?.Invoke(keys, this);
+        }
+
+        public void UnFocusTextInputBox(TextinputBox ti)//ti is the one which is going to be focused
+        {
+            foreach(var t in textinputBoxes)
+            {
+                t.UnFocus(); 
+            }
+            focusedTextInput = ti; 
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿using ExplorerOpenGL.Controlers.Networking.EventArgs;
+﻿using ExplorerOpenGL.Managers.Networking.EventArgs;
 using ExplorerOpenGL.Model.Sprites;
 using System;
 using System.Collections.Generic;
@@ -7,7 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ExplorerOpenGL.Controlers.Networking
+namespace ExplorerOpenGL.Managers.Networking
 {
     public class ClientSend
     {

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace ExplorerOpenGL.Controlers.Networking
+namespace ExplorerOpenGL.Managers.Networking
 {
     /// <summary>Sent from server to client.</summary>
     public enum ServerPackets

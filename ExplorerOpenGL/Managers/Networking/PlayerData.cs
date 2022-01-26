@@ -7,7 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ExplorerOpenGL.Controlers.Networking
+namespace ExplorerOpenGL.Managers.Networking
 {
     public class PlayerData : Sprite
     {
@@ -25,8 +25,8 @@ namespace ExplorerOpenGL.Controlers.Networking
         public Vector2 OriginName { get; set; }
         public float opacity;
         public bool NameHasChange { get; set; }
-        private Vector2 originFeet; 
-
+        private Vector2 originFeet;
+        private TextureManager textureManager; 
 
 
         public int idTexture { get; set; }
@@ -34,6 +34,7 @@ namespace ExplorerOpenGL.Controlers.Networking
 
         public PlayerData(int id, string name)
         {
+            textureManager = TextureManager.Instance; 
             NameHasChange = false; 
             this.Name = name; 
             scale = 1f;
@@ -42,24 +43,25 @@ namespace ExplorerOpenGL.Controlers.Networking
         }
         public PlayerData(int id)
         {
+            textureManager = TextureManager.Instance;
             NameHasChange = false;
             scale = 1f;
             opacity = 1f;
             ID = id;
         }
 
-        public override void Update(GameTime gameTime, List<Sprite> sprites, Controler controler)
+        public override void Update(GameTime gameTime, List<Sprite> sprites)
         {
             PositionName = new Vector2(ServerPosition.X, ServerPosition.Y + 50);
             if(RenderName != Name)
             {
-                GenerateTexture(controler.TextureManager);
+                GenerateTexture(textureManager);
             }
             if(playerFeetTexture == null || playerTexture == null)
             {
-                SetTextures(controler.TextureManager.LoadedTextures["playerfeet"], controler.TextureManager.LoadedTextures["player"]);
+                SetTextures(textureManager.LoadedTextures["playerfeet"], textureManager.LoadedTextures["player"]);
             }
-            base.Update(gameTime, sprites, controler);
+            base.Update(gameTime, sprites);
         }
 
         private void SetTextures(Texture2D texture, Texture2D textureFeet)

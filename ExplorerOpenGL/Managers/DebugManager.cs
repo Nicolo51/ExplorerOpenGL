@@ -9,13 +9,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ExplorerOpenGL.Controlers
+namespace ExplorerOpenGL.Managers
 {
     public class DebugManager
     {
         public Dictionary<string, SpriteFont> Fonts { get; set; }
         public Dictionary<string, Texture2D> Textures { get; set; }
-        TextureManager textureManager;
         public List<LogElement> EventLogList { get; private set; }
         public Color TextColor { get; set; }
         public Vector2 MaxLogVec { get; set; } //???
@@ -23,19 +22,38 @@ namespace ExplorerOpenGL.Controlers
         Texture2D OutlineDebugMessageTexture; 
         StringBuilder debugMessage;
         MousePointer debugMouse;
-        GraphicsDeviceManager graphics; 
-
+        GraphicsDeviceManager graphics;
         public bool IsDebuging { get; private set; } 
+        private static DebugManager instance;
 
-        public DebugManager(TextureManager textureManager,  Dictionary<string, SpriteFont> fonts, GraphicsDeviceManager graphics)
+
+        public static event EventHandler Initialized;
+        private TextureManager textureManager; 
+        public static DebugManager Instance
         {
-            this.textureManager = textureManager;
-            this.graphics = graphics; 
-            Fonts = fonts; 
+            get
+            {
+                if(instance == null)
+                {
+                    instance = new DebugManager();
+                    Initialized?.Invoke(instance, EventArgs.Empty);
+                    return instance; 
+                }
+                return instance;
+            }
+        } 
+
+        private DebugManager()
+        {
             debugMessage = new StringBuilder(); 
             IsDebuging = false; 
             TextColor = Color.White;
-            EventLogList = new List<LogElement>(); 
+            EventLogList = new List<LogElement>();
+        }
+
+        public void InitDependencies()
+        {
+            textureManager = TextureManager.Instance;
         }
 
         public void Update(List<Sprite> sprites)
@@ -93,7 +111,7 @@ namespace ExplorerOpenGL.Controlers
                     break;
             }
         }
-        public void AddEvent(object e, KeyboardUtils keyboardUtils)
+        public void AddEvent(object e, KeyboardManager KeyboardManager)
         {
             if (EventLogList.Count > 10)
             {
@@ -161,11 +179,7 @@ namespace ExplorerOpenGL.Controlers
             {
                 spriteBatch.DrawString(Fonts["Default"], EventLogList[i].Text, new Vector2(graphics.PreferredBackBufferWidth,  i * 20) , Color.White * EventLogList[i].opacity, 0f, MaxLogVec, 1f, SpriteEffects.None, 1f); 
             }
-            //spriteBatch.Draw(textureManager.CreateTexture((int)stringDimension.X, (int)stringDimension.Y, paint => Color.Black), Vector2.Zero, null, Color.White * 0. f, 0f, Vector2.Zero, scale, SpriteEffects.None, 1f);
-
-            //textureManager.OutlineText(debugMessage.ToString(), Fonts["Default"], spriteBatch, Color.White, Color.Black, 5);
             spriteBatch.Draw(OutlineDebugMessageTexture, Vector2.Zero, null, Color.White, 0f, Vector2.Zero, scale, SpriteEffects.None, 1f);
-            //spriteBatch.DrawString(Fonts["Default"], debugMessage, Vector2.Zero, Color.White, 0f, Vector2.Zero, 1f, SpriteEffects.None, 0f);
         }
     }
 }
