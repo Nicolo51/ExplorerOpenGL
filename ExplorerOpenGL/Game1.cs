@@ -127,7 +127,12 @@ namespace ExplorerOpenGL
         {
             if(_sprites == null)
                 return;
+
             gameManager.Camera.Update();
+            gameManager.Update(gameTime);
+            debugManager.Update();
+            keyboardManager.Update();
+            networkManager.Update(gameTime); 
 
             for (int i = 0; i < _sprites.Count; i++)
             {
@@ -139,7 +144,6 @@ namespace ExplorerOpenGL
                 _sprites[i].Update(gameTime, _sprites);
             }
             // TODO: Add your update logic here
-            gameManager.Update(_sprites, gameTime);
 
             base.Update(gameTime);
         }
@@ -152,6 +156,7 @@ namespace ExplorerOpenGL
                     tm.InitDependencies(graphics, Content, spriteBatch); 
                     break;
                 case DebugManager dm:
+                    dm.InitDependencies(graphics, _sprites);
                     break;
                 case KeyboardManager km:
                     Window.TextInput += KeyboardManager.Instance.OnTextInput;
@@ -166,7 +171,7 @@ namespace ExplorerOpenGL
                     sm.InitDependencies();
                     break;
                 case RenderManager rm:
-                    rm.InitDependencies(graphics);
+                    rm.InitDependencies(graphics, _sprites, spriteBatch);
                     break;
                 case FontManager fm:
                     fm.InitDependencies(Content);

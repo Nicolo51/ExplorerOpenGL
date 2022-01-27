@@ -17,9 +17,9 @@ namespace ExplorerOpenGL.Managers
         private SpriteBatch spriteBatch;
 
         private RenderManager renderManager;
+        private FontManager fontManager;
 
         public Dictionary<string, Texture2D> LoadedTextures;
-        Dictionary<string, SpriteFont> fonts;
 
         private static TextureManager instance;
 
@@ -50,6 +50,7 @@ namespace ExplorerOpenGL.Managers
             this.spriteBatch = spriteBatch; 
             this.graphics = graphics;
             renderManager = RenderManager.Instance;
+            fontManager = FontManager.Instance;
         }
 
         public Texture2D CreateTexture(int width, int height, Func<int, Color> paint)
@@ -145,7 +146,7 @@ namespace ExplorerOpenGL.Managers
         public Texture2D OutlineText(string input, string font, Color borderColor, Color textColor, int Thickness)
         {
 
-            Texture2D textTexture = renderManager.RenderTextToTexture(input, fonts[font], textColor, Thickness) ;
+            Texture2D textTexture = renderManager.RenderTextToTexture(input, fontManager.GetFont(font), textColor, Thickness) ;
             Vector2 stringDimension = new Vector2(textTexture.Width, textTexture.Height);
             Color[] data = new Color[textTexture.Width* textTexture.Height];
             

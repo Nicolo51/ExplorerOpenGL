@@ -18,14 +18,16 @@ namespace ExplorerOpenGL.Managers
         KeyboardState currentKeyboardState;
         KeyboardState previousKeyboardState;
 
-        public delegate void KeyPressedEventHandler(Keys[] keys, KeyboardManager KeyboardManager);
-        public event KeyPressedEventHandler KeyPressed;
-
-        public delegate void KeyReleasedEventHandler(Keys[] keys, KeyboardManager KeyboardManager);
-        public event KeyReleasedEventHandler KeyRealeased;
+        public delegate void KeySwitchEventHandler(KeysArray keys);
+        public event KeySwitchEventHandler KeyPressed;
+        public event KeySwitchEventHandler KeyRealeased;
 
         public delegate void TextInputedEventHandler(TextInputEventArgs e);
         public event TextInputedEventHandler TextInputed;
+
+        public delegate void SpecificKeySwitch();
+        private Dictionary<Keys, SpecificKeySwitch> specificKeyPressed;
+        private Dictionary<Keys, SpecificKeySwitch> specificKeyReleased;
 
         private List<TextinputBox> textinputBoxes;
         private TextinputBox focusedTextInput; 
@@ -47,9 +49,54 @@ namespace ExplorerOpenGL.Managers
             }
         }
 
+        public void KeyPressedSubTo(Keys key, SpecificKeySwitch callback)
+        {
+            if (specificKeyPressed.ContainsKey(key))
+            {
+                specificKeyPressed[key] += callback;
+                return;
+            }
+            specificKeyPressed.Add(key, callback);
+        }
+
+        public void KeyReleasedSubTo(Keys key, SpecificKeySwitch callback)
+        {
+            if (specificKeyReleased.ContainsKey(key))
+            {
+                specificKeyReleased[key] += callback;
+                return;
+            }
+            specificKeyReleased.Add(key, callback);
+        }
+
+        private void RaiseSpecificKeyPressed(Keys[] keys)
+        {
+            foreach(Keys k in keys)
+            {
+                if (specificKeyPressed.ContainsKey(k))
+                {
+                    specificKeyPressed[k]?.Invoke();
+                }
+            }
+        }
+
+        private void RaiseSpecificKeyReleased(Keys[] keys)
+        {
+            foreach (Keys k in keys)
+            {
+                if (specificKeyReleased.ContainsKey(k))
+                {
+                    specificKeyReleased[k]?.Invoke();
+                }
+            }
+        }
+
         private KeyboardManager()
         {
             currentKeyboardState = Keyboard.GetState();
+            textinputBoxes = new List<TextinputBox>();
+            specificKeyPressed = new Dictionary<Keys, SpecificKeySwitch>();
+            specificKeyReleased = new Dictionary<Keys, SpecificKeySwitch>();
         }
 
         public void InitDependencies()
@@ -64,14 +111,6 @@ namespace ExplorerOpenGL.Managers
             {
                 textinputBoxes.Add(sprite as TextinputBox); 
             }
-        }
-
-        public bool Contains(Keys[] keys, Keys seekingKey)
-        {
-            int index = Array.IndexOf(keys, seekingKey);
-            if (index > -1)
-                return true;
-            return false; 
         }
 
         public void OnTextInput(object sender, TextInputEventArgs e)
@@ -95,17 +134,18 @@ namespace ExplorerOpenGL.Managers
             Keys[] currentPressedKeys = currentKeyboardState.GetPressedKeys();
             Keys[] previousPressedKeys = previousKeyboardState.GetPressedKeys();
 
-            Keys[] NewKeys = GetPressedKey(currentPressedKeys, previousPressedKeys).GetArray();
-            Keys[] LostKeys = GetReleasedKey(currentPressedKeys, previousPressedKeys).GetArray();
+            Keys[] newKeys = GetPressedKey(currentPressedKeys, previousPressedKeys).GetArray();
+            Keys[] lostKeys = GetReleasedKey(currentPressedKeys, previousPressedKeys).GetArray();
 
-
-            if (NewKeys.Length > 0) 
+            if (newKeys.Length > 0) 
             {
-                OnKeyPressed(NewKeys);
+                RaiseSpecificKeyPressed(newKeys);
+                OnKeyPressed(newKeys);
             }
-            if (LostKeys.Length > 0) 
+            if (lostKeys.Length > 0) 
             {
-                OnKeyRelease(LostKeys); 
+                RaiseSpecificKeyReleased(lostKeys);
+                OnKeyRelease(lostKeys); 
             }
 
         }
@@ -190,12 +230,12 @@ namespace ExplorerOpenGL.Managers
 
         private void OnKeyRelease(Keys[] keys)
         {
-            KeyRealeased?.Invoke(keys, this);
+            KeyRealeased?.Invoke(new KeysArray(keys));
         }
 
         private void OnKeyPressed(Keys[] keys)
         {
-            KeyPressed?.Invoke(keys, this);
+            KeyPressed?.Invoke(new KeysArray(keys));
         }
 
         public void UnFocusTextInputBox(TextinputBox ti)//ti is the one which is going to be focused

@@ -22,6 +22,7 @@ namespace ExplorerOpenGL.Managers
         private Client client; 
         GameManager gameManager;
         DebugManager debugManager;
+        Player player;
 
         private static NetworkManager instance;
         public static event EventHandler Initialized;
@@ -50,6 +51,7 @@ namespace ExplorerOpenGL.Managers
             gameManager = GameManager.Instance;
             debugManager = DebugManager.Instance;
             client = new Client(gameManager);
+            player = gameManager.Player;
         }
 
         public void Connect(string ip) //port is 25789
@@ -145,15 +147,18 @@ namespace ExplorerOpenGL.Managers
             }
         }
 
-        public void Update(GameTime gametime, Player player)
+        public void Update(GameTime gametime)
         {
-            if (clock > timer)
+            if (IsConnectedToAServer)
             {
-                client.SendMessage(player, (int)ClientPackets.UdpUpdatePlayer); 
-                clock = 0d;
-                return; 
+                if (clock > timer)
+                {
+                    client.SendMessage(player, (int)ClientPackets.UdpUpdatePlayer);
+                    clock = 0d;
+                    return;
+                }
+                clock += gametime.ElapsedGameTime.TotalMilliseconds;
             }
-            clock += gametime.ElapsedGameTime.TotalMilliseconds;
         }
     }
 }

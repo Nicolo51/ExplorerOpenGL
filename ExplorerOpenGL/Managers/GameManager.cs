@@ -53,8 +53,6 @@ namespace ExplorerOpenGL.Managers
             }
         }
 
-        
-
         public delegate void AddSpriteEventHandler(Sprite sprite, object issuer);
         public event AddSpriteEventHandler SpriteAdded; 
 
@@ -72,10 +70,7 @@ namespace ExplorerOpenGL.Managers
             fontManager = FontManager.Instance;
             networkManager = NetworkManager.Instance;
 
-            keyboardManager.KeyPressed += debugManager.AddEvent;
-            keyboardManager.KeyRealeased += debugManager.AddEvent;
-
-            InitKeyEvent();
+            keyboardManager.KeyPressed += OnKeyPressed;
 
             this.Camera = camera; 
             _sprites = sprites;
@@ -88,8 +83,6 @@ namespace ExplorerOpenGL.Managers
             _sprites.Add(Terminal);
             _sprites.Add(TerminalTexintput);
             _sprites.Add(MousePointer);
-
-            
         }
 
         public void AddActionToUIThread(Action<object> action, object arg)
@@ -98,46 +91,12 @@ namespace ExplorerOpenGL.Managers
             this.actionArg.Add(arg);
         }
 
-
-        private void OnQueried(string message)
-        {
-            if (networkManager.IsConnectedToAServer && (message = message.Trim()) != String.Empty)
-            {
-                networkManager.SendMessageToServer(message);
-            }
-        }
-
-        public void Update(List<Sprite> sprites, GameTime gametime)
+        public void Update(GameTime gametime)
         {
             for(int i = 0; i < action.Count; i++)
             {
                 action[i].Invoke(actionArg[i]); 
             }
-            if(keyboardManager != null && textureManager != null && debugManager != null && networkManager != null )
-            {
-                keyboardManager.Update();
-                debugManager.Update(sprites);
-                if (networkManager.IsConnectedToAServer)
-                {
-                    networkManager.Update(gametime, Player);
-                }
-            }
-            else
-            {
-                throw new NullReferenceException("Toutes les instances des controllers doivent être initialisées"); 
-            }
-
-        }
-
-        private void InitKeyEvent()
-        {
-            keyboardManager.KeyPressed += OnKeyPressed;
-            keyboardManager.KeyRealeased += OnKeyRealeased;
-        }
-
-        private void OnKeyRealeased(Keys[] keys, KeyboardManager KeyboardManager)
-        {
-            debugManager.AddEvent("Key realeased : " + new KeysArray(keys), KeyboardManager);
         }
 
         public void AddSprite(Sprite sprite, object issuer)
@@ -146,29 +105,13 @@ namespace ExplorerOpenGL.Managers
             _sprites.Add(sprite); 
         }
 
-        public void UnFocusAll()
+        private void OnKeyPressed(KeysArray keys)
         {
-            foreach (TextinputBox t in _sprites.Where(e => e is TextinputBox))
-            {
-                t.UnFocus();
-            }
-        }
-
-        private void OnKeyPressed(Keys[] keys, KeyboardManager KeyboardManager)
-        {
-            if (KeyboardManager.Contains(keys, Keys.Enter))
+            if (keys.Contains( Keys.Enter))
             {
                 TerminalTexintput.ToggleFocus(true); 
             }
-            if (KeyboardManager.Contains(keys, Keys.OemQuestion))
-            {
-                Terminal.AddMessageToTerminal("This is a ne message", "Client", Color.Green); 
-            }
-            if (KeyboardManager.Contains(keys, Keys.F3))
-            {
-                debugManager.ToggleDebugMode(_sprites);
-            }
-            if (KeyboardManager.Contains(keys, Keys.F2))
+            if (keys.Contains(Keys.F2))
             {
                 Texture2D screenshot = renderManager.RenderSceneToTexture();
 
@@ -176,11 +119,11 @@ namespace ExplorerOpenGL.Managers
                 screenshot.SaveAsPng(stream, (int)Camera.Bounds.X, (int)Camera.Bounds.Y);
                 stream.Dispose();
             }
-            if (KeyboardManager.Contains(keys, Keys.F5))
+            if (keys.Contains(Keys.F5))
             {
                 Camera.ToggleFollow();
             }
-            if (KeyboardManager.Contains(keys, Keys.F1))
+            if (keys.Contains(Keys.F1))
             {
                 using (StreamReader sr = new StreamReader("ip.txt"))
                 {
@@ -188,7 +131,6 @@ namespace ExplorerOpenGL.Managers
                     networkManager.Connect(ip);
                 }
             }
-            debugManager.AddEvent("Key pressed : " + new KeysArray(keys), KeyboardManager);
         }
 
         public void OnWindowResize(object sender, EventArgs e)

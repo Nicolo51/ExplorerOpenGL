@@ -1,6 +1,7 @@
 ﻿using ExplorerOpenGL.Model.Sprites;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,7 +14,9 @@ namespace ExplorerOpenGL.Managers
     {
         private List<Sprite> _sprites;
         private GraphicsDeviceManager graphics;
-        private SpriteBatch spriteBatch; 
+        private SpriteBatch spriteBatch;
+
+        private KeyboardManager keyboardManager;
 
         private static RenderManager instance;
         public static event EventHandler Initialized;
@@ -35,9 +38,14 @@ namespace ExplorerOpenGL.Managers
 
         }
 
-        public void InitDependencies(GraphicsDeviceManager graphics)
+        public void InitDependencies(GraphicsDeviceManager graphics, List<Sprite> sprites, SpriteBatch spriteBatch)
         {
-            this.graphics = graphics; 
+            _sprites = sprites;
+            this.spriteBatch = spriteBatch;
+            this.graphics = graphics;
+            keyboardManager = KeyboardManager.Instance;
+
+            keyboardManager.KeyPressedSubTo(Keys.F2, RenderSceneToTexture);
         }
 
         public Texture2D RenderSceneToTexture()

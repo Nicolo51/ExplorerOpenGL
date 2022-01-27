@@ -15,6 +15,12 @@ namespace ExplorerOpenGL.Model
         {
             this.Keys = Keys;
         }
+
+        public bool Contains(Keys key)
+        {
+            return Keys.Contains(key);
+        }
+
         public override string ToString()
         {
             StringBuilder sb = new StringBuilder();
@@ -28,6 +34,7 @@ namespace ExplorerOpenGL.Model
             }
             return sb.ToString(); 
         }
+
 
         public Keys[] GetArray()
         {

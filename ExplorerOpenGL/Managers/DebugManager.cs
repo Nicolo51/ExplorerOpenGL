@@ -13,22 +13,22 @@ namespace ExplorerOpenGL.Managers
 {
     public class DebugManager
     {
-        public Dictionary<string, SpriteFont> Fonts { get; set; }
-        public Dictionary<string, Texture2D> Textures { get; set; }
+
         public List<LogElement> EventLogList { get; private set; }
         public Color TextColor { get; set; }
         public Vector2 MaxLogVec { get; set; } //???
-        float scale = 1f;
-        Texture2D OutlineDebugMessageTexture; 
+        float scale = 2f;
         StringBuilder debugMessage;
         MousePointer debugMouse;
         GraphicsDeviceManager graphics;
+        private List<Sprite> sprites;
         public bool IsDebuging { get; private set; } 
         private static DebugManager instance;
 
 
         public static event EventHandler Initialized;
-        private TextureManager textureManager; 
+        private KeyboardManager keyboardManager;
+        private FontManager fontManager;
         public static DebugManager Instance
         {
             get
@@ -51,12 +51,19 @@ namespace ExplorerOpenGL.Managers
             EventLogList = new List<LogElement>();
         }
 
-        public void InitDependencies()
+        public void InitDependencies(GraphicsDeviceManager graphics, List<Sprite> sprites)
         {
-            textureManager = TextureManager.Instance;
+            keyboardManager = KeyboardManager.Instance;
+            fontManager = FontManager.Instance;
+
+            keyboardManager.KeyPressedSubTo(Keys.F3, ToggleDebugMode);
+            keyboardManager.KeyRealeased += AddEvent;
+            keyboardManager.KeyPressed += AddEvent;
+            this.sprites = sprites;
+            this.graphics = graphics;
         }
 
-        public void Update(List<Sprite> sprites)
+        public void Update()
         {
             if (!IsDebuging)
                 return;
@@ -70,18 +77,16 @@ namespace ExplorerOpenGL.Managers
                     EventLogList.RemoveAt(i);
                     continue; 
                 }
-                Vector2 temp = Fonts["Default"].MeasureString(EventLogList[i].Text);
+                Vector2 temp = fontManager.GetFont("Default").MeasureString(EventLogList[i].Text);
                 if (temp.X > MaxLogVec.X)
                 {
                     MaxLogVec = new Vector2(temp.X, 0); 
                 }
             }
-
             BuildDebugMessage(sprites);
-            OutlineDebugMessageTexture = textureManager.OutlineText(debugMessage.ToString(), "Default", Color.Black, Color.White, 0);
         }
 
-        public void ToggleDebugMode(List<Sprite> sprites)
+        public void ToggleDebugMode()
         {
             IsDebuging = !IsDebuging; 
             if(IsDebuging)
@@ -109,21 +114,6 @@ namespace ExplorerOpenGL.Managers
                 default:
                     EventLogList.Add(new LogElement(e.ToString()));
                     break;
-            }
-        }
-        public void AddEvent(object e, KeyboardManager KeyboardManager)
-        {
-            if (EventLogList.Count > 10)
-            {
-                EventLogList.RemoveAt(0);
-            }
-            if (e is KeysArray)
-            {
-                EventLogList.Add(new LogElement(e.ToString()));
-            }
-            if (e is string)
-            {
-                EventLogList.Add(new LogElement(e as string));
             }
         }
 
@@ -177,9 +167,9 @@ namespace ExplorerOpenGL.Managers
         {
             for(int i = 0; i < EventLogList.Count; i++)
             {
-                spriteBatch.DrawString(Fonts["Default"], EventLogList[i].Text, new Vector2(graphics.PreferredBackBufferWidth,  i * 20) , Color.White * EventLogList[i].opacity, 0f, MaxLogVec, 1f, SpriteEffects.None, 1f); 
+                spriteBatch.DrawString(fontManager.GetFont("Default"), EventLogList[i].Text, new Vector2(graphics.PreferredBackBufferWidth,  i * scale * 20) , Color.White * EventLogList[i].opacity, 0f, MaxLogVec, scale, SpriteEffects.None, 1f); 
             }
-            spriteBatch.Draw(OutlineDebugMessageTexture, Vector2.Zero, null, Color.White, 0f, Vector2.Zero, scale, SpriteEffects.None, 1f);
+            spriteBatch.DrawString(fontManager.GetFont("Default"), debugMessage, Vector2.Zero, Color.White, 0f, Vector2.Zero, scale, SpriteEffects.None, 1f);
         }
     }
 }

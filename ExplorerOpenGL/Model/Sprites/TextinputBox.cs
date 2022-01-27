@@ -284,15 +284,15 @@ namespace ExplorerOpenGL.Model.Sprites
             Opacity = 1f;
         }
 
-        private void ArrowKeyPressed(Keys[] keys, KeyboardManager KeyboardManager)
+        private void ArrowKeyPressed(KeysArray keys)
         {
             if (!IsFocused)
                 return;
-            if (KeyboardManager.Contains(keys, Keys.Left))
+            if (keys.Contains(Keys.Left))
             {
                 MoveCursor(-1);
             }
-            if (KeyboardManager.Contains(keys, Keys.Right))
+            if (keys.Contains(Keys.Right))
             {
                 MoveCursor(1);
             }

@@ -98,22 +98,8 @@ namespace ExplorerOpenGL.Model.Sprites
 
         public void AddMessageToTerminal(string message)
         {
-            AddMessageToTerminal(message, gameManager.Player.Name, Color.White); 
-        }
-
-        public void KeyboardListener(Keys[] keys, KeyboardManager KeyboardManager)
-        {
-            if (!IsFocused)
-                return;
-
-            if (KeyboardManager.Contains(keys, Keys.Left))
-            {
-                //MoveCursor(-1);
-            }
-            if (KeyboardManager.Contains(keys, Keys.Right))
-            {
-                //MoveCursor(1);
-            }
+            if(gameManager.Player != null)
+                AddMessageToTerminal(message, gameManager.Player.Name, Color.White); 
         }
 
         public override void Update(GameTime gameTime, List<Sprite> sprites)
