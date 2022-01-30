@@ -41,18 +41,18 @@ namespace ExplorerOpenGL.Model.Sprites
             base.Update(gameTime, sprites);
         }
 
-        private void OnMouseOver(object sender, MousePointer mousePointer, GameManager manager)
+        private void OnMouseOver(object sender, MousePointer mousePointer)
         {
             isMouseOver = true;
-            manager.MousePointer.SourceRectangle = new Rectangle(300, 0, 75, 75);
+            gameManager.MousePointer.SourceRectangle = new Rectangle(300, 0, 75, 75);
         }
-        private void OnMouseLeft(object sender, MousePointer mousePointer, GameManager manager)
+        private void OnMouseLeft(object sender, MousePointer mousePointer)
         {
             isMouseOver = false;
-            manager.MousePointer.SourceRectangle = new Rectangle(0, 0, 75, 75);
+            gameManager.MousePointer.SourceRectangle = new Rectangle(0, 0, 75, 75);
 
         }
-        private void OnMouseClick(object sender, MousePointer mousePointer, GameManager manager, Vector2 clickPosition)
+        private void OnMouseClick(object sender, MousePointer mousePointer,  Vector2 clickPosition)
         {
 
         }

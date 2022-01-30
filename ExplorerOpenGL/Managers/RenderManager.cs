@@ -44,8 +44,6 @@ namespace ExplorerOpenGL.Managers
             this.spriteBatch = spriteBatch;
             this.graphics = graphics;
             keyboardManager = KeyboardManager.Instance;
-
-            keyboardManager.KeyPressedSubTo(Keys.F2, RenderSceneToTexture);
         }
 
         public Texture2D RenderSceneToTexture()

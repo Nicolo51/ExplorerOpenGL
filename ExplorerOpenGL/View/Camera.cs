@@ -20,12 +20,11 @@ namespace ExplorerOpenGL.View
         public Vector2 LookAtPosition { get; private set; }
         public Camera(Vector2 bounds)
         {
-            this.Bounds = bounds; 
+            this.Bounds = bounds;
         }
 
         public void Update()
         {
-            
             Matrix position;
             if (IsFollowingSprite)
             {
@@ -58,7 +57,7 @@ namespace ExplorerOpenGL.View
             SpriteToFollow = target;
         }
 
-        public void LookAt( Vector2 value)
+        public void LookAt(Vector2 value)
         {
             LookAtPosition = value;
         }

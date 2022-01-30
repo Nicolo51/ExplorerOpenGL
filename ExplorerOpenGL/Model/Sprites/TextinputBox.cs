@@ -37,13 +37,13 @@ namespace ExplorerOpenGL.Model.Sprites
         {
             MouseOvered += OnMouseOver;
             MouseLeft += OnMouseLeft;
+            MouseClicked += OnMouseClick;
             DoEraseWhenUnfocused = eraseWhenUnfocused;
             cursorIndex = 0;
             cursorOpacity = 1;
             cursorTimer = 0f;
 
             indexStartDrawing = 0;
-            MouseClicked += OnMouseClick;
             _texture = texture;
             spriteFont = SpriteFont;
             Opacity = 1f;
@@ -116,16 +116,6 @@ namespace ExplorerOpenGL.Model.Sprites
                 }
 
             }
-            //if()
-
-
-            cursorPosition.X = spriteFont.MeasureString(inputText.ToString().Substring(indexStartDrawing)).X - 3;
-            return Vector2.Zero;
-        }
-
-        private Vector2 ComputeIndexStartToDraw()
-        {
-            for (indexEndDrawing = 0; indexStartDrawing + indexEndDrawing + 1 > inputText.Length && spriteFont.MeasureString(inputText.ToString().Substring(indexStartDrawing, indexEndDrawing)).X > width; indexEndDrawing++) ;
             cursorPosition.X = spriteFont.MeasureString(inputText.ToString().Substring(indexStartDrawing)).X - 3;
             return Vector2.Zero;
         }
@@ -191,7 +181,7 @@ namespace ExplorerOpenGL.Model.Sprites
             spriteBatch.DrawString(spriteFont, inputText.ToString().Substring(indexStartDrawing, indexEndDrawing), Position, Color.White, 0f, Vector2.Zero, 1f, SpriteEffects.None, layerDepth - .01f);
         }
 
-        public void OnMouseClick(object sender, MousePointer mousePointer, GameManager manager, Vector2 clickPosition)
+        public void OnMouseClick(object sender, MousePointer mousePointer, Vector2 clickPosition)
         {
             if (IsFocused)
             {
@@ -201,22 +191,24 @@ namespace ExplorerOpenGL.Model.Sprites
             Focus();
         }
 
-        private void OnMouseOver(object sender, MousePointer mousePointer, GameManager manager)
+        private void OnMouseOver(object sender, MousePointer mousePointer)
         {
             mousePointer.SetCursorIcon(MousePointerType.Text);
         }
-        private void OnMouseLeft(object sender, MousePointer mousePointer, GameManager manager)
+        private void OnMouseLeft(object sender, MousePointer mousePointer)
         {
             mousePointer.SetCursorIcon(MousePointerType.Default);
         }
 
-        public string Validate()
+        public string Validate(bool unFocus = true)
         {
             string output = inputText.ToString();
             cursorIndex = 0;
             cursorPosition.X = 0;
             Clear();
             Validated?.Invoke(output.Trim(), this);
+            if (unFocus)
+                UnFocus(); 
             return output;
         }
 
@@ -247,6 +239,7 @@ namespace ExplorerOpenGL.Model.Sprites
             Opacity = 0f;
             if (DoEraseWhenUnfocused)
                 Clear();
+            keyboardManager.UnFocusTextinputBox(); 
             IsFocused = false;
         }
 
@@ -279,7 +272,7 @@ namespace ExplorerOpenGL.Model.Sprites
 
         public void Focus()
         {
-            keyboardManager.UnFocusTextInputBox(this);
+            keyboardManager.FocusTextinput(this);
             IsFocused = true;
             Opacity = 1f;
         }

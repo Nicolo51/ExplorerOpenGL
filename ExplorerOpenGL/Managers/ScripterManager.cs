@@ -17,7 +17,9 @@ namespace ExplorerOpenGL.Managers
         private GameManager gameManager;
         private FontManager fontManager;
         private KeyboardManager keyboardManager; 
-        private TextureManager textureManager; 
+        private TextureManager textureManager;
+        private NetworkManager networkManager;
+        private DebugManager debugManager;
 
         public static ScripterManager Instance { get { 
                 if (instance == null) 
@@ -41,10 +43,13 @@ namespace ExplorerOpenGL.Managers
             textureManager = TextureManager.Instance;
             fontManager = FontManager.Instance;
             gameManager = GameManager.Instance;
+            networkManager = NetworkManager.Instance;
+            debugManager = DebugManager.Instance; 
         }
 
         public void CreateMenu()
         {
+            gameManager.Camera.LookAt(0, 0);
             gameManager.ClearScene(); 
             var sp = new Button(textureManager.OutlineText("Singleplayer", "Menu", Color.Black, new Color(4, 136, 201), 1), textureManager.OutlineText("Singleplayer", "Menu", Color.Black, new Color(4, 136, 201), 2)) 
             { Position = new Vector2(0, -200)};
@@ -54,7 +59,7 @@ namespace ExplorerOpenGL.Managers
             { Position = new Vector2(0, 200) };
             
             sp.MouseClicked += LaunchSinglePlayer;
-            mp.MouseClicked += AskNameForMultiplayer;
+            mp.MouseClicked += DisplayMultiplayerForm;
             option.MouseClicked += DisplayOptionMenu;
 
             gameManager.AddSprite(sp, this);
@@ -63,9 +68,9 @@ namespace ExplorerOpenGL.Managers
         }
 
 
-        public void AskNameForMultiplayer(object sender, MousePointer mousePointer, GameManager Manager, Vector2 clickPosition)
+        public void DisplayMultiplayerForm(object sender, MousePointer mousePointer, Vector2 clickPosition)
         {
-            Manager.Camera.LookAt(new Vector2(0, 0));
+            gameManager.Camera.LookAt(new Vector2(0, 0));
             gameManager.ClearScene();
             var ti = new TextinputBox(textureManager.CreateTexture(200, 50, e => Color.Black), fontManager.GetFont("Default"), false);
             ti.Validated += ConnectToServer;
@@ -74,14 +79,15 @@ namespace ExplorerOpenGL.Managers
 
         public void ConnectToServer(string message, TextinputBox textinput)
         {
-
+            debugManager.AddEvent(message);
+            //networkManager.Connect(message.Trim()); 
         }
 
-        public void LaunchSinglePlayer(object sender, MousePointer mousePointer, GameManager Manager, Vector2 clickPosition)
+        public void LaunchSinglePlayer(object sender, MousePointer mousePointer, Vector2 clickPosition)
         {
 
         }
-        public void DisplayOptionMenu(object sender, MousePointer mousePointer, GameManager Manager, Vector2 clickPosition)
+        public void DisplayOptionMenu(object sender, MousePointer mousePointer, Vector2 clickPosition)
         {
 
         }

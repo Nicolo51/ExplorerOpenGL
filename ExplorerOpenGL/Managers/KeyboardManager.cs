@@ -115,7 +115,7 @@ namespace ExplorerOpenGL.Managers
 
         public void OnTextInput(object sender, TextInputEventArgs e)
         {
-            if (e.Character == '/' && !gameManager.TerminalTexintput.IsFocused && focusedTextInput != null)
+            if (e.Character == '/' && !gameManager.TerminalTexintput.IsFocused && focusedTextInput == null)
             {
                 gameManager.TerminalTexintput.Clear();
                 gameManager.TerminalTexintput.Focus();
@@ -164,6 +164,7 @@ namespace ExplorerOpenGL.Managers
                     t.UnFocus();
                     break;
                 case Keys.Enter:
+                    t.Validate(); 
                     break; 
                 default: 
                     t.AddChar(e.Character);
@@ -238,7 +239,12 @@ namespace ExplorerOpenGL.Managers
             KeyPressed?.Invoke(new KeysArray(keys));
         }
 
-        public void UnFocusTextInputBox(TextinputBox ti)//ti is the one which is going to be focused
+        public void UnFocusTextinputBox()
+        {
+            focusedTextInput = null; 
+        }
+
+        public void FocusTextinput(TextinputBox ti)//ti is the one which is going to be focused
         {
             foreach(var t in textinputBoxes)
             {

@@ -30,13 +30,13 @@ namespace ExplorerOpenGL.Model.Sprites
         public float Opacity { get; set; }
         public bool IsHUD { get; set; }
 
-        public delegate void MouseOverEventHandler(object sender, MousePointer mousePointer, GameManager GameManager);
+        public delegate void MouseOverEventHandler(object sender, MousePointer mousePointer);
         public event MouseOverEventHandler MouseOvered;
 
-        public delegate void MouseLeaveEventHandler(object sender, MousePointer mousePointer, GameManager GameManager);
+        public delegate void MouseLeaveEventHandler(object sender, MousePointer mousePointer);
         public event MouseLeaveEventHandler MouseLeft;
 
-        public delegate void MouseClickEventHandler(object sender, MousePointer mousePointer, GameManager GameManager, Vector2 clickPosition);
+        public delegate void MouseClickEventHandler(object sender, MousePointer mousePointer,  Vector2 clickPosition);
         public event MouseClickEventHandler MouseClicked;
 
         protected GameManager gameManager; 
@@ -75,7 +75,7 @@ namespace ExplorerOpenGL.Model.Sprites
             if (this.HitBox.Intersects(new Rectangle((int)gameManager.MousePointer.InWindowPosition.X, (int)gameManager.MousePointer.InWindowPosition.Y, 1, 1)) && !this.IsHUD)
             {
                 if (!isOver)
-                    OnMouseOver(sprites, gameManager);
+                    OnMouseOver(sprites);
 
                 isOver = true;
                 if ((gameManager.MousePointer.currentMouseState.LeftButton == ButtonState.Pressed && gameManager.MousePointer.prevMouseState.LeftButton == ButtonState.Released) || isClicked)
@@ -84,7 +84,7 @@ namespace ExplorerOpenGL.Model.Sprites
                     if (gameManager.MousePointer.currentMouseState.LeftButton == ButtonState.Released)
                     {
                         Vector2 ClickPosition = new Vector2(mousePointer.Position.X - Position.X - origin.X / 2, mousePointer.Position.Y - Position.Y - origin.Y / 2);
-                        OnMouseClick(sprites, gameManager, ClickPosition);
+                        OnMouseClick(sprites, ClickPosition);
                     }
                 }
                 if (gameManager.MousePointer.currentMouseState.LeftButton == ButtonState.Released)
@@ -95,7 +95,7 @@ namespace ExplorerOpenGL.Model.Sprites
             else if (this.IsHUD && gameManager.MousePointer.HitBox.Intersects(this.HitBox))
             {
                 if (!isOver)
-                    OnMouseOver(sprites, gameManager);
+                    OnMouseOver(sprites);
 
                 isOver = true;
                 if ((gameManager.MousePointer.currentMouseState.LeftButton == ButtonState.Pressed && gameManager.MousePointer.prevMouseState.LeftButton == ButtonState.Released) || isClicked)
@@ -104,7 +104,7 @@ namespace ExplorerOpenGL.Model.Sprites
                     if (gameManager.MousePointer.currentMouseState.LeftButton == ButtonState.Released)
                     {
                         Vector2 ClickPosition = new Vector2(mousePointer.InWindowPosition.X - Position.X - origin.X / 2, mousePointer.InWindowPosition.Y - Position.Y - origin.Y / 2);
-                        OnMouseClick(sprites, gameManager, ClickPosition);
+                        OnMouseClick(sprites, ClickPosition);
                     }
                 }
                 if (gameManager.MousePointer.currentMouseState.LeftButton == ButtonState.Released)
@@ -117,25 +117,25 @@ namespace ExplorerOpenGL.Model.Sprites
                 if (isOver)
                 {
                     isClicked = false;
-                    OnMouseLeave(sprites, gameManager);
+                    OnMouseLeave(sprites);
                     isOver = false;
                 }
             }
         }
 
-        private void OnMouseOver(List<Sprite> sprites, GameManager GameManager)
+        private void OnMouseOver(List<Sprite> sprites)
         {
-            MouseOvered?.Invoke(this, GameManager.MousePointer, GameManager);
+            MouseOvered?.Invoke(this, gameManager.MousePointer);
         }
 
-        private void OnMouseLeave(List<Sprite> sprites, GameManager GameManager)
+        private void OnMouseLeave(List<Sprite> sprites)
         {
-            MouseLeft?.Invoke(this, GameManager.MousePointer, GameManager);
+            MouseLeft?.Invoke(this, gameManager.MousePointer);
         }
 
-        private void OnMouseClick(List<Sprite> sprites, GameManager GameManager, Vector2 clickPosition)
+        private void OnMouseClick(List<Sprite> sprites, Vector2 clickPosition)
         {
-            MouseClicked?.Invoke(this, GameManager.MousePointer, GameManager, clickPosition);
+            MouseClicked?.Invoke(this, gameManager.MousePointer, clickPosition);
         }
 
         public virtual void Draw(SpriteBatch spriteBatch)

@@ -160,6 +160,7 @@ namespace ExplorerOpenGL
                     break;
                 case KeyboardManager km:
                     Window.TextInput += KeyboardManager.Instance.OnTextInput;
+                    km.InitDependencies(); 
                     break;
                 case GameManager m:
                     m.InitDependencies(_sprites, camera); 

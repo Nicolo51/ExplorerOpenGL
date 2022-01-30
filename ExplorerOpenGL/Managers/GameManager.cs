@@ -23,11 +23,12 @@ namespace ExplorerOpenGL.Managers
         private List<object> actionArg; 
 
         private KeyboardManager keyboardManager;
-        private DebugManager debugManager; //instantiate on load
-        private TextureManager textureManager; //instantiate on load 
+        private DebugManager debugManager;
+        private TextureManager textureManager; 
         private RenderManager renderManager;
         private NetworkManager networkManager;
-        private FontManager fontManager; 
+        private FontManager fontManager;
+        private ScripterManager scripterManager;
 
         public Player Player { get; set; }
         public Terminal Terminal { get; private set; }
@@ -69,6 +70,7 @@ namespace ExplorerOpenGL.Managers
             debugManager = DebugManager.Instance;
             fontManager = FontManager.Instance;
             networkManager = NetworkManager.Instance;
+            scripterManager = ScripterManager.Instance; 
 
             keyboardManager.KeyPressed += OnKeyPressed;
 
@@ -80,9 +82,9 @@ namespace ExplorerOpenGL.Managers
             TerminalTexintput.Validated += Terminal.OnTextinputValidation;
             MousePointer = new MousePointer(textureManager.LoadTexture("cursor"));
 
-            _sprites.Add(Terminal);
-            _sprites.Add(TerminalTexintput);
-            _sprites.Add(MousePointer);
+            AddSprite(Terminal, this);
+            AddSprite(TerminalTexintput, this);
+            AddSprite(MousePointer, this);
         }
 
         public void AddActionToUIThread(Action<object> action, object arg)
@@ -107,10 +109,7 @@ namespace ExplorerOpenGL.Managers
 
         private void OnKeyPressed(KeysArray keys)
         {
-            if (keys.Contains( Keys.Enter))
-            {
-                TerminalTexintput.ToggleFocus(true); 
-            }
+            
             if (keys.Contains(Keys.F2))
             {
                 Texture2D screenshot = renderManager.RenderSceneToTexture();
@@ -131,6 +130,10 @@ namespace ExplorerOpenGL.Managers
                     networkManager.Connect(ip);
                 }
             }
+            if (keys.Contains(Keys.F6))
+            {
+                scripterManager.CreateMenu(); 
+            }
         }
 
         public void OnWindowResize(object sender, EventArgs e)
@@ -148,7 +151,7 @@ namespace ExplorerOpenGL.Managers
             for (int i = 0; i < _sprites.Count; i++)
             {
                 var sprite = _sprites[i];
-                if (!(sprite is Terminal || sprite is MousePointer))
+                if (!(sprite is Terminal || sprite is MousePointer || sprite == TerminalTexintput))
                 {
                     _sprites.Remove(sprite);
                     i--;

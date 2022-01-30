@@ -98,8 +98,12 @@ namespace ExplorerOpenGL.Model.Sprites
 
         public void AddMessageToTerminal(string message)
         {
-            if(gameManager.Player != null)
-                AddMessageToTerminal(message, gameManager.Player.Name, Color.White); 
+            if (gameManager.Player != null)
+            {
+                AddMessageToTerminal(message, gameManager.Player.Name, Color.White);
+                return; 
+            }
+            AddMessageToTerminal(message, "System", Color.White);
         }
 
         public override void Update(GameTime gameTime, List<Sprite> sprites)
@@ -201,6 +205,11 @@ namespace ExplorerOpenGL.Model.Sprites
 
         private void changeName(string[] commande)
         {
+            if (gameManager.Player == null)
+            {
+                AddMessageToTerminal("Can't find instance of a player", "Error", Color.Red);
+                return;
+            }
             if (networkManager.IsConnectedToAServer)
             {
                 networkManager.RequestNameChange(commande[1]); 
