@@ -50,7 +50,8 @@ namespace ExplorerOpenGL.Model.Sprites
             IsHUD = false; 
             scale = 1;
             Opacity = 1f;
-            gameManager = GameManager.Instance; 
+            gameManager = GameManager.Instance;
+            layerDepth = 1f; 
         }
 
         public Sprite(Texture2D texture)
@@ -60,7 +61,8 @@ namespace ExplorerOpenGL.Model.Sprites
             IsHUD = false;
             scale = 1;
             Opacity = 1f;
-            gameManager = GameManager.Instance; 
+            layerDepth = 1f; 
+            gameManager = GameManager.Instance;
         }
 
         public virtual void Update(GameTime gameTime, List<Sprite> sprites)
@@ -121,6 +123,11 @@ namespace ExplorerOpenGL.Model.Sprites
                     isOver = false;
                 }
             }
+        }
+
+        public void SetOriginToMiddle()
+        {
+            origin = new Vector2(_texture.Width / 2, _texture.Height / 2);
         }
 
         private void OnMouseOver(List<Sprite> sprites)

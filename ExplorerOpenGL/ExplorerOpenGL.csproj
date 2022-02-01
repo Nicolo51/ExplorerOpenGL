@@ -78,6 +78,7 @@
     <Compile Include="Model\LogElement.cs" />
     <Compile Include="Model\Sides.cs" />
     <Compile Include="Model\Sprites\Button.cs" />
+    <Compile Include="Model\Sprites\MessageBox.cs" />
     <Compile Include="Model\Sprites\Terminal.cs" />
     <Compile Include="Model\Sprites\MousePointer.cs" />
     <Compile Include="Model\Sprites\Player.cs" />

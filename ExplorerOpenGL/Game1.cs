@@ -102,7 +102,11 @@ namespace ExplorerOpenGL
             //_sprites.Add(new Wall(Manager.TextureManager.CreateTexture(1000, 50, paint => (paint % 2 == 0)? Color.White : Color.Black)));
             //_sprites.Add(new Button(Manager.TextureManager.CreateTexture(200, 200, paint => Color.Black), Manager.TextureManager.CreateTexture(200, 200, paint => Color.Red), fonts["Default"])); 
             //Manager.Camera.FollowSprite(Player);
-            gameManager.Camera.LookAt(0, 0); 
+            gameManager.Camera.LookAt(0, 0);
+            var mb = new MessageBox(textureManager.CreateBorderedTexture(500, 200, 5, 5, paint => Color.DarkSlateBlue, paint => Color.White)) { Position = new Vector2(200, 200)};
+            var ti = new TextinputBox(textureManager.CreateTexture(200, 35, e => Color.Black), fontManager.GetFont("Default"), false);
+            mb.AddChildSprite(ti, new Vector2(0, 0)); 
+            gameManager.AddSprite(mb, this);
 
             Window.ClientSizeChanged += UpdateDisplay;
             Window.AllowUserResizing = true;
