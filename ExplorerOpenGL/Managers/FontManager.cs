@@ -45,11 +45,14 @@ namespace ExplorerOpenGL.Managers
 
         public SpriteFont GetFont(string font)
         {
-            if (loadedFonts.ContainsKey(font))
-                return loadedFonts[font];
+            string fontTL = font.ToLower().Trim();
+            if (loadedFonts.ContainsKey(fontTL))
+                return loadedFonts[fontTL];
             try
             {
-                return content.Load<SpriteFont>(font); 
+                SpriteFont spriteFont = content.Load<SpriteFont>("Fonts/" + font);
+                loadedFonts.Add(fontTL, spriteFont);
+                return spriteFont;
             }
             catch
             {
@@ -59,8 +62,8 @@ namespace ExplorerOpenGL.Managers
 
         public void InitFonts()
         {
-            loadedFonts.Add("Default", content.Load<SpriteFont>("Fonts/Default"));
-            loadedFonts.Add("Menu", content.Load<SpriteFont>("Fonts/Menu"));
+            loadedFonts.Add("default", content.Load<SpriteFont>("Fonts/Default"));
+            loadedFonts.Add("menu", content.Load<SpriteFont>("Fonts/Menu"));
         }
     }
 }

@@ -145,7 +145,6 @@ namespace ExplorerOpenGL.Managers
 
         public Texture2D OutlineText(string input, string font, Color borderColor, Color textColor, int Thickness)
         {
-
             Texture2D textTexture = renderManager.RenderTextToTexture(input, fontManager.GetFont(font), textColor, Thickness) ;
             Vector2 stringDimension = new Vector2(textTexture.Width, textTexture.Height);
             Color[] data = new Color[textTexture.Width* textTexture.Height];
@@ -207,6 +206,11 @@ namespace ExplorerOpenGL.Managers
                 return true; 
             }
             return false;
+        }
+
+        public Texture2D TextureText(string text, string font, Color color)
+        {
+            return renderManager.RenderTextToTexture(text, fontManager.GetFont(font), color, 0);
         }
     }
 }

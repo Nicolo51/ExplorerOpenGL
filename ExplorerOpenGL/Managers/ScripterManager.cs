@@ -74,7 +74,13 @@ namespace ExplorerOpenGL.Managers
             gameManager.ClearScene();
             var ti = new TextinputBox(textureManager.CreateTexture(200, 50, e => Color.Black), fontManager.GetFont("Default"), false);
             ti.Validated += ConnectToServer;
+            
             gameManager.AddSprite(ti, this);
+        }
+
+        private void ConnectBtnClicked(object sender, MousePointer mousePointer, Vector2 clickPosition)
+        {
+            
         }
 
         public void ConnectToServer(string message, TextinputBox textinput)
