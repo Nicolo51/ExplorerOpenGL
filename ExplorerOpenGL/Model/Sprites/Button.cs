@@ -33,6 +33,7 @@ namespace ExplorerOpenGL.Model.Sprites
             this.origin = new Vector2(texture.Width / 2, texture.Height / 2);
             Text = String.Empty;
             layerDepth = 0.1f;
+            isDraggable = true;
         }
 
         public override void Update(GameTime gameTime, List<Sprite> sprites)

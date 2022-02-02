@@ -20,6 +20,7 @@ namespace ExplorerOpenGL.Model.Sprites
             childSprites = new List<Sprite>();
             childSpritesPosition = new List<Vector2>();
             origin = new Vector2(texture.Width / 2, texture.Height / 2);
+            isDraggable = true;
         }
 
         public override void Update(GameTime gameTime, List<Sprite> sprites)

@@ -39,19 +39,24 @@ namespace ExplorerOpenGL.Model.Sprites
         public delegate void MouseClickEventHandler(object sender, MousePointer mousePointer,  Vector2 clickPosition);
         public event MouseClickEventHandler MouseClicked;
 
-        protected GameManager gameManager; 
+        protected GameManager gameManager;
 
         protected bool isClicked;
         private bool isOver; 
         protected bool IsClickable;
+        public  bool isDraggable;
+        private bool isDragged;
+        Vector2 ClickPosition; 
+
 
         public Sprite()
         {
+            isDraggable = false;
             IsHUD = false; 
             scale = 1;
             Opacity = 1f;
             gameManager = GameManager.Instance;
-            layerDepth = 1f; 
+            layerDepth = 1f;
         }
 
         public Sprite(Texture2D texture)
@@ -63,18 +68,19 @@ namespace ExplorerOpenGL.Model.Sprites
             Opacity = 1f;
             layerDepth = 1f; 
             gameManager = GameManager.Instance;
+            isDraggable = false;
         }
 
         public virtual void Update(GameTime gameTime, List<Sprite> sprites)
         {
-            if (IsClickable)
+            if (IsClickable || isDraggable)
                 CheckMouseEvent(sprites); 
         }
 
         private void CheckMouseEvent(List<Sprite> sprites)
         {
             MousePointer mousePointer = gameManager.MousePointer; 
-            if (this.HitBox.Intersects(new Rectangle((int)gameManager.MousePointer.InWindowPosition.X, (int)gameManager.MousePointer.InWindowPosition.Y, 1, 1)) && !this.IsHUD)
+            if (!this.IsHUD && this.HitBox.Intersects(new Rectangle((int)gameManager.MousePointer.InWindowPosition.X, (int)gameManager.MousePointer.InWindowPosition.Y, 1, 1)) )
             {
                 if (!isOver)
                     OnMouseOver(sprites);
@@ -82,16 +88,35 @@ namespace ExplorerOpenGL.Model.Sprites
                 isOver = true;
                 if ((gameManager.MousePointer.currentMouseState.LeftButton == ButtonState.Pressed && gameManager.MousePointer.prevMouseState.LeftButton == ButtonState.Released) || isClicked)
                 {
+                    if(!isClicked)
+                        ClickPosition = new Vector2(mousePointer.InWindowPosition.X - Position.X + origin.X, mousePointer.InWindowPosition.Y - Position.Y + origin.Y);
                     isClicked = true;
-                    if (gameManager.MousePointer.currentMouseState.LeftButton == ButtonState.Released)
+                    if (gameManager.MousePointer.currentMouseState.LeftButton == ButtonState.Released && !isDragged)
                     {
-                        Vector2 ClickPosition = new Vector2(mousePointer.Position.X - Position.X - origin.X / 2, mousePointer.Position.Y - Position.Y - origin.Y / 2);
                         OnMouseClick(sprites, ClickPosition);
+                        isDragged = false; 
                     }
                 }
                 if (gameManager.MousePointer.currentMouseState.LeftButton == ButtonState.Released)
                 {
                     isClicked = false;
+                    isDragged = false; 
+                }
+                if(isClicked && isOver && isDraggable)
+                {
+                    if (!isDragged) 
+                    {
+                        Vector2 currentClickPosition = new Vector2(mousePointer.InWindowPosition.X - Position.X + origin.X, mousePointer.InWindowPosition.Y - Position.Y + origin.Y);
+                        float distance = Vector2.Distance(ClickPosition, currentClickPosition);
+                        if (distance > 3)
+                        {
+                            isDragged = true;
+                        }
+                    }
+                    else
+                    {
+                        Position = mousePointer.InWindowPosition + origin -ClickPosition;
+                    }
                 }
             }
             else if (this.IsHUD && gameManager.MousePointer.HitBox.Intersects(this.HitBox))
@@ -105,7 +130,7 @@ namespace ExplorerOpenGL.Model.Sprites
                     isClicked = true;
                     if (gameManager.MousePointer.currentMouseState.LeftButton == ButtonState.Released)
                     {
-                        Vector2 ClickPosition = new Vector2(mousePointer.InWindowPosition.X - Position.X - origin.X / 2, mousePointer.InWindowPosition.Y - Position.Y - origin.Y / 2);
+                        Vector2 ClickPosition = new Vector2(mousePointer.Position.X - Position.X + origin.X, mousePointer.Position.Y - Position.Y + origin.Y);
                         OnMouseClick(sprites, ClickPosition);
                     }
                 }
@@ -148,7 +173,7 @@ namespace ExplorerOpenGL.Model.Sprites
         public virtual void Draw(SpriteBatch spriteBatch)
         {
             if(_texture != null && !(this is MousePointer))
-                spriteBatch.Draw(_texture, Position, null, Color.White * Opacity * (isClicked ? .5f : 1f), Radian, origin, scale, Effects, layerDepth);
+                spriteBatch.Draw(_texture, Position, null, Color.White * Opacity * (isClicked && IsClickable ? .5f : 1f), Radian, origin, scale, Effects, layerDepth);
         }
     }
 }
