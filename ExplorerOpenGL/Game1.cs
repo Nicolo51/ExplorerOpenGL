@@ -105,9 +105,10 @@ namespace ExplorerOpenGL
             gameManager.Camera.LookAt(0, 0);
             var mb = new MessageBox(textureManager.CreateBorderedTexture(500, 200, 5, 5, paint => Color.DarkSlateBlue, paint => Color.White)) { Position = new Vector2(200, 200)};
             var ti = new TextinputBox(textureManager.CreateTexture(200, 35, e => Color.Black), fontManager.GetFont("Default"), false);
-            mb.AddChildSprite(ti, new Vector2(0, 0));
-            var connectBtn = new Button(textureManager.TextureText("Connect", "Default", Color.White), textureManager.OutlineText("Connect", "Default", Color.Black, Color.White, 2));
-            mb.AddChildSprite(connectBtn, new Vector2(0, 100));
+            mb.AddChildSprite(ti, new Vector2(100, 50));
+            var connectBtn = new Button(textureManager.TextureText("Connect", "Default", Color.Red), textureManager.OutlineText("Connect", "Default", Color.Black, Color.Red, 2));
+            connectBtn.isDraggable = true;
+            gameManager.AddSprite(connectBtn, this);
             gameManager.AddSprite(mb, this);
 
             Window.ClientSizeChanged += UpdateDisplay;

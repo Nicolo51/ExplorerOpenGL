@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using ExplorerOpenGL.Managers;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
@@ -45,6 +46,22 @@ namespace ExplorerOpenGL.Model.Sprites
         public override void Draw(SpriteBatch spriteBatch)
         {
             base.Draw(spriteBatch);
+        }
+
+        public static MessageBox Show(string title, string message, MessageBoxType messageBoxType, string custom = null)
+        {
+            TextureManager tm = TextureManager.Instance;
+            FontManager fm = FontManager.Instance;
+            fm.GetFont("Default").MeasureString(message);
+            MessageBox mb = new MessageBox(tm.CreateBorderedTexture()
+        }
+
+        public enum MessageBoxType
+        {
+            YesNo, 
+            OkCancel, 
+            Ok, 
+            Custom
         }
     }
 }
