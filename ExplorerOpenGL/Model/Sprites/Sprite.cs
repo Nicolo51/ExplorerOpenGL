@@ -24,6 +24,7 @@ namespace ExplorerOpenGL.Model.Sprites
                 else return new Rectangle((int)Position.X, (int)Position.Y, 1, 1); 
             } }
         public Vector2 origin;
+        public Rectangle Bounds { get { if (_texture != null) return _texture.Bounds; return Rectangle.Empty; } }
         public SpriteEffects Effects { get; set; }
         public float  layerDepth { get; set; }
         protected float scale { get; set; }
@@ -152,6 +153,8 @@ namespace ExplorerOpenGL.Model.Sprites
 
         public void SetOriginToMiddle()
         {
+            if (_texture == null)
+                return; 
             origin = new Vector2(_texture.Width / 2, _texture.Height / 2);
         }
 

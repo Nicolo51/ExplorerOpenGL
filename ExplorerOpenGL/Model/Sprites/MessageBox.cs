@@ -13,10 +13,10 @@ namespace ExplorerOpenGL.Model.Sprites
     {
 
         private List<Sprite> childSprites;
-        private List<Vector2> childSpritesPosition; 
+        private List<Vector2> childSpritesPosition;
 
         public MessageBox(Texture2D texture)
-            :base(texture)
+            : base(texture)
         {
             childSprites = new List<Sprite>();
             childSpritesPosition = new List<Vector2>();
@@ -26,10 +26,10 @@ namespace ExplorerOpenGL.Model.Sprites
 
         public override void Update(GameTime gameTime, List<Sprite> sprites)
         {
-            for(int i = 0; i < childSprites.Count; i++)
+            for (int i = 0; i < childSprites.Count; i++)
             {
                 Sprite child = childSprites[i];
-                child.Position = Position + childSpritesPosition[i]; 
+                child.Position = Position + childSpritesPosition[i];
             }
             base.Update(gameTime, sprites);
         }
@@ -37,7 +37,7 @@ namespace ExplorerOpenGL.Model.Sprites
         public void AddChildSprite(Sprite sprite, Vector2 childPosition)
         {
             sprite.layerDepth -= .01f;
-            sprite.SetOriginToMiddle(); 
+            sprite.SetOriginToMiddle();
             childSprites.Add(sprite);
             childSpritesPosition.Add(childPosition);
             gameManager.AddSprite(sprite, this);
@@ -52,10 +52,20 @@ namespace ExplorerOpenGL.Model.Sprites
         {
             TextureManager tm = TextureManager.Instance;
             FontManager fm = FontManager.Instance;
-            fm.GetFont("Default").MeasureString(message);
-            MessageBox mb = new MessageBox(tm.CreateBorderedTexture()
+            GameManager gm = GameManager.Instance;
+            Vector2 bounds = fm.GetFont("Default").MeasureString(message);
+            if (bounds.X > 500)
+            {
+                //Todo Wrap text; 
+            }
+            MessageBox mb = new MessageBox(tm.CreateBorderedTexture((int)bounds.X + 50, (int)bounds.Y + 90, 3, 0, paint => Color.Black, paint => (paint < ((int)bounds.X + 50) * 30)? Color.LightGray : Color.White));
+            mb.AddChildSprite(new TextZone(title, fm.GetFont("Default"), Color.Black, AlignOption.TopLeft), new Vector2(2,2));
+            mb.AddChildSprite(new TextZone(message, fm.GetFont("Default"), Color.Black, AlignOption.Center), new Vector2(mb.Bounds.Width / 2, mb.Bounds.Height / 2));
+            mb.AddChildSprite(new Button(tm.TextureText("OK", "Default", Color.Red), tm.OutlineText("OK", "Default", Color.Black, Color.Red, 2)), new Vector2(mb.Bounds.Width / 2, mb.Bounds.Height - 20));
+            gm.AddSprite(mb, null);
+            return mb;
         }
-
+    }
         public enum MessageBoxType
         {
             YesNo, 
@@ -63,5 +73,4 @@ namespace ExplorerOpenGL.Model.Sprites
             Ok, 
             Custom
         }
-    }
 }
