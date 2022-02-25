@@ -37,7 +37,6 @@ namespace ExplorerOpenGL.Model.Sprites
         public void AddChildSprite(Sprite sprite, Vector2 childPosition)
         {
             sprite.layerDepth -= .01f;
-            sprite.SetOriginToMiddle();
             childSprites.Add(sprite);
             childSpritesPosition.Add(childPosition);
             gameManager.AddSprite(sprite, this);
@@ -50,18 +49,63 @@ namespace ExplorerOpenGL.Model.Sprites
 
         public static MessageBox Show(string title, string message, MessageBoxType messageBoxType, string custom = null)
         {
+            const int maxWidth = 500; 
+            if(messageBoxType == MessageBoxType.Custom && custom == null)
+            {
+                throw new Exception("No custom message set"); 
+            }
+
             TextureManager tm = TextureManager.Instance;
             FontManager fm = FontManager.Instance;
             GameManager gm = GameManager.Instance;
-            Vector2 bounds = fm.GetFont("Default").MeasureString(message);
-            if (bounds.X > 500)
+            SpriteFont font = fm.GetFont("Default"); 
+            Vector2 bounds = font.MeasureString(message);
+            int lineCount = 1; 
+            if (bounds.X > maxWidth)
             {
-                //Todo Wrap text; 
+                string[] words = message.Split(' ');
+                StringBuilder sb = new StringBuilder(); 
+                for(int i = 0; i < words.Length; i++)
+                {
+                    if(font.MeasureString(sb.ToString() + " " + words[i]).X < maxWidth)
+                    {
+                        sb.Append(" " + words[i]); 
+                    }
+                    else
+                    {
+                        sb.Append("\n" + words[i]);
+                        lineCount++;
+                    }
+                }
+                bounds.X = maxWidth;
+                message = sb.ToString(); 
             }
-            MessageBox mb = new MessageBox(tm.CreateBorderedTexture((int)bounds.X + 50, (int)bounds.Y + 90, 3, 0, paint => Color.Black, paint => (paint < ((int)bounds.X + 50) * 30)? Color.LightGray : Color.White));
-            mb.AddChildSprite(new TextZone(title, fm.GetFont("Default"), Color.Black, AlignOption.TopLeft), new Vector2(2,2));
-            mb.AddChildSprite(new TextZone(message, fm.GetFont("Default"), Color.Black, AlignOption.Center), new Vector2(mb.Bounds.Width / 2, mb.Bounds.Height / 2));
-            mb.AddChildSprite(new Button(tm.TextureText("OK", "Default", Color.Red), tm.OutlineText("OK", "Default", Color.Black, Color.Red, 2)), new Vector2(mb.Bounds.Width / 2, mb.Bounds.Height - 20));
+            MessageBox mb = new MessageBox(tm.CreateBorderedTexture((int)bounds.X + 50, lineCount * 35 + 90, 3, 0, paint => Color.Black, paint => (paint < ((int)bounds.X + 50) * 30)? new Color(22, 59, 224) : new Color(245, 231, 213)));
+            mb.AddChildSprite(new TextZone(title, font, Color.White, AlignOption.TopLeft), new Vector2(2,2));
+            mb.AddChildSprite(new TextZone(message, font, Color.Black, AlignOption.Center), new Vector2(mb.Bounds.Width / 2, mb.Bounds.Height / 2 - 10));
+            switch (messageBoxType)
+            {
+                case MessageBoxType.YesNo:
+                    mb.AddChildSprite(new Button(tm.TextureText("Yes", "Default", Color.Red), tm.OutlineText("Yes", "Default", Color.Black, Color.Red, 2)), new Vector2(mb.Bounds.Width / 2 + 50, mb.Bounds.Height - 35));
+                    mb.AddChildSprite(new Button(tm.TextureText("No", "Default", Color.Red), tm.OutlineText("No", "Default", Color.Black, Color.Red, 2)), new Vector2(mb.Bounds.Width / 2 - 50, mb.Bounds.Height - 35));
+                    break;
+                case MessageBoxType.OkCancel:
+                    mb.AddChildSprite(new Button(tm.TextureText("OK", "Default", Color.Red), tm.OutlineText("OK", "Default", Color.Black, Color.Red, 2)), new Vector2(mb.Bounds.Width / 2 + 50, mb.Bounds.Height - 20));
+                    mb.AddChildSprite(new Button(tm.TextureText("Cancel", "Default", Color.Red), tm.OutlineText("Cancel", "Default", Color.Black, Color.Red, 2)), new Vector2(mb.Bounds.Width / 2 - 50, mb.Bounds.Height - 35));
+                    break;
+                case MessageBoxType.Ok:
+                    mb.AddChildSprite(new Button(tm.TextureText("OK", "Default", Color.Red), tm.OutlineText("OK", "Default", Color.Black, Color.Red, 2)), new Vector2(mb.Bounds.Width / 2, mb.Bounds.Height - 35));
+                    break;
+                case MessageBoxType.Continue:
+                    mb.AddChildSprite(new Button(tm.TextureText("Continue", "Default", Color.Red), tm.OutlineText("Continue", "Default", Color.Black, Color.Red, 2)), new Vector2(mb.Bounds.Width / 2, mb.Bounds.Height - 35));
+                    break;
+                case MessageBoxType.Custom:
+                    mb.AddChildSprite(new Button(tm.TextureText(custom, "Default", Color.Red), tm.OutlineText(custom, "Default", Color.Black, Color.Red, 2)), new Vector2(mb.Bounds.Width / 2, mb.Bounds.Height - 35));
+                    break;
+                default:
+                    mb.AddChildSprite(new Button(tm.TextureText("OK", "Default", Color.Red), tm.OutlineText("OK", "Default", Color.Black, Color.Red, 2)), new Vector2(mb.Bounds.Width / 2, mb.Bounds.Height - 35));
+                    break; 
+            }
             gm.AddSprite(mb, null);
             return mb;
         }
@@ -71,6 +115,7 @@ namespace ExplorerOpenGL.Model.Sprites
             YesNo, 
             OkCancel, 
             Ok, 
+            Continue, 
             Custom
         }
 }

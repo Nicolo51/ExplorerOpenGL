@@ -24,6 +24,7 @@ namespace ExplorerOpenGL.Model.Sprites
                 else return new Rectangle((int)Position.X, (int)Position.Y, 1, 1); 
             } }
         public Vector2 origin;
+        private AlignOption alignOption;
         public Rectangle Bounds { get { if (_texture != null) return _texture.Bounds; return Rectangle.Empty; } }
         public SpriteEffects Effects { get; set; }
         public float  layerDepth { get; set; }
@@ -52,6 +53,7 @@ namespace ExplorerOpenGL.Model.Sprites
 
         public Sprite()
         {
+            alignOption = AlignOption.None;
             isDraggable = false;
             IsHUD = false; 
             scale = 1;
@@ -62,6 +64,7 @@ namespace ExplorerOpenGL.Model.Sprites
 
         public Sprite(Texture2D texture)
         {
+            alignOption = AlignOption.None;
             _texture = texture;
             SourceRectangle = new Rectangle(0, 0, texture.Width, texture.Height);
             IsHUD = false;
@@ -151,11 +154,48 @@ namespace ExplorerOpenGL.Model.Sprites
             }
         }
 
-        public void SetOriginToMiddle()
+        public void SetAlignOption(AlignOption ao)
         {
-            if (_texture == null)
-                return; 
-            origin = new Vector2(_texture.Width / 2, _texture.Height / 2);
+            if (ao == alignOption)
+                return;
+            Vector2 bounds = new Vector2(HitBox.Width, HitBox.Height);
+            switch (ao)
+            {
+                case AlignOption.Left:
+                    origin = new Vector2(0, bounds.Y / 2);
+                    break;
+                case AlignOption.Right:
+                    origin = new Vector2(bounds.X, bounds.Y / 2);
+                    break;
+                case AlignOption.Top:
+                    origin = new Vector2(bounds.X / 2, 0);
+                    break;
+                case AlignOption.Bottom:
+                    origin = new Vector2(bounds.X / 2, bounds.Y);
+                    break;
+                case AlignOption.BottomLeft:
+                    origin = new Vector2(0, bounds.Y);
+                    break;
+                case AlignOption.BottomRight:
+                    origin = new Vector2(bounds.X, bounds.Y / 2);
+                    break;
+                case AlignOption.TopLeft:
+                    origin = new Vector2(0, 0);
+                    break;
+                case AlignOption.TopRight:
+                    origin = new Vector2(bounds.X, 0);
+                    break;
+                case AlignOption.Center:
+                    origin = new Vector2(bounds.X / 2, bounds.Y / 2);
+                    break;
+            }
+            alignOption = ao;
+        }
+
+        public void SetPadding(Vector2 pad)
+        {
+            SetAlignOption(alignOption);
+            origin += pad;
         }
 
         private void OnMouseOver(List<Sprite> sprites)
@@ -178,5 +218,18 @@ namespace ExplorerOpenGL.Model.Sprites
             if(_texture != null && !(this is MousePointer))
                 spriteBatch.Draw(_texture, Position, null, Color.White * Opacity * (isClicked && IsClickable ? .5f : 1f), Radian, origin, scale, Effects, layerDepth);
         }
+    }
+    public enum AlignOption
+    {
+        None,
+        Left,
+        Right,
+        Center,
+        Top,
+        Bottom,
+        BottomRight,
+        BottomLeft,
+        TopRight,
+        TopLeft
     }
 }
