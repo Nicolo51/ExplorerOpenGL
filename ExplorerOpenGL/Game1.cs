@@ -103,7 +103,7 @@ namespace ExplorerOpenGL
             //_sprites.Add(new Button(Manager.TextureManager.CreateTexture(200, 200, paint => Color.Black), Manager.TextureManager.CreateTexture(200, 200, paint => Color.Red), fonts["Default"])); 
             //Manager.Camera.FollowSprite(Player);
             gameManager.Camera.LookAt(0, 0);
-            MessageBox.Show("Error", "Something went wrong and it's really a big deal. Je reprends en français parceque c'est quand même plus rigolo, en vrai faut faire quelque chose, ça va vrament pas la !", MessageBoxType.YesNo);
+            MessageBox.Show("Error", "Je suis un message un peu long qui sera donc wrappé par mon prog", MessageBoxType.YesNo);
             Window.ClientSizeChanged += UpdateDisplay;
             Window.AllowUserResizing = true;
         }

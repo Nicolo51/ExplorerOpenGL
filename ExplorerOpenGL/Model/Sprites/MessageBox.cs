@@ -14,6 +14,7 @@ namespace ExplorerOpenGL.Model.Sprites
 
         private List<Sprite> childSprites;
         private List<Vector2> childSpritesPosition;
+        public MessageBoxResult Result { get; set; }
 
         public MessageBox(Texture2D texture)
             : base(texture)
@@ -90,8 +91,11 @@ namespace ExplorerOpenGL.Model.Sprites
                     mb.AddChildSprite(new Button(tm.TextureText("No", "Default", Color.Red), tm.OutlineText("No", "Default", Color.Black, Color.Red, 2)), new Vector2(mb.Bounds.Width / 2 - 50, mb.Bounds.Height - 35));
                     break;
                 case MessageBoxType.OkCancel:
-                    mb.AddChildSprite(new Button(tm.TextureText("OK", "Default", Color.Red), tm.OutlineText("OK", "Default", Color.Black, Color.Red, 2)), new Vector2(mb.Bounds.Width / 2 + 50, mb.Bounds.Height - 20));
-                    mb.AddChildSprite(new Button(tm.TextureText("Cancel", "Default", Color.Red), tm.OutlineText("Cancel", "Default", Color.Black, Color.Red, 2)), new Vector2(mb.Bounds.Width / 2 - 50, mb.Bounds.Height - 35));
+                    var okButton = new Button(tm.TextureText("OK", "Default", Color.Red), tm.OutlineText("OK", "Default", Color.Black, Color.Red, 2));
+                    var CancelButton = new Button(tm.TextureText("Cancel", "Default", Color.Red), tm.OutlineText("Cancel", "Default", Color.Black, Color.Red, 2)); 
+
+                    mb.AddChildSprite(okButton, new Vector2(mb.Bounds.Width / 2 + 50, mb.Bounds.Height - 20));
+                    mb.AddChildSprite(CancelButton, new Vector2(mb.Bounds.Width / 2 - 50, mb.Bounds.Height - 35));
                     break;
                 case MessageBoxType.Ok:
                     mb.AddChildSprite(new Button(tm.TextureText("OK", "Default", Color.Red), tm.OutlineText("OK", "Default", Color.Black, Color.Red, 2)), new Vector2(mb.Bounds.Width / 2, mb.Bounds.Height - 35));
@@ -110,12 +114,21 @@ namespace ExplorerOpenGL.Model.Sprites
             return mb;
         }
     }
-        public enum MessageBoxType
-        {
-            YesNo, 
-            OkCancel, 
-            Ok, 
-            Continue, 
-            Custom
-        }
+    public enum MessageBoxType
+    {
+        YesNo, 
+        OkCancel, 
+        Ok, 
+        Continue, 
+        Custom
+    }
+
+    public  enum MessageBoxResult
+    {
+        Yes, 
+        No, 
+        Ok, 
+        Cancel, 
+        Continue, 
+    }
 }
