@@ -49,24 +49,15 @@ namespace ExplorerOpenGL.Managers
 
         public void CreateMenu()
         {
-            gameManager.Camera.LookAt(0, 0);
-            gameManager.ClearScene(); 
-            var sp = new Button(textureManager.OutlineText("Singleplayer", "Menu", Color.Black, new Color(4, 136, 201), 1), textureManager.OutlineText("Singleplayer", "Menu", Color.Black, new Color(4, 136, 201), 2)) 
-            { Position = new Vector2(0, -200)};
-            var mp = new Button(textureManager.OutlineText("Multiplayer", "Menu", Color.Black, new Color(4, 136, 201), 1), textureManager.OutlineText("Multiplayer", "Menu", Color.Black, new Color(4, 136, 201), 2)) 
-            { Position = new Vector2(0, 0) };
-            var option = new Button(textureManager.OutlineText("Options", "Menu", Color.Black, new Color(4, 136, 201), 1), textureManager.OutlineText("Options", "Menu", Color.Black, new Color(4, 136, 201), 2)) 
-            { Position = new Vector2(0, 200) };
-            
-            sp.MouseClicked += LaunchSinglePlayer;
-            mp.MouseClicked += DisplayMultiplayerForm;
-            option.MouseClicked += DisplayOptionMenu;
-
-            gameManager.AddSprite(sp, this);
-            gameManager.AddSprite(mp, this);
-            gameManager.AddSprite(option, this);
+            var mb = MessageBox.Show("Error", "Je suis un message un peu long qui sera donc wrappé par mon prog", MessageBoxType.YesNo);
+            mb.Result += GetResult;
         }
 
+        private void GetResult(MessageBox sender, MessageBoxResultEventArgs e)
+        {
+            sender.Close(); 
+            MessageBox.Show("Vous avez cliqué sur " + e.MessageBoxResult.ToString());
+        }
 
         public void DisplayMultiplayerForm(object sender, MousePointer mousePointer, Vector2 clickPosition)
         {

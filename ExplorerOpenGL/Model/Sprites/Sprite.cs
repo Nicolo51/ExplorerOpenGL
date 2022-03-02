@@ -45,7 +45,7 @@ namespace ExplorerOpenGL.Model.Sprites
 
         protected bool isClicked;
         private bool isOver; 
-        protected bool IsClickable;
+        public bool IsClickable;
         public  bool isDraggable;
         private bool isDragged;
         Vector2 ClickPosition; 
@@ -152,6 +152,11 @@ namespace ExplorerOpenGL.Model.Sprites
                     isOver = false;
                 }
             }
+        }
+
+        public virtual void Remove()
+        {
+            IsRemove = true; 
         }
 
         public void SetAlignOption(AlignOption ao)
