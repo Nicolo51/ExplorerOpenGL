@@ -11,9 +11,15 @@ namespace ExplorerOpenGL.Model.Sprites
 {
     public class MessageBox : Sprite
     {
+        public string Title { get; set; }
 
-        private List<Sprite> childSprites;
-        private List<Vector2> childSpritesPosition;
+        protected List<Sprite> childSprites;
+        protected List<Vector2> childSpritesPosition;
+        
+        protected TextureManager textureManager;
+        protected FontManager fontManager;
+
+        protected Texture2D borderTexture;
 
         public delegate void MessageBoxResultClickEventHandler(MessageBox sender, MessageBoxResultEventArgs e);
         public event MessageBoxResultClickEventHandler Result;
@@ -21,9 +27,23 @@ namespace ExplorerOpenGL.Model.Sprites
         public MessageBox(Texture2D texture)
             : base(texture)
         {
+            textureManager = TextureManager.Instance;
+            fontManager = FontManager.Instance;
+
             childSprites = new List<Sprite>();
             childSpritesPosition = new List<Vector2>();
             //origin = new Vector2(texture.Width / 2, texture.Height / 2);
+            isDraggable = true;
+        }
+
+        public MessageBox()
+        : base()
+        {
+            textureManager = TextureManager.Instance;
+            fontManager = FontManager.Instance;
+
+            childSprites = new List<Sprite>();
+            childSpritesPosition = new List<Vector2>();
             isDraggable = true;
         }
 
@@ -32,7 +52,7 @@ namespace ExplorerOpenGL.Model.Sprites
             for (int i = 0; i < childSprites.Count; i++)
             {
                 Sprite child = childSprites[i];
-                child.Position = Position + childSpritesPosition[i];
+                child.Position = Position + childSpritesPosition[i] - origin;
             }
             base.Update(gameTime, sprites);
         }
@@ -60,7 +80,15 @@ namespace ExplorerOpenGL.Model.Sprites
         public override void Draw(SpriteBatch spriteBatch)
         {
             base.Draw(spriteBatch);
+            if(borderTexture  != null)
+                spriteBatch.Draw(borderTexture, Position, null, Color.White * Opacity * (isClicked && IsClickable ? .5f : 1f), Radian, origin, scale, Effects, layerDepth+0.1f);
         }
+
+        public virtual void Show()
+        {
+            this.AddChildSprite(new TextZone(Title, fontManager.GetFont("Default"), Color.White, AlignOption.TopLeft), new Vector2(2, 2));
+        }
+
 
         public static MessageBox Show(string message)
         {
@@ -80,7 +108,7 @@ namespace ExplorerOpenGL.Model.Sprites
             GameManager gm = GameManager.Instance;
             SpriteFont font = fm.GetFont("Default"); 
             Vector2 bounds = font.MeasureString(message);
-            int lineCount = 1; 
+            int lineCount = message.Split('\n').Length; 
             if (bounds.X > maxWidth)
             {
                 string[] words = message.Split(' ');
@@ -101,6 +129,7 @@ namespace ExplorerOpenGL.Model.Sprites
                 message = sb.ToString(); 
             }
             MessageBox mb = new MessageBox(tm.CreateBorderedTexture((int)bounds.X + 50, lineCount * 35 + 90, 3, 0, paint => Color.Black, paint => (paint < ((int)bounds.X + 50) * 30)? new Color(22, 59, 224) : new Color(245, 231, 213)));
+            mb.Title = title;
             mb.AddChildSprite(new TextZone(title, font, Color.White, AlignOption.TopLeft), new Vector2(2,2));
             mb.AddChildSprite(new TextZone(message, font, Color.Black, AlignOption.Center), new Vector2(mb.Bounds.Width / 2, mb.Bounds.Height / 2 - 10));
             switch (messageBoxType)
@@ -161,6 +190,7 @@ namespace ExplorerOpenGL.Model.Sprites
                     mb.AddChildSprite(defaultButton, new Vector2(mb.Bounds.Width / 2, mb.Bounds.Height - 35));
                     break; 
             }
+            mb.SetAlignOption(AlignOption.Center);
             gm.AddSprite(mb, null);
             return mb;
         }

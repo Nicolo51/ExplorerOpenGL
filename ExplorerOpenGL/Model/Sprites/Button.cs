@@ -29,11 +29,47 @@ namespace ExplorerOpenGL.Model.Sprites
             MouseLeft += OnMouseLeft;
 
             this.mouseOverTexture = MouseOverTexture;
-            this.originMouseOver = new Vector2(mouseOverTexture.Width / 2, mouseOverTexture.Height / 2); 
-            this.origin = new Vector2(texture.Width / 2, texture.Height / 2);
+            SetAlignOption(AlignOption.Center);
             Text = String.Empty;
             layerDepth = 0.1f;
             isDraggable = true;
+        }
+        public override void SetAlignOption(AlignOption ao)
+        {
+            if (ao == alignOption)
+                return;
+            Vector2 bounds = new Vector2(mouseOverTexture.Width, mouseOverTexture.Height);
+            switch (ao)
+            {
+                case AlignOption.Left:
+                    originMouseOver = new Vector2(0, bounds.Y / 2);
+                    break;
+                case AlignOption.Right:
+                    originMouseOver = new Vector2(bounds.X, bounds.Y / 2);
+                    break;
+                case AlignOption.Top:
+                    originMouseOver = new Vector2(bounds.X / 2, 0);
+                    break;
+                case AlignOption.Bottom:
+                    originMouseOver = new Vector2(bounds.X / 2, bounds.Y);
+                    break;
+                case AlignOption.BottomLeft:
+                    originMouseOver = new Vector2(0, bounds.Y);
+                    break;
+                case AlignOption.BottomRight:
+                    originMouseOver = new Vector2(bounds.X, bounds.Y / 2);
+                    break;
+                case AlignOption.TopLeft:
+                    originMouseOver = new Vector2(0, 0);
+                    break;
+                case AlignOption.TopRight:
+                    originMouseOver = new Vector2(bounds.X, 0);
+                    break;
+                case AlignOption.Center:
+                    originMouseOver = new Vector2(bounds.X / 2, bounds.Y / 2);
+                    break;
+            }
+            base.SetAlignOption(ao);
         }
 
         public override void Update(GameTime gameTime, List<Sprite> sprites)

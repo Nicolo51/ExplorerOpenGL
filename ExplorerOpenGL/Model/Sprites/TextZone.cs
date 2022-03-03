@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using ExplorerOpenGL.Managers;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
@@ -15,7 +16,7 @@ namespace ExplorerOpenGL.Model.Sprites
         public Color Color { get; set; }
         private Vector2 bounds; 
         public override Rectangle HitBox { get { return new Rectangle((int)Position.X, (int)Position.Y, (int)bounds.X, (int)bounds.Y); } }
-        public TextZone(string text, SpriteFont font, Color color, AlignOption ao)
+        public TextZone(string text, SpriteFont font, Color color , AlignOption ao = AlignOption.None)
             :base()
         {
             Color = color; 

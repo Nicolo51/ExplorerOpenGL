@@ -1,4 +1,5 @@
 ﻿using ExplorerOpenGL.Model.Sprites;
+using ExplorerOpenGL.View;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -49,8 +50,10 @@ namespace ExplorerOpenGL.Managers
 
         public void CreateMenu()
         {
-            var mb = MessageBox.Show("Error", "Je suis un message un peu long qui sera donc wrappé par mon prog", MessageBoxType.YesNo);
-            mb.Result += GetResult;
+            //var mb = MessageBox.Show("Error", "Je suis un message un peu long qui sera donc wrappé par mon prog", MessageBoxType.YesNo);
+            //mb.Result += GetResult;
+            var ls = new LoginScreen();
+            ls.Show();
         }
 
         private void GetResult(MessageBox sender, MessageBoxResultEventArgs e)

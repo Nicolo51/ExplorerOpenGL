@@ -24,7 +24,7 @@ namespace ExplorerOpenGL.Model.Sprites
                 else return new Rectangle((int)Position.X, (int)Position.Y, 1, 1); 
             } }
         public Vector2 origin;
-        private AlignOption alignOption;
+        protected AlignOption alignOption;
         public Rectangle Bounds { get { if (_texture != null) return _texture.Bounds; return Rectangle.Empty; } }
         public SpriteEffects Effects { get; set; }
         public float  layerDepth { get; set; }
@@ -159,7 +159,7 @@ namespace ExplorerOpenGL.Model.Sprites
             IsRemove = true; 
         }
 
-        public void SetAlignOption(AlignOption ao)
+        public virtual void SetAlignOption(AlignOption ao)
         {
             if (ao == alignOption)
                 return;

@@ -78,7 +78,7 @@ namespace ExplorerOpenGL.Managers
             _sprites = sprites;
 
             Terminal = new Terminal(textureManager.CreateTexture(700, 30, paint => Color.Black), fontManager.GetFont("Default")) { Position = new Vector2(0, 185) };
-            TerminalTexintput = new TextinputBox(textureManager.CreateTexture(700, 35, paint => Color.Black * .8f), fontManager.GetFont("Default"), true) { IsHUD = true, Position = new Vector2(0, 695), Opacity = 0f, };
+            TerminalTexintput = new TextinputBox(textureManager.CreateTexture(700, 35, paint => Color.Black * .8f), fontManager.GetFont("Default"), true, true) { IsHUD = true, Position = new Vector2(0, 695), Opacity = 0f, };
             TerminalTexintput.Validated += Terminal.OnTextinputValidation;
             MousePointer = new MousePointer(textureManager.LoadTexture("cursor"));
 

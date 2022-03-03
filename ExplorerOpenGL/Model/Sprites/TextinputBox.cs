@@ -28,17 +28,21 @@ namespace ExplorerOpenGL.Model.Sprites
 
         public bool IsFocused { get; private set; }
         public bool DoEraseWhenUnfocused { get; private set; }
+        public bool MakeItTransparentWhenUnfocused { get; set; }
 
         public delegate void ValidateEventHandler(string message, TextinputBox textinput);
         public event ValidateEventHandler Validated;
 
-        public TextinputBox(Texture2D texture, SpriteFont SpriteFont,  bool eraseWhenUnfocused)
+        public string Text { get { return inputText.ToString(); }}
+
+        public TextinputBox(Texture2D texture, SpriteFont SpriteFont,  bool eraseWhenUnfocused = false, bool makeItTransparentUnfocused = false)
             : base(texture)
         {
             MouseOvered += OnMouseOver;
             MouseLeft += OnMouseLeft;
             MouseClicked += OnMouseClick;
             DoEraseWhenUnfocused = eraseWhenUnfocused;
+            MakeItTransparentWhenUnfocused = makeItTransparentUnfocused;
             cursorIndex = 0;
             cursorOpacity = 1;
             cursorTimer = 0f;
@@ -236,7 +240,8 @@ namespace ExplorerOpenGL.Model.Sprites
 
         public void UnFocus()
         {
-            Opacity = 0f;
+            if(MakeItTransparentWhenUnfocused)
+                Opacity = 0f;
             if (DoEraseWhenUnfocused)
                 Clear();
             keyboardManager.UnFocusTextinputBox(); 
