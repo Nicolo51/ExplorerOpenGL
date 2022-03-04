@@ -106,6 +106,8 @@ namespace ExplorerOpenGL
             
             Window.ClientSizeChanged += UpdateDisplay;
             Window.AllowUserResizing = true;
+
+            new MainMenu().Show(); 
         }
 
        

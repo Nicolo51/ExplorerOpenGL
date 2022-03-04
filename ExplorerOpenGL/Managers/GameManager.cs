@@ -57,7 +57,7 @@ namespace ExplorerOpenGL.Managers
         public delegate void AddSpriteEventHandler(Sprite sprite, object issuer);
         public event AddSpriteEventHandler SpriteAdded; 
 
-        public GameManager()
+        private GameManager()
         {
             action = new List<Action<object>>();
             actionArg = new List<object>();
@@ -93,6 +93,28 @@ namespace ExplorerOpenGL.Managers
             this.actionArg.Add(arg);
         }
 
+        public void StartGame(string name, string ip = null )
+        {
+            MousePointer.SetCursorIcon(MousePointerType.Crosshair);
+            Player Player = new Player(textureManager.LoadTexture("player"), textureManager.LoadTexture("playerfeet"), name)
+            {
+                Position = new Vector2(0, 0),
+                input = new Input()
+                {
+                    Down = Keys.S,
+                    Up = Keys.Z,
+                    Left = Keys.Q,
+                    Right = Keys.D,
+                }
+            };
+            AddSprite(Player, this);
+            if(!string.IsNullOrWhiteSpace(ip))
+            {
+                //TODO online handling
+            }
+
+        }
+
         public void Update(GameTime gametime)
         {
             for(int i = 0; i < action.Count; i++)
@@ -120,6 +142,10 @@ namespace ExplorerOpenGL.Managers
             }
             if (keys.Contains(Keys.F5))
             {
+                if (Player != null)
+                {
+                    Camera.FollowSprite(Player);
+                } 
                 Camera.ToggleFollow();
             }
             if (keys.Contains(Keys.F1))
@@ -129,10 +155,6 @@ namespace ExplorerOpenGL.Managers
                     string ip = sr.ReadLine();
                     networkManager.Connect(ip);
                 }
-            }
-            if (keys.Contains(Keys.F6))
-            {
-                scripterManager.CreateMenu(); 
             }
         }
 

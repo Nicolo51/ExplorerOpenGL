@@ -48,49 +48,5 @@ namespace ExplorerOpenGL.Managers
             debugManager = DebugManager.Instance; 
         }
 
-        public void CreateMenu()
-        {
-            //var mb = MessageBox.Show("Error", "Je suis un message un peu long qui sera donc wrappé par mon prog", MessageBoxType.YesNo);
-            //mb.Result += GetResult;
-            var ls = new LoginScreen();
-            ls.Show();
-        }
-
-        private void GetResult(MessageBox sender, MessageBoxResultEventArgs e)
-        {
-            sender.Close(); 
-            MessageBox.Show("Vous avez cliqué sur " + e.MessageBoxResult.ToString());
-        }
-
-        public void DisplayMultiplayerForm(object sender, MousePointer mousePointer, Vector2 clickPosition)
-        {
-            gameManager.Camera.LookAt(new Vector2(0, 0));
-            gameManager.ClearScene();
-            var ti = new TextinputBox(textureManager.CreateTexture(200, 50, e => Color.Black), fontManager.GetFont("Default"), false);
-            ti.Validated += ConnectToServer;
-            
-            gameManager.AddSprite(ti, this);
-        }
-
-        private void ConnectBtnClicked(object sender, MousePointer mousePointer, Vector2 clickPosition)
-        {
-            
-        }
-
-        public void ConnectToServer(string message, TextinputBox textinput)
-        {
-            debugManager.AddEvent(message);
-            //networkManager.Connect(message.Trim()); 
-        }
-
-        public void LaunchSinglePlayer(object sender, MousePointer mousePointer, Vector2 clickPosition)
-        {
-
-        }
-        public void DisplayOptionMenu(object sender, MousePointer mousePointer, Vector2 clickPosition)
-        {
-
-        }
-
     }
 }

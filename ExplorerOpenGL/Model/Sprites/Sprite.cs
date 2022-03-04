@@ -15,6 +15,7 @@ namespace ExplorerOpenGL.Model.Sprites
     public class Sprite
     {
         public bool IsRemove { get; set; }
+
         public Vector2 Position;
         protected Texture2D _texture;
         public float Radian { get; set; }

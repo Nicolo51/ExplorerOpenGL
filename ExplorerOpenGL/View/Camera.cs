@@ -72,6 +72,11 @@ namespace ExplorerOpenGL.View
         }
         public void ToggleFollow()
         {
+            if(SpriteToFollow == null)
+            {
+                IsFollowingSprite = false;
+                return;
+            }
             IsFollowingSprite = !IsFollowingSprite;
         }
 

@@ -28,15 +28,15 @@ namespace ExplorerOpenGL.Model.Sprites
         private TextureManager textureManager;
         private KeyboardManager keyboardManager; 
 
-        public Player(Texture2D texture, Texture2D playerFeetTexture, MousePointer mousepointer, string name, TextureManager textureManager)
+        public Player(Texture2D texture, Texture2D playerFeetTexture, string name)
             : base(texture)
         {
-            this.textureManager = textureManager;
+            this.textureManager = TextureManager.Instance;
+            mousePointer = gameManager.MousePointer; 
             ChangeName(name);
             Direction = new Vector2(0, 0);
             playerFeet = new PlayerFeet(playerFeetTexture);
             playerFeet.layerDepth = .9f;
-            this.mousePointer = mousepointer;
             origin = new Vector2(texture.Width / 2, texture.Height / 2);
             Velocity = 5;
             layerDepth = .9f;
@@ -47,7 +47,7 @@ namespace ExplorerOpenGL.Model.Sprites
 
         public override void Update(GameTime gameTime, List<Sprite> sprites)
         {
-            Radian = CalculateAngle(Position, mousePointer.Position);
+            Radian = CalculateAngle(Position, mousePointer.InWindowPosition);
             Move(sprites);
             PositionName = new Vector2(Position.X, Position.Y + 50);
             base.Update(gameTime, sprites);
@@ -66,7 +66,6 @@ namespace ExplorerOpenGL.Model.Sprites
 
         public void ChangeName(object name)
         {
-
             TextureName = textureManager.OutlineText((name as string), "Default", Color.Black, Color.White, 2); 
             Name = (name as string);
             OriginName = new Vector2(TextureName.Width / 2, TextureName.Height / 2);

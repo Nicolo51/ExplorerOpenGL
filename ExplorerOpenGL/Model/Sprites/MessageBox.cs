@@ -69,6 +69,10 @@ namespace ExplorerOpenGL.Model.Sprites
         {
             foreach(Sprite s in childSprites)
             {
+                if(s is TextinputBox)
+                {
+                    (s as TextinputBox).UnFocus(); 
+                }
                 s.Remove(); 
             }
             gameManager.MousePointer.SetCursorIcon(MousePointerType.Default);
@@ -77,16 +81,29 @@ namespace ExplorerOpenGL.Model.Sprites
             this.Remove(); 
         }
 
+        public void Hide()
+        {
+            foreach (Sprite s in childSprites)
+            {
+                s.Remove();
+            }
+            gameManager.MousePointer.SetCursorIcon(MousePointerType.Default);
+            childSprites.Clear();
+            childSpritesPosition.Clear();
+            this.Remove();
+        }
+        public virtual void Show()
+        {
+            gameManager.AddSprite(this, this);
+            if(Title != null)
+                this.AddChildSprite(new TextZone(Title, fontManager.GetFont("Default"), Color.White, AlignOption.TopLeft), new Vector2(2, 2));
+        }
+
         public override void Draw(SpriteBatch spriteBatch)
         {
             base.Draw(spriteBatch);
             if(borderTexture  != null)
                 spriteBatch.Draw(borderTexture, Position, null, Color.White * Opacity * (isClicked && IsClickable ? .5f : 1f), Radian, origin, scale, Effects, layerDepth+0.1f);
-        }
-
-        public virtual void Show()
-        {
-            this.AddChildSprite(new TextZone(Title, fontManager.GetFont("Default"), Color.White, AlignOption.TopLeft), new Vector2(2, 2));
         }
 
 

@@ -91,6 +91,8 @@
     <Compile Include="Model\Sprites\Sprite.cs" />
     <Compile Include="View\Camera.cs" />
     <Compile Include="View\LoginScreen.cs" />
+    <Compile Include="View\MainMenu.cs" />
+    <Compile Include="View\PickNameScreen.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="MonoGame.Framework">

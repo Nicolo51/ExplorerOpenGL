@@ -244,7 +244,8 @@ namespace ExplorerOpenGL.Model.Sprites
                 Opacity = 0f;
             if (DoEraseWhenUnfocused)
                 Clear();
-            keyboardManager.UnFocusTextinputBox(); 
+            if(IsFocused)
+                keyboardManager.UnFocusTextinputBox(); 
             IsFocused = false;
         }
 
