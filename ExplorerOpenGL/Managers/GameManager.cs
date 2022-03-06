@@ -30,9 +30,9 @@ namespace ExplorerOpenGL.Managers
         private FontManager fontManager;
         private ScripterManager scripterManager;
 
+        private bool isGameStarted;  
         public Player Player { get; set; }
         public Terminal Terminal { get; private set; }
-        public TextinputBox TerminalTexintput; 
         public Camera Camera { get; private set; } 
         public MousePointer MousePointer { get; private set; }
 
@@ -61,6 +61,7 @@ namespace ExplorerOpenGL.Managers
         {
             action = new List<Action<object>>();
             actionArg = new List<object>();
+            isGameStarted = false; 
         }
 
         public void InitDependencies(List<Sprite> sprites, Camera camera)
@@ -78,12 +79,10 @@ namespace ExplorerOpenGL.Managers
             _sprites = sprites;
 
             Terminal = new Terminal(textureManager.CreateTexture(700, 30, paint => Color.Black), fontManager.GetFont("Default")) { Position = new Vector2(0, 185) };
-            TerminalTexintput = new TextinputBox(textureManager.CreateTexture(700, 35, paint => Color.Black * .8f), fontManager.GetFont("Default"), true, true) { IsHUD = true, Position = new Vector2(0, 695), Opacity = 0f, };
-            TerminalTexintput.Validated += Terminal.OnTextinputValidation;
+            
             MousePointer = new MousePointer(textureManager.LoadTexture("cursor"));
 
             AddSprite(Terminal, this);
-            AddSprite(TerminalTexintput, this);
             AddSprite(MousePointer, this);
         }
 
@@ -95,7 +94,8 @@ namespace ExplorerOpenGL.Managers
 
         public void StartGame(string name, string ip = null )
         {
-            MousePointer.SetCursorIcon(MousePointerType.Crosshair);
+            if (isGameStarted)
+                return;
             Player Player = new Player(textureManager.LoadTexture("player"), textureManager.LoadTexture("playerfeet"), name)
             {
                 Position = new Vector2(0, 0),
@@ -107,12 +107,26 @@ namespace ExplorerOpenGL.Managers
                     Right = Keys.D,
                 }
             };
-            AddSprite(Player, this);
             if(!string.IsNullOrWhiteSpace(ip))
             {
-                //TODO online handling
+                if(!networkManager.Connect(ip, name))
+                {
+                    return; 
+                }
             }
+            AddSprite(Player, this);
+            MousePointer.SetDefaultIcon(MousePointerType.Crosshair);
+            MousePointer.SetCursorIcon(MousePointerType.Crosshair);
+        }
 
+        public void StopGame()
+        {
+            if (!isGameStarted)
+                return;
+            Camera.FollowSprite(null);
+            RemoveSprite(Player);
+            Player = null; 
+            MousePointer.SetDefaultIcon(MousePointerType.Arrow);
         }
 
         public void Update(GameTime gametime)
@@ -125,6 +139,8 @@ namespace ExplorerOpenGL.Managers
 
         public void AddSprite(Sprite sprite, object issuer)
         {
+            if (sprite is Player && issuer is GameManager)
+                Player = sprite as Player; 
             SpriteAdded?.Invoke(sprite, issuer); 
             _sprites.Add(sprite); 
         }
@@ -148,14 +164,6 @@ namespace ExplorerOpenGL.Managers
                 } 
                 Camera.ToggleFollow();
             }
-            if (keys.Contains(Keys.F1))
-            {
-                using (StreamReader sr = new StreamReader("ip.txt"))
-                {
-                    string ip = sr.ReadLine();
-                    networkManager.Connect(ip);
-                }
-            }
         }
 
         public void OnWindowResize(object sender, EventArgs e)
@@ -165,6 +173,7 @@ namespace ExplorerOpenGL.Managers
 
         public void RemoveSprite(Sprite sprite)
         {
+            sprite.IsRemove = true; 
             _sprites.Remove(sprite);
         }
 
@@ -173,7 +182,7 @@ namespace ExplorerOpenGL.Managers
             for (int i = 0; i < _sprites.Count; i++)
             {
                 var sprite = _sprites[i];
-                if (!(sprite is Terminal || sprite is MousePointer || sprite == TerminalTexintput))
+                if (!(sprite is Terminal || sprite is MousePointer))
                 {
                     _sprites.Remove(sprite);
                     i--;

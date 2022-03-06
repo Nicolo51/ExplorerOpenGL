@@ -31,11 +31,10 @@ namespace ExplorerOpenGL.Managers.Networking
             int tickRate  = packet.ReadInt();
             client.myId = id;
             client.serverTickRate = tickRate;
-            client.PlayersData.Add(id, new PlayerData(id)); 
-            clientSend.SendResponseWelcome();
-            client.udp.Connect(((IPEndPoint)client.tcp.socket.Client.LocalEndPoint).Port);
+            PlayerData playerData = new PlayerData(id);
+            client.PlayersData.Add(id, playerData); 
 
-            NetworkEventArgs e = new NetworkEventArgs() { Message = msg + $".", MessageType = MessageType.OnWelcomeReceive, Protocol = Protocol.TCP, RequestType = RequestType.Receive };
+            NetworkEventArgs e = new WelcomeEventArgs() { Message = msg + $".", MessageType = MessageType.OnWelcomeReceive, Protocol = Protocol.TCP, RequestType = RequestType.Receive, ID = id, PlayerData = playerData, TickRate = tickRate};
             client.PacketReceived(e); 
         }
 

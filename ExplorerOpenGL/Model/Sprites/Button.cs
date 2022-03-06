@@ -81,12 +81,13 @@ namespace ExplorerOpenGL.Model.Sprites
         private void OnMouseOver(object sender, MousePointer mousePointer)
         {
             isMouseOver = true;
-            gameManager.MousePointer.SourceRectangle = new Rectangle(300, 0, 75, 75);
+            gameManager.MousePointer.SetCursorIcon(MousePointerType.Pointer);
+            //gameManager.MousePointer.SourceRectangle = new Rectangle(300, 0, 75, 75);
         }
         private void OnMouseLeft(object sender, MousePointer mousePointer)
         {
             isMouseOver = false;
-            gameManager.MousePointer.SourceRectangle = new Rectangle(0, 0, 75, 75);
+            gameManager.MousePointer.SetCursorIcon(MousePointerType.Default);
 
         }
         private void OnMouseClick(object sender, MousePointer mousePointer,  Vector2 clickPosition)

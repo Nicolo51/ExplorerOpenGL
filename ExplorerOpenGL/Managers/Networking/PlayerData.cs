@@ -40,6 +40,7 @@ namespace ExplorerOpenGL.Managers.Networking
             scale = 1f;
             opacity = 1f; 
             ID = id;
+            layerDepth = .9f;
         }
         public PlayerData(int id)
         {
@@ -48,6 +49,7 @@ namespace ExplorerOpenGL.Managers.Networking
             scale = 1f;
             opacity = 1f;
             ID = id;
+            layerDepth = .9f;
         }
 
         public override void Update(GameTime gameTime, List<Sprite> sprites)
@@ -59,7 +61,7 @@ namespace ExplorerOpenGL.Managers.Networking
             }
             if(playerFeetTexture == null || playerTexture == null)
             {
-                SetTextures(textureManager.LoadedTextures["playerfeet"], textureManager.LoadedTextures["player"]);
+                SetTextures(textureManager.LoadedTextures["player"], textureManager.LoadedTextures["playerfeet"]);
             }
             base.Update(gameTime, sprites);
         }
@@ -94,8 +96,8 @@ namespace ExplorerOpenGL.Managers.Networking
             if (TextureName != null && playerFeetTexture != null && playerTexture != null)
             {
                 spriteBatch.Draw(TextureName, PositionName, null, Color.White, 0f, OriginName, .75f, SpriteEffects.None, layerDepth);
-                spriteBatch.Draw(playerFeetTexture, ServerPosition, null, Color.White * opacity, FeetRadian, originFeet, scale * .5f, Effects, layerDepth);
-                spriteBatch.Draw(playerTexture, ServerPosition, null, Color.White * opacity, LookAtRadian, origin, scale , Effects, layerDepth + .01f);
+                spriteBatch.Draw(playerFeetTexture, ServerPosition, null, Color.White * opacity, FeetRadian, originFeet, scale , Effects, layerDepth + .01f);
+                spriteBatch.Draw(playerTexture, ServerPosition, null, Color.White * opacity, LookAtRadian, origin, scale * .5f, Effects, layerDepth);
             }
             
         }

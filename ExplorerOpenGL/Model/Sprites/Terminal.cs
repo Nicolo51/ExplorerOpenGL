@@ -15,7 +15,10 @@ namespace ExplorerOpenGL.Model.Sprites
         SpriteFont font;
         public Color FontColor; 
         private KeyboardManager keyboardManager;
-        private NetworkManager networkManager; 
+        private NetworkManager networkManager;
+        private FontManager fontManager;
+        private TextureManager textureManager;
+        private TextinputBox terminalTexintput;
         private int height;
         private int width; 
 
@@ -36,7 +39,9 @@ namespace ExplorerOpenGL.Model.Sprites
             :base(texture)
         {
             networkManager = NetworkManager.Instance; 
-            this.keyboardManager = KeyboardManager.Instance;
+            keyboardManager = KeyboardManager.Instance;
+            fontManager = FontManager.Instance;
+            textureManager = TextureManager.Instance;
             height = 500; 
             width = texture.Width;
             IsHUD = true; 
@@ -44,8 +49,40 @@ namespace ExplorerOpenGL.Model.Sprites
             layerDepth = .1f; 
             _texture = texture; 
             Opacity = .5f;
-            
+
+            terminalTexintput = new TextinputBox(textureManager.CreateTexture(700, 35, paint => Color.Black * .8f), fontManager.GetFont("Default"), true, true) { IsHUD = true, Position = new Vector2(0, 695), Opacity = 0f, };
+            terminalTexintput.Validated += OnTextinputValidation;
+            keyboardManager.KeyPressedSubTo(Keys.Enter, OnEnterPress);
+            keyboardManager.KeyPressedSubTo(Keys.Escape, OnEscapePress);
+            keyboardManager.TextInputed += KeyboardManager_TextInputed;
+
+
+            keyboardManager.OnSpriteAdded(terminalTexintput, this);
             messages = new List<ChatElement>();
+        }
+
+        private void KeyboardManager_TextInputed(TextInputEventArgs e)
+        {
+            if (e.Character == '/' && !terminalTexintput.IsFocused && !keyboardManager.IsTextInputBoxFocused)
+            {
+                terminalTexintput.Clear();
+                terminalTexintput.Focus();
+            }
+        }
+
+        private void OnEnterPress()
+        {
+            if (keyboardManager.focusedTextInput == null || keyboardManager.focusedTextInput == terminalTexintput)
+                terminalTexintput.ToggleFocus(true);
+        }
+        private void OnEscapePress()
+        {
+            terminalTexintput.UnFocus();
+        }
+
+        public void OnTextInput(object sender, TextInputEventArgs e)
+        {
+           
         }
 
         public void AddMessageToTerminal(string message, string name, Color color)
@@ -126,35 +163,20 @@ namespace ExplorerOpenGL.Model.Sprites
                     messages[i].Opacity = .5f;
                 }
             }
-
-            //if (IsNewMessage)
-            //{
-            //    for(int i = 0;  i < messages.Count; i++)
-            //    {
-            //        ChatElement message = messages[i]; 
-            //        if (!message.IsDisplayed)
-            //            continue;
-            //        message.Opacity -= 0.05f;
-            //        if (message.Opacity < 0f)
-            //            message.IsDisplayed = false; 
-            //    }
-            //}
+            terminalTexintput.Update(gameTime, sprites); 
             base.Update(gameTime, sprites);
         }
 
+
+
         public override void Draw(SpriteBatch spriteBatch)
         {
-
-            //base.Draw(spriteBatch);
-            //int j = messages.Count - 1;
-            //if (j == -1)
-            //{ return; }
             for (int i = messages.Count - 1; i >= 0; i--)
             {
                 spriteBatch.Draw(_texture, new Vector2(Position.X, Position.Y + height - ((messages.Count - 1 - i) * 30)), null, Color.White * messages[i].Opacity, 0f, new Vector2(0, 30), 1f ,  SpriteEffects.None, layerDepth - .01f);
                 spriteBatch.DrawString(font, messages[i].ToString(), new Vector2(Position.X, Position.Y + height - ((messages.Count - 1 - i) *25)), messages[i].Color * messages[i].Opacity * 2, 0f, new Vector2(0, 30), 1f, SpriteEffects.None, layerDepth - .02f);
-                //j--;
             }
+            terminalTexintput.Draw(spriteBatch);
         }
         
         public void OnTextinputValidation(string s, TextinputBox t)

@@ -30,7 +30,7 @@ namespace ExplorerOpenGL.Managers
         private Dictionary<Keys, SpecificKeySwitch> specificKeyReleased;
 
         private List<TextinputBox> textinputBoxes;
-        private TextinputBox focusedTextInput; 
+        public TextinputBox focusedTextInput { get; private set; } 
         public bool IsTextInputBoxFocused { get { return (focusedTextInput != null); } }
 
         public static event EventHandler Initialized;
@@ -105,7 +105,7 @@ namespace ExplorerOpenGL.Managers
             gameManager.SpriteAdded += OnSpriteAdded;
         }
 
-        private void OnSpriteAdded(Sprite sprite, object issuer)
+        public void OnSpriteAdded(Sprite sprite, object issuer)
         {
             if(sprite is TextinputBox)
             {
@@ -115,12 +115,8 @@ namespace ExplorerOpenGL.Managers
 
         public void OnTextInput(object sender, TextInputEventArgs e)
         {
-            if (e.Character == '/' && !gameManager.TerminalTexintput.IsFocused && focusedTextInput == null)
-            {
-                gameManager.TerminalTexintput.Clear();
-                gameManager.TerminalTexintput.Focus();
-            }
-            if(focusedTextInput != null)
+            TextInputed?.Invoke(e); 
+            if(IsTextInputBoxFocused)
                 ProcessTextInput(e, focusedTextInput);
         }
         public void Update()
@@ -147,11 +143,14 @@ namespace ExplorerOpenGL.Managers
                 RaiseSpecificKeyReleased(lostKeys);
                 OnKeyRelease(lostKeys); 
             }
-
         }
 
         public void ProcessTextInput(TextInputEventArgs e, TextinputBox t)
         {
+            if(e.Key == Keys.Enter || e.Key == Keys.Tab)
+            {
+                return;
+            }
             switch(e.Key)
             {
                 case Keys.Delete:
@@ -163,9 +162,6 @@ namespace ExplorerOpenGL.Managers
                 case Keys.Escape:
                     t.UnFocus();
                     break;
-                case Keys.Enter:
-                    t.Validate(); 
-                    break; 
                 default: 
                     t.AddChar(e.Character);
                     break; 

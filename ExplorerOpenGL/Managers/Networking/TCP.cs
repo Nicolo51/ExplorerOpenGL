@@ -57,7 +57,7 @@ namespace ExplorerOpenGL.Managers.Networking
                 return;
 
             stream = socket.GetStream();
-
+            
             receiveData = new Packet();
 
             stream.BeginRead(receiveBuffer, 0, dataBufferSize, onReceive, null);

@@ -138,6 +138,10 @@ namespace ExplorerOpenGL.Managers
 
         public Texture2D LoadTexture(string path)
         {
+            if (LoadedTextures.ContainsKey(path))
+            {
+                return LoadedTextures[path]; 
+            }
             Texture2D texture = content.Load<Texture2D>(path);
             LoadedTextures.Add(path, texture);
             return texture; 

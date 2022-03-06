@@ -13,20 +13,20 @@ namespace ExplorerOpenGL.Managers
 {
     public class NetworkManager 
     {
-        public bool IsConnectedToAServer { get; private set; }
+        public ConnectionState ConnectionState{ get; private set; }
+        public bool IsConnectedToAServer { get { return ConnectionState == ConnectionState.Connected; } }
         SocketAddress socketAddress;
         int serverTickRate; 
         double timer;
         double clock;
-        Terminal terminal;
         private Client client; 
         GameManager gameManager;
         DebugManager debugManager;
         Player player;
-
+        private int port;
         private static NetworkManager instance;
         public static event EventHandler Initialized;
-
+        private string playerNameOnConnection; 
         public static NetworkManager Instance { get
             {
                 if(instance == null)
@@ -41,9 +41,10 @@ namespace ExplorerOpenGL.Managers
 
         public NetworkManager()
         {
-            IsConnectedToAServer = false;
+            ConnectionState = ConnectionState.NotConnected;
             timer = 0d;
-            clock = 0d; 
+            clock = 0d;
+            port = 25789;
         }
 
         public void InitDependencies()
@@ -51,25 +52,37 @@ namespace ExplorerOpenGL.Managers
             gameManager = GameManager.Instance;
             debugManager = DebugManager.Instance;
             client = new Client(gameManager);
-            player = gameManager.Player;
+            
         }
 
-        public void Connect(string ip) //port is 25789
+        public bool Connect(string ip, string name) //port is 25789 by default
         {
-            if (!IsConnectedToAServer)
+            playerNameOnConnection = name; 
+
+            if (ip.IndexOf(':') != -1)
             {
-                terminal.AddMessageToTerminal($"Connecting to {ip}...", "System", Color.White);
-                socketAddress = new SocketAddress(ip, 25789);
-                client.Start(new SocketAddress(ip, 25789));
-                client.ConnectToServer();
-                IsConnectedToAServer = true;
+                if(!Int32.TryParse(ip.Split(':')[1], out port))
+                {
+                    MessageBox.Show("Error", "Port unreadable.");
+                    return false; 
+                } 
+            }
+            if (ConnectionState == ConnectionState.NotConnected)
+            {
+                gameManager.Terminal.AddMessageToTerminal($"Connecting to {ip}...", "System", Color.White);
+                socketAddress = new SocketAddress(ip, port);
+                client.Start(new SocketAddress(ip, port));
+
+                ConnectionState = ConnectionState.WaitingForTcp;
                 client.OnPacketReceived += OnPacketReceived; 
                 client.OnPacketSent += OnPacketSent;
-                terminal.AddMessageToTerminal($"Connected !", "System", Color.Green);
+                client.ConnectToServer();
+                return true;
             }
             else
             {
-                terminal.AddMessageToTerminal("You're already connected to a server." , "System", Color.Red);
+                gameManager.Terminal.AddMessageToTerminal("You're already connected to a server." , "System", Color.Red);
+                return false; 
             }
         }
 
@@ -110,55 +123,77 @@ namespace ExplorerOpenGL.Managers
                     }
                     break;
                 case RequestResponseEventArgs rrea:
-                    terminal.AddMessageToTerminal(rrea.Message, "System", Color.White);
+                    gameManager.Terminal.AddMessageToTerminal(rrea.Message, "System", Color.White);
                     break;
                 case PlayerDisconnectionEventArgs pdea:
                     gameManager.RemoveSprite(client.PlayersData[pdea.ID]);
                     client.PlayersData.Remove(pdea.ID);
-                    terminal.AddMessageToTerminal(pdea.Message, "System", Color.White);
+                    gameManager.Terminal.AddMessageToTerminal(pdea.Message, "System", Color.White);
                     break;
                 case PlayerConnectEventArgs pcea:
                     PlayerData playerDataCo = new PlayerData(pcea.ID, pcea.Name);
                     client.PlayersData.Add(pcea.ID, playerDataCo);
-                    terminal.AddMessageToTerminal(pcea.Message, "System", Color.White);
+                    gameManager.Terminal.AddMessageToTerminal(pcea.Message, "System", Color.White);
                     gameManager.AddSprite(playerDataCo, this);
                     break;
                 case PlayerChangeNameEventArgs pcnea:
-                    if(pcnea.IDPlayer == client.myId)
+                    string exName = client.PlayersData[pcnea.IDPlayer].Name; 
+                    if (pcnea.IDPlayer == client.myId)
                     {
                         gameManager.AddActionToUIThread(gameManager.Player.ChangeName, pcnea.Name);
                         return; 
                     }
                     client.PlayersData[pcnea.IDPlayer].Name = pcnea.Name;
+                    gameManager.Terminal.AddMessageToTerminal(exName + " is now known as " + pcnea.Name, "System", Color.Green);
+                    break;
+                case WelcomeEventArgs wea:
+                    client.SendResponseWelcome(playerNameOnConnection);
+                    client.ConnectUdp();
+                    ConnectionState = ConnectionState.WaitingForUdp;
                     break; 
                 default:
-                    terminal.AddMessageToTerminal(e.Message, "System", Color.White);
-                    break; 
+                    if (e.MessageType == MessageType.OnUdpTestReceive)
+                    {
+                        gameManager.Terminal.AddMessageToTerminal($"Connected !", "System", Color.Green);
+                        ConnectionState = ConnectionState.Connected;
+                        break;
+                    }
+                    gameManager.Terminal.AddMessageToTerminal(e.Message, "System", Color.White);
+                    break;
             }
         }
-
-        
 
         public void OnPacketSent(NetworkEventArgs e)
         {
             if (string.IsNullOrWhiteSpace(e.Message))
             {
-                terminal.AddMessageToTerminal(e.Message, "System", Color.White);
+                gameManager.Terminal.AddMessageToTerminal(e.Message, "System", Color.White);
             }
         }
 
         public void Update(GameTime gametime)
         {
+            if (gameManager.Player == null || gameManager.Terminal == null)
+            {
+                return;
+            }
             if (IsConnectedToAServer)
             {
                 if (clock > timer)
                 {
-                    client.SendMessage(player, (int)ClientPackets.UdpUpdatePlayer);
+                    
+                    client.SendMessage(gameManager.Player, (int)ClientPackets.UdpUpdatePlayer);
                     clock = 0d;
                     return;
                 }
                 clock += gametime.ElapsedGameTime.TotalMilliseconds;
             }
         }
+    }
+    public enum ConnectionState {
+        NotConnected, 
+        Connected, 
+        WaitingForUdp, 
+        WaitingForTcp, 
     }
 }

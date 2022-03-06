@@ -59,6 +59,7 @@
     <Compile Include="Managers\Networking\EventArgs\PlayerSyncEventArgs.cs" />
     <Compile Include="Managers\Networking\EventArgs\PlayerUpdateEventArgs.cs" />
     <Compile Include="Managers\Networking\EventArgs\RequestResponseEventArgs.cs" />
+    <Compile Include="Managers\Networking\EventArgs\WelcomeEventArgs.cs" />
     <Compile Include="Managers\NetworkManager.cs" />
     <Compile Include="Managers\Networking\Client.cs" />
     <Compile Include="Managers\Networking\ClientHandle.cs" />

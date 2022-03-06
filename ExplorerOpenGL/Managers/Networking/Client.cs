@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -47,6 +48,17 @@ namespace ExplorerOpenGL.Managers.Networking
             tcp.Connect();
             InitClientData();
         }
+
+        public void ConnectUdp()
+        {
+            udp.Connect(((IPEndPoint)tcp.socket.Client.LocalEndPoint).Port);
+        }
+
+        public void SendResponseWelcome(string name)
+        {
+            clientSend.SendResponseWelcome(name);
+        }
+
         public void SendMessage(object obj, int idHandler)
         {
             clientSend.SendMessage(obj, idHandler);

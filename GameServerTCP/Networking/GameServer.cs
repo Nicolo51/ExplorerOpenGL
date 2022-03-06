@@ -68,6 +68,9 @@ namespace GameServerTCP
             catch (Exception _ex)
             {
                 Console.WriteLine($"Error receiving UDP data: {_ex}");
+                udpListener.BeginReceive(OnUDPReceived, null);
+                Console.WriteLine($"The UDP service has been reset");
+
             }
         }
 

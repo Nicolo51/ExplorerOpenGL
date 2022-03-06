@@ -33,12 +33,12 @@ namespace ExplorerOpenGL.Managers.Networking
             client.udp.SendData(packet);
         }
 
-        public void SendResponseWelcome()
+        public void SendResponseWelcome(string name)
         {
             using (Packet packet = new Packet((int)ClientPackets.welcomeReceived))
             {
                 packet.Write(client.myId);
-                packet.Write("Nicolas");
+                packet.Write(name);
                 packet.Write("Hello client here");
                 SendTcpData(packet);
             }

@@ -43,6 +43,7 @@ namespace ExplorerOpenGL.View
             txtIP.SetAlignOption(AlignOption.TopLeft);
             btnConnect.SetAlignOption(AlignOption.Left);
             btnBack.SetAlignOption(AlignOption.Right);
+            SetAlignOption(AlignOption.Center);
 
             btnBack.MouseClicked += BtnBack_MouseClicked;
             btnConnect.MouseClicked += BtnConnect_MouseClicked;
@@ -50,7 +51,8 @@ namespace ExplorerOpenGL.View
 
         private void BtnConnect_MouseClicked(object sender, MousePointer mousePointer, Vector2 clickPosition)
         {
-            MessageBox.Show("IP :" + tbIP.Text + "\nName : " + tbName.Text);
+            gameManager.StartGame(tbName.Text, tbIP.Text);
+            this.Close(); 
         }
 
         private void BtnBack_MouseClicked(object sender, MousePointer mousePointer, Vector2 clickPosition)
