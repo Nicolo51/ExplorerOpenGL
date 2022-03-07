@@ -81,7 +81,7 @@ namespace GameServerTCP
             Vector2 position = new Vector2(packet.ReadFloat(), packet.ReadFloat());
             float feetRadian = packet.ReadFloat(); 
             float lookAtRadian = packet.ReadFloat();
-            double health = packet.ReadDouble(); 
+            double health = packet.ReadLong(); 
 
             string msg = $"Posistion = {position.ToString()}, FeetRadian = {feetRadian.ToString("0.##")}, LookAtRadian = {lookAtRadian.ToString("0.##")}";
             Game.UpdatePlayer(fromClient, position, feetRadian, lookAtRadian, health);

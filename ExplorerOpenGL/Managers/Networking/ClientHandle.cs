@@ -192,11 +192,10 @@ namespace ExplorerOpenGL.Managers.Networking
                 {
                     playerData.Add(new PlayerData(idPlayer)
                     {
-                        ServerPosition = new Vector2(packet.ReadFloat(),
-                        packet.ReadFloat()),
+                        ServerPosition = new Vector2(packet.ReadFloat(), packet.ReadFloat()),
                         LookAtRadian = packet.ReadFloat(),
                         FeetRadian = packet.ReadFloat(),
-                        Health = packet.ReadDouble(), 
+                        Health = packet.ReadLong(), 
                     }); 
                 }
                 else

@@ -21,7 +21,7 @@ namespace ExplorerOpenGL.Model.Sprites
         private Vector2 PositionName;
         private Vector2 OriginName; 
         public Vector2 Direction;
-        public double Health { get; private set;  }
+        public long Health { get; private set;  }
         public string Name{ get; private set; }
         public int ID { get; private set; }
         public float PlayerFeetRadian { get { return playerFeet.Radian; } }

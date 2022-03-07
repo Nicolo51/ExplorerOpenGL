@@ -11,7 +11,7 @@ namespace GameServerTCP.GameData
         public Vector2 Position { get; set; }
         public float LookAtRadian { get; set; }
         public float FeetRadian { get; set; }
-        public double Health { get; set; }
+        public long Health { get; set; }
         public Player(int id, string name)
         {
             ID = id;
