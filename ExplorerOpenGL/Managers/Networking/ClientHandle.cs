@@ -195,13 +195,13 @@ namespace ExplorerOpenGL.Managers.Networking
                         ServerPosition = new Vector2(packet.ReadFloat(),
                         packet.ReadFloat()),
                         LookAtRadian = packet.ReadFloat(),
-                        FeetRadian = packet.ReadFloat()
+                        FeetRadian = packet.ReadFloat(),
+                        Health = packet.ReadDouble(), 
                     }); 
-                    //Debug.WriteLine(Client.PlayersData[idPlayer].ToString());
                 }
                 else
                 {
-                    //Debug.WriteLine("Un sync from the server, might lag a little while re syncing ");
+                    //Debug.WriteLine("Unsync from the server, might lag a little while re syncing ");
                 }
             }
             PlayerUpdateEventArgs e = new PlayerUpdateEventArgs()

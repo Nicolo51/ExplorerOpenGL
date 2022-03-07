@@ -11,13 +11,15 @@ namespace GameServerTCP.GameData
         public Vector2 Position { get; set; }
         public float LookAtRadian { get; set; }
         public float FeetRadian { get; set; }
+        public double Health { get; set; }
         public Player(int id, string name)
         {
             ID = id;
             Name = name;
             Position = new Vector2(0, 0);
             LookAtRadian = 0f;
-            FeetRadian = 0f; 
+            FeetRadian = 0f;
+            Health = 100; 
         }
 
         public Player(int id)
@@ -26,6 +28,7 @@ namespace GameServerTCP.GameData
             Position = new Vector2(0, 0);
             LookAtRadian = 0f;
             FeetRadian = 0f;
+            Health = 100; 
         }
 
         public override string ToString()

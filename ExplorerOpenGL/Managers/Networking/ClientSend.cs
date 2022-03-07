@@ -58,7 +58,6 @@ namespace ExplorerOpenGL.Managers.Networking
         {
             if (obj is Player) 
             {
-                
                 Player player = (obj as Player); 
                 using (Packet packet = new Packet((int)ClientPackets.UdpUpdatePlayer))
                 {
@@ -66,7 +65,7 @@ namespace ExplorerOpenGL.Managers.Networking
                     packet.Write(player.Position.Y);
                     packet.Write(player.PlayerFeetRadian);
                     packet.Write(player.Radian);
-                    //Debug.WriteLine(player.Position);
+                    packet.Write(player.Health);
                     SendUdpData(packet);
                 }
             }

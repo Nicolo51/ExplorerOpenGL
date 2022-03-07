@@ -22,12 +22,12 @@ namespace GameServerTCP.GameData
             Players.Add(player.ID, player); 
         }
 
-        public static void UpdatePlayer(int id, Vector2 postion, float feetRadian, float lootAtRadian)
+        public static void UpdatePlayer(int id, Vector2 postion, float feetRadian, float lootAtRadian, double health)
         {
-            
             Players[id].Position = postion;
             Players[id].FeetRadian = feetRadian;
             Players[id].LookAtRadian = lootAtRadian;
+            Players[id].Health = health; 
         }
         public static void movePlayer(int id, Vector2 position)
         {

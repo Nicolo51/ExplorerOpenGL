@@ -25,7 +25,7 @@ namespace GameServerTCP
             tcpListener.BeginAcceptTcpClient(new AsyncCallback(OnClientConnect), null);
 
             udpListener = new UdpClient(port);
-            udpListener.BeginReceive(OnUDPReceived, null); 
+            udpListener.BeginReceive(OnUDPReceived, null);
 
             Console.WriteLine("Server started on port {0}", port); 
         }
@@ -68,6 +68,7 @@ namespace GameServerTCP
             catch (Exception _ex)
             {
                 Console.WriteLine($"Error receiving UDP data: {_ex}");
+                udpListener = new UdpClient(port);
                 udpListener.BeginReceive(OnUDPReceived, null);
                 Console.WriteLine($"The UDP service has been reset");
 

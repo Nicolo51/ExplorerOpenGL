@@ -154,6 +154,12 @@ namespace GameServerTCP
         {
             buffer.AddRange(BitConverter.GetBytes(_value));
         }
+        /// <summary>Adds a double to the packet.</summary>
+        /// <param name="_value">The double to add.</param>
+        public void Write(double _value)
+        {
+            buffer.AddRange(BitConverter.GetBytes(_value));
+        }
         /// <summary>Adds a float to the packet.</summary>
         /// <param name="_value">The float to add.</param>
         public void Write(float _value)
@@ -225,6 +231,28 @@ namespace GameServerTCP
                 throw new Exception("Could not read value of type 'byte[]'!");
             }
         }
+
+        /// <summary>Reads a double from the packet.</summary>
+        /// <param name="_moveReadPos">Whether or not to move the buffer's read position.</param>
+        public double ReadDouble(bool _moveReadPos = true)
+        {
+            if (buffer.Count > readPos)
+            {
+                // If there are unread bytes
+                double _value = BitConverter.ToDouble(readableBuffer, readPos); // Convert the bytes to a double
+                if (_moveReadPos)
+                {
+                    // If _moveReadPos is true and there are unread bytes
+                    readPos += 2; // Increase readPos by 2
+                }
+                return _value; // Return the double
+            }
+            else
+            {
+                throw new Exception("Could not read value of type 'double'!");
+            }
+        }
+
 
         /// <summary>Reads a short from the packet.</summary>
         /// <param name="_moveReadPos">Whether or not to move the buffer's read position.</param>

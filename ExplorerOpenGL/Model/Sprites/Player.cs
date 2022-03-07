@@ -21,6 +21,7 @@ namespace ExplorerOpenGL.Model.Sprites
         private Vector2 PositionName;
         private Vector2 OriginName; 
         public Vector2 Direction;
+        public double Health { get; private set;  }
         public string Name{ get; private set; }
         public int ID { get; private set; }
         public float PlayerFeetRadian { get { return playerFeet.Radian; } }
@@ -41,7 +42,7 @@ namespace ExplorerOpenGL.Model.Sprites
             Velocity = 5;
             layerDepth = .9f;
             scale = .5f;
-
+            Health = 100;
             keyboardManager = KeyboardManager.Instance; 
         }
 

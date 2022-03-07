@@ -26,7 +26,8 @@ namespace ExplorerOpenGL.Managers.Networking
         public float opacity;
         public bool NameHasChange { get; set; }
         private Vector2 originFeet;
-        private TextureManager textureManager; 
+        private TextureManager textureManager;
+        public double Health { get; set; }
 
 
         public int idTexture { get; set; }

@@ -86,6 +86,7 @@ namespace GameServerTCP
                         packet.Write(entry.Value.Position.Y); 
                         packet.Write(entry.Value.LookAtRadian);
                         packet.Write(entry.Value.FeetRadian);
+                        packet.Write((long)entry.Value.Health); 
                     }
                 }
                 packet.Write(false);
