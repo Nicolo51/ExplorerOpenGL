@@ -135,7 +135,7 @@ namespace ExplorerOpenGL
 
             gameManager.Camera.Update();
             gameManager.Update(gameTime);
-            debugManager.Update();
+            debugManager.Update(gameTime);
             keyboardManager.Update();
             networkManager.Update(gameTime); 
 

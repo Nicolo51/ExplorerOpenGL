@@ -27,7 +27,13 @@ namespace ExplorerOpenGL.Managers
         private static NetworkManager instance;
         public static event EventHandler Initialized;
         private string playerNameOnConnection;
-        private GameTime gameTime; 
+        private GameTime gameTime;
+
+        double elapsedTimeSinceLastUpdatePlayer;
+        double lastUpdate; 
+
+        private bool DoOnce; 
+
         public static NetworkManager Instance { get
             {
                 if(instance == null)
@@ -46,14 +52,14 @@ namespace ExplorerOpenGL.Managers
             timer = 0d;
             clock = 0d;
             port = 25789;
+            DoOnce = false; 
         }
 
-        public void InitDependencies(GameTime gameTime)
+        public void InitDependencies()
         {
             gameManager = GameManager.Instance;
             debugManager = DebugManager.Instance;
             client = new Client(gameManager);
-            this.gameTime = gameTime; 
         }
 
         public bool Connect(string ip, string name) //port is 25789 by default
@@ -105,11 +111,14 @@ namespace ExplorerOpenGL.Managers
             switch (e)
             {
                 case PlayerUpdateEventArgs puea:
+                    elapsedTimeSinceLastUpdatePlayer = gameTime.TotalGameTime.TotalMilliseconds - lastUpdate;
+                    lastUpdate = gameTime.TotalGameTime.TotalMilliseconds;
                     foreach(PlayerData pd in puea.PlayerData)
                     {
                         client.PlayersData[pd.ID].ServerPosition = pd.ServerPosition; 
                         client.PlayersData[pd.ID].LookAtRadian = pd.LookAtRadian; 
                         client.PlayersData[pd.ID].FeetRadian = pd.FeetRadian;
+                        pd.SetTimeToTravel(elapsedTimeSinceLastUpdatePlayer, gameTime);
                     }
                     break;
                 case ChatMessageEventArgs cmea:
@@ -173,8 +182,13 @@ namespace ExplorerOpenGL.Managers
             }
         }
 
-        public void Update(GameTime gametime)
+        public void Update(GameTime gameTime)
         {
+            if (!DoOnce)
+            {
+                this.gameTime = gameTime;
+                DoOnce = true; 
+            }
             if (gameManager.Player == null || gameManager.Terminal == null)
             {
                 return;
@@ -188,7 +202,7 @@ namespace ExplorerOpenGL.Managers
                     clock = 0d;
                     return;
                 }
-                clock += gametime.ElapsedGameTime.TotalMilliseconds;
+                clock += gameTime.ElapsedGameTime.TotalMilliseconds;
             }
         }
     }

@@ -63,7 +63,7 @@ namespace ExplorerOpenGL.Managers
             this.graphics = graphics;
         }
 
-        public void Update()
+        public void Update(GameTime gameTime)
         {
             if (!IsDebuging)
                 return;
@@ -83,7 +83,7 @@ namespace ExplorerOpenGL.Managers
                     MaxLogVec = new Vector2(temp.X, 0); 
                 }
             }
-            BuildDebugMessage(sprites);
+            BuildDebugMessage(sprites, gameTime);
         }
 
         public void ToggleDebugMode()
@@ -93,7 +93,6 @@ namespace ExplorerOpenGL.Managers
             {
                 EventLogList.Clear();
                 SortSpriteToDebug(sprites);
-                BuildDebugMessage(sprites); 
             }
         }
 
@@ -129,11 +128,12 @@ namespace ExplorerOpenGL.Managers
             }
         }
 
-        private void BuildDebugMessage(List<Sprite> sprites)
+        private void BuildDebugMessage(List<Sprite> sprites, GameTime gameTime)
         {
             debugMessage.Clear();
 
             debugMessage.Append("Window dimension : " + graphics.PreferredBackBufferHeight + ", " + graphics.PreferredBackBufferWidth +"\n");
+            debugMessage.Append("Total Time : " + gameTime.TotalGameTime.TotalSeconds.ToString("#.#") + "s\n");
 
             debugMessage.Append("Sprite Count = " + sprites.Count.ToString() + "\n");
             Dictionary<Type, int> debugTypeList = new Dictionary<Type, int>();

@@ -29,7 +29,11 @@ namespace ExplorerOpenGL.Managers.Networking
         private TextureManager textureManager;
         public double Health { get; set; }
 
-        private NetworkManager networkManager; 
+        private NetworkManager networkManager;
+
+        private double timeToTravel;
+        private double lagCompProgress; 
+        private Vector2 lagCompDirection; 
 
         public int idTexture { get; set; }
         public int idFeetTexture { get; set; }
@@ -58,6 +62,19 @@ namespace ExplorerOpenGL.Managers.Networking
 
         public override void Update(GameTime gameTime, List<Sprite> sprites)
         {
+            if (InGamePosition != ServerPosition)
+            {
+                lagCompProgress += gameTime.ElapsedGameTime.TotalMilliseconds / timeToTravel;
+                if (lagCompProgress > 1)
+                {
+                    InGamePosition = ServerPosition;
+                }
+                else
+                {
+                    InGamePosition = new Vector2((float)(InGamePosition.X + lagCompDirection.X * lagCompProgress), (float)(InGamePosition.Y + lagCompDirection.Y * lagCompProgress));
+                }
+            }
+
             PositionName = new Vector2(ServerPosition.X, ServerPosition.Y + 50);
             if(RenderName != Name)
             {
@@ -68,6 +85,12 @@ namespace ExplorerOpenGL.Managers.Networking
                 SetTextures(textureManager.LoadedTextures["player"], textureManager.LoadedTextures["playerfeet"]);
             }
             base.Update(gameTime, sprites);
+        }
+
+        public void SetTimeToTravel(double time, GameTime gameTime)
+        {
+            timeToTravel = time;
+            lagCompDirection = new Vector2(ServerPosition.X - InGamePosition.X, ServerPosition.Y - InGamePosition.Y);
         }
 
         private void SetTextures(Texture2D texture, Texture2D textureFeet)
