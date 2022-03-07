@@ -29,6 +29,7 @@ namespace ExplorerOpenGL.Managers.Networking
         private TextureManager textureManager;
         public double Health { get; set; }
 
+        private NetworkManager networkManager; 
 
         public int idTexture { get; set; }
         public int idFeetTexture { get; set; }
@@ -42,6 +43,7 @@ namespace ExplorerOpenGL.Managers.Networking
             opacity = 1f; 
             ID = id;
             layerDepth = .9f;
+            networkManager = NetworkManager.Instance;
         }
         public PlayerData(int id)
         {
@@ -51,6 +53,7 @@ namespace ExplorerOpenGL.Managers.Networking
             opacity = 1f;
             ID = id;
             layerDepth = .9f;
+            networkManager = NetworkManager.Instance;
         }
 
         public override void Update(GameTime gameTime, List<Sprite> sprites)

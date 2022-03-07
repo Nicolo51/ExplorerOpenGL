@@ -26,7 +26,8 @@ namespace ExplorerOpenGL.Managers
         private int port;
         private static NetworkManager instance;
         public static event EventHandler Initialized;
-        private string playerNameOnConnection; 
+        private string playerNameOnConnection;
+        private GameTime gameTime; 
         public static NetworkManager Instance { get
             {
                 if(instance == null)
@@ -47,12 +48,12 @@ namespace ExplorerOpenGL.Managers
             port = 25789;
         }
 
-        public void InitDependencies()
+        public void InitDependencies(GameTime gameTime)
         {
             gameManager = GameManager.Instance;
             debugManager = DebugManager.Instance;
             client = new Client(gameManager);
-            
+            this.gameTime = gameTime; 
         }
 
         public bool Connect(string ip, string name) //port is 25789 by default
@@ -149,6 +150,7 @@ namespace ExplorerOpenGL.Managers
                 case WelcomeEventArgs wea:
                     client.SendResponseWelcome(playerNameOnConnection);
                     client.ConnectUdp();
+                    serverTickRate = wea.TickRate; 
                     ConnectionState = ConnectionState.WaitingForUdp;
                     break; 
                 default:

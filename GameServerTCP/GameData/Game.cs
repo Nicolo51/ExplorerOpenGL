@@ -9,7 +9,7 @@ namespace GameServerTCP.GameData
     {
         public static Dictionary<int, Player> Players;
         public static Timer timer;
-        public const int tickRate = 16; 
+        public const int tickRate = 40; 
         public static void Start()
         {
             timer = new Timer(new TimerCallback(gameTick));
