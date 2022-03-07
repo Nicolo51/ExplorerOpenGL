@@ -22,7 +22,7 @@ namespace GameServerTCP.GameData
             Players.Add(player.ID, player); 
         }
 
-        public static void UpdatePlayer(int id, Vector2 postion, float feetRadian, float lootAtRadian, double health)
+        public static void UpdatePlayer(int id, Vector2 postion, float feetRadian, float lootAtRadian, long health)
         {
             Players[id].Position = postion;
             Players[id].FeetRadian = feetRadian;
