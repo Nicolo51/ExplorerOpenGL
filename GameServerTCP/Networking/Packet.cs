@@ -243,7 +243,7 @@ namespace GameServerTCP
                 if (_moveReadPos)
                 {
                     // If _moveReadPos is true and there are unread bytes
-                    readPos += 2; // Increase readPos by 2
+                    readPos += 8; // Increase readPos by 8
                 }
                 return _value; // Return the double
             }
