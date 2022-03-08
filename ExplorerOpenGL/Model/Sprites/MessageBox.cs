@@ -47,14 +47,14 @@ namespace ExplorerOpenGL.Model.Sprites
             isDraggable = true;
         }
 
-        public override void Update(GameTime gameTime, List<Sprite> sprites)
+        public override void Update(List<Sprite> sprites)
         {
             for (int i = 0; i < childSprites.Count; i++)
             {
                 Sprite child = childSprites[i];
                 child.Position = Position + childSpritesPosition[i] - origin;
             }
-            base.Update(gameTime, sprites);
+            base.Update(sprites);
         }
 
         public void AddChildSprite(Sprite sprite, Vector2 childPosition)

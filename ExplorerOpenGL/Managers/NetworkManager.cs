@@ -113,12 +113,13 @@ namespace ExplorerOpenGL.Managers
                 case PlayerUpdateEventArgs puea:
                     elapsedTimeSinceLastUpdatePlayer = gameTime.TotalGameTime.TotalMilliseconds - lastUpdate;
                     lastUpdate = gameTime.TotalGameTime.TotalMilliseconds;
+                    debugManager.AddEvent(elapsedTimeSinceLastUpdatePlayer);
                     foreach(PlayerData pd in puea.PlayerData)
                     {
                         client.PlayersData[pd.ID].ServerPosition = pd.ServerPosition; 
                         client.PlayersData[pd.ID].LookAtRadian = pd.LookAtRadian; 
                         client.PlayersData[pd.ID].FeetRadian = pd.FeetRadian;
-                        pd.SetTimeToTravel(elapsedTimeSinceLastUpdatePlayer, gameTime);
+                        client.PlayersData[pd.ID].SetTimeToTravel(elapsedTimeSinceLastUpdatePlayer, gameTime);
                     }
                     break;
                 case ChatMessageEventArgs cmea:
@@ -184,11 +185,8 @@ namespace ExplorerOpenGL.Managers
 
         public void Update(GameTime gameTime)
         {
-            if (!DoOnce)
-            {
-                this.gameTime = gameTime;
-                DoOnce = true; 
-            }
+            this.gameTime = gameTime;
+            DoOnce = true; 
             if (gameManager.Player == null || gameManager.Terminal == null)
             {
                 return;

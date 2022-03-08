@@ -74,6 +74,7 @@
     <Compile Include="Managers\ScripterManager.cs" />
     <Compile Include="Managers\TextureManager.cs" />
     <Compile Include="Game1.cs" />
+    <Compile Include="Managers\TimeManager.cs" />
     <Compile Include="Model\Input.cs" />
     <Compile Include="Model\KeysArray.cs" />
     <Compile Include="Model\LogElement.cs" />

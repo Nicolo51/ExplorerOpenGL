@@ -60,18 +60,19 @@ namespace ExplorerOpenGL.Managers.Networking
             networkManager = NetworkManager.Instance;
         }
 
-        public override void Update(GameTime gameTime, List<Sprite> sprites)
+        public override void Update(List<Sprite> sprites)
         {
-            if (InGamePosition != ServerPosition)
+            if (InGamePosition != ServerPosition && timeToTravel != 0)
             {
-                lagCompProgress += gameTime.ElapsedGameTime.TotalMilliseconds / timeToTravel;
+                lagCompProgress += timeManager.ElapsedUpdate.TotalMilliseconds / timeToTravel;
                 if (lagCompProgress > 1)
                 {
                     InGamePosition = ServerPosition;
+                    lagCompProgress = 0; 
                 }
                 else
                 {
-                    InGamePosition = new Vector2((float)(InGamePosition.X + lagCompDirection.X * lagCompProgress), (float)(InGamePosition.Y + lagCompDirection.Y * lagCompProgress));
+                    InGamePosition = new Vector2((float)(ServerPosition.X - (lagCompDirection.X * (1-lagCompProgress))), (float)(ServerPosition.Y - (lagCompDirection.Y * (1-lagCompProgress))));
                 }
             }
 
@@ -84,12 +85,13 @@ namespace ExplorerOpenGL.Managers.Networking
             {
                 SetTextures(textureManager.LoadedTextures["player"], textureManager.LoadedTextures["playerfeet"]);
             }
-            base.Update(gameTime, sprites);
+            base.Update(sprites);
         }
 
         public void SetTimeToTravel(double time, GameTime gameTime)
         {
             timeToTravel = time;
+            lagCompProgress = 0; 
             lagCompDirection = new Vector2(ServerPosition.X - InGamePosition.X, ServerPosition.Y - InGamePosition.Y);
         }
 
@@ -123,8 +125,8 @@ namespace ExplorerOpenGL.Managers.Networking
             if (TextureName != null && playerFeetTexture != null && playerTexture != null)
             {
                 spriteBatch.Draw(TextureName, PositionName, null, Color.White, 0f, OriginName, .75f, SpriteEffects.None, layerDepth);
-                spriteBatch.Draw(playerFeetTexture, ServerPosition, null, Color.White * opacity, FeetRadian, originFeet, scale , Effects, layerDepth + .01f);
-                spriteBatch.Draw(playerTexture, ServerPosition, null, Color.White * opacity, LookAtRadian, origin, scale * .5f, Effects, layerDepth);
+                spriteBatch.Draw(playerFeetTexture, InGamePosition, null, Color.White * opacity, FeetRadian, originFeet, scale , Effects, layerDepth + .01f);
+                spriteBatch.Draw(playerTexture, InGamePosition, null, Color.White * opacity, LookAtRadian, origin, scale * .5f, Effects, layerDepth);
             }
             
         }

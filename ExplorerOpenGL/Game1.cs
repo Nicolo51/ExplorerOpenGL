@@ -7,6 +7,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -27,6 +28,7 @@ namespace ExplorerOpenGL
         NetworkManager networkManager;
         FontManager fontManager;
         ScripterManager scripterManager;
+        TimeManager timeManager; 
 
         GraphicsDeviceManager graphics;
         SpriteBatch spriteBatch;
@@ -39,6 +41,9 @@ namespace ExplorerOpenGL
         public Game1()
         {
             graphics = new GraphicsDeviceManager(this);
+            graphics.SynchronizeWithVerticalRetrace = false;
+            IsFixedTimeStep = false;
+            TargetElapsedTime = TimeSpan.FromMilliseconds(16);
             Window.AllowUserResizing = true; 
             Content.RootDirectory = "Content";
             graphics.PreferredBackBufferHeight = Height;
@@ -52,7 +57,6 @@ namespace ExplorerOpenGL
             spriteBatch = new SpriteBatch(GraphicsDevice);
             _sprites = new List<Sprite>();
             camera = new Camera(new Vector2(Width, Height)); 
-
             DebugManager.Initialized += OnManagerInitialization;
             KeyboardManager.Initialized += OnManagerInitialization;
             NetworkManager.Initialized += OnManagerInitialization;
@@ -61,7 +65,9 @@ namespace ExplorerOpenGL
             TextureManager.Initialized += OnManagerInitialization;
             GameManager.Initialized += OnManagerInitialization;
             FontManager.Initialized += OnManagerInitialization;
+            TimeManager.Initialized += OnManagerInitialization;
 
+            timeManager = TimeManager.Instance; 
             gameManager = GameManager.Instance;
             keyboardManager = KeyboardManager.Instance;
             textureManager = TextureManager.Instance;
@@ -69,7 +75,9 @@ namespace ExplorerOpenGL
             fontManager = FontManager.Instance;
             networkManager = NetworkManager.Instance;
             renderManager = RenderManager.Instance;
-            scripterManager = ScripterManager.Instance; 
+            scripterManager = ScripterManager.Instance;
+
+            timeManager.StartUpdateTimer(16);
 
             base.Initialize();
         }
@@ -107,7 +115,8 @@ namespace ExplorerOpenGL
             Window.ClientSizeChanged += UpdateDisplay;
             Window.AllowUserResizing = true;
 
-            new MainMenu().Show(); 
+            //new MainMenu().Show();
+            Debug.WriteLine("Thread principal est : " + Thread.CurrentThread.ManagedThreadId); 
         }
 
        
@@ -123,6 +132,7 @@ namespace ExplorerOpenGL
             // TODO: Unload any non ContentManager content here
         }
 
+
         /// <summary>
         /// Allows the game to run logic such as updating the world,
         /// checking for collisions, gathering input, and playing audio.
@@ -130,6 +140,7 @@ namespace ExplorerOpenGL
         /// <param name="gameTime">Provides a snapshot of timing values.</param>
         protected override void Update(GameTime gameTime)
         {
+            timeManager.LastDrawUpdateTime = DateTime.Now; 
             if(_sprites == null)
                 return;
 
@@ -137,17 +148,9 @@ namespace ExplorerOpenGL
             gameManager.Update(gameTime);
             debugManager.Update(gameTime);
             keyboardManager.Update();
-            networkManager.Update(gameTime); 
-
-            for (int i = 0; i < _sprites.Count; i++)
-            {
-                if (_sprites[i].IsRemove)
-                {
-                    _sprites.RemoveAt(i);
-                    i--; 
-                }
-                _sprites[i].Update(gameTime, _sprites);
-            }
+            networkManager.Update(gameTime);
+            textureManager.Update(); 
+            
             // TODO: Add your update logic here
 
             base.Update(gameTime);
@@ -191,23 +194,26 @@ namespace ExplorerOpenGL
         /// <param name="gameTime">Provides a snapshot of timing values.</param>
         protected override void Draw(GameTime gameTime)
         {
+            timeManager.LastDrawTime = DateTime.Now;
             GraphicsDevice.Clear(Color.CornflowerBlue);
             if (_sprites == null)
                 return;
             spriteBatch.Begin(SpriteSortMode.BackToFront, transformMatrix: gameManager.Camera.Transform);
 
-            foreach (Sprite sprite in _sprites.Where(e => !e.IsHUD))
+            for(int i = 0; i < _sprites.Count; i++)
             {
-                sprite.Draw(spriteBatch);
+                if(!_sprites[i].IsHUD)
+                    _sprites[i].Draw(spriteBatch);
             }
 
             spriteBatch.End();
 
             spriteBatch.Begin(SpriteSortMode.BackToFront);
 
-            foreach (Sprite sprite in _sprites.Where(e => e.IsHUD))
+            for (int i = 0; i < _sprites.Count; i++)
             {
-                sprite.Draw(spriteBatch);
+                if (_sprites[i].IsHUD)
+                    _sprites[i].Draw(spriteBatch);
             }
 
             if (DebugManager.Instance.IsDebuging)

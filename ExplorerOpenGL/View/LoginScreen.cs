@@ -51,7 +51,8 @@ namespace ExplorerOpenGL.View
 
         private void BtnConnect_MouseClicked(object sender, MousePointer mousePointer, Vector2 clickPosition)
         {
-            gameManager.StartGame("Test", "192.168.1.29");
+            //gameManager.StartGame("Test", "192.168.1.29");
+            gameManager.StartGame("Test", "127.0.0.1");
             this.Close(); 
         }
 

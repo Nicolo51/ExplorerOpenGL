@@ -72,10 +72,10 @@ namespace ExplorerOpenGL.Model.Sprites
             base.SetAlignOption(ao);
         }
 
-        public override void Update(GameTime gameTime, List<Sprite> sprites)
+        public override void Update(List<Sprite> sprites)
         {
            
-            base.Update(gameTime, sprites);
+            base.Update(sprites);
         }
 
         private void OnMouseOver(object sender, MousePointer mousePointer)

@@ -28,9 +28,9 @@ namespace ExplorerOpenGL.Model.Sprites
             SetAlignOption(ao);
         }
 
-        public override void Update(GameTime gameTime, List<Sprite> sprites)
+        public override void Update(List<Sprite> sprites)
         {
-            base.Update(gameTime, sprites);
+            base.Update(sprites);
         }
 
         public override void Draw(SpriteBatch spriteBatch)

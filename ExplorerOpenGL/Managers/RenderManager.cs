@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -17,7 +18,7 @@ namespace ExplorerOpenGL.Managers
         private SpriteBatch spriteBatch;
 
         private KeyboardManager keyboardManager;
-
+        
         private static RenderManager instance;
         public static event EventHandler Initialized;
         public static RenderManager Instance {
@@ -191,4 +192,5 @@ namespace ExplorerOpenGL.Managers
             return outputs; 
         }
     }
+    
 }

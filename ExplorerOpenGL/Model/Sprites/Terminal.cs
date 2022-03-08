@@ -143,7 +143,7 @@ namespace ExplorerOpenGL.Model.Sprites
             AddMessageToTerminal(message, "System", Color.White);
         }
 
-        public override void Update(GameTime gameTime, List<Sprite> sprites)
+        public override void Update(List<Sprite> sprites)
         {
             for(int i = 0; i < messages.Count; i++)
             {
@@ -153,7 +153,7 @@ namespace ExplorerOpenGL.Model.Sprites
                 if (message.Timer < 0)
                     message.Opacity -= .01f;
                 else
-                    message.Timer -= gameTime.ElapsedGameTime.TotalSeconds;
+                    message.Timer -= timeManager.ElapsedUpdate.TotalSeconds;
             }
             if (keyboardManager.IsKeyDown(Keys.H) && !keyboardManager.IsTextInputBoxFocused){
                 for (int i = 0; i < messages.Count; i++)
@@ -163,8 +163,8 @@ namespace ExplorerOpenGL.Model.Sprites
                     messages[i].Opacity = .5f;
                 }
             }
-            terminalTexintput.Update(gameTime, sprites); 
-            base.Update(gameTime, sprites);
+            terminalTexintput.Update( sprites); 
+            base.Update(sprites);
         }
 
 

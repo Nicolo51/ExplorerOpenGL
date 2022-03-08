@@ -94,6 +94,14 @@ namespace GameServerTCP
             }
         }
 
+        public static void UdpUpdatePlayers()
+        {
+            foreach(var entry in Game.Players)
+            {
+                UdpUpdatePlayers(entry.Value.ID);
+            }
+        }
+
         public static void TcpChangeNameResult(int toClient, int response, string name)
         {
             using (Packet packet = new Packet((int)ServerPackets.ChangeNameResult))

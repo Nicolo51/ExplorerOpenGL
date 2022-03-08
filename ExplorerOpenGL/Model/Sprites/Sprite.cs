@@ -43,6 +43,7 @@ namespace ExplorerOpenGL.Model.Sprites
         public event MouseClickEventHandler MouseClicked;
 
         protected GameManager gameManager;
+        protected TimeManager timeManager; 
 
         protected bool isClicked;
         private bool isOver; 
@@ -60,6 +61,7 @@ namespace ExplorerOpenGL.Model.Sprites
             scale = 1;
             Opacity = 1f;
             gameManager = GameManager.Instance;
+            timeManager = TimeManager.Instance;
             layerDepth = 1f;
         }
 
@@ -72,11 +74,12 @@ namespace ExplorerOpenGL.Model.Sprites
             scale = 1;
             Opacity = 1f;
             layerDepth = 1f; 
+            timeManager = TimeManager.Instance;
             gameManager = GameManager.Instance;
             isDraggable = false;
         }
 
-        public virtual void Update(GameTime gameTime, List<Sprite> sprites)
+        public virtual void Update(List<Sprite> sprites)
         {
             if (IsClickable || isDraggable)
                 CheckMouseEvent(sprites); 

@@ -46,12 +46,12 @@ namespace ExplorerOpenGL.Model.Sprites
             keyboardManager = KeyboardManager.Instance; 
         }
 
-        public override void Update(GameTime gameTime, List<Sprite> sprites)
+        public override void Update(List<Sprite> sprites)
         {
             Radian = CalculateAngle(Position, mousePointer.InWindowPosition);
             Move(sprites);
             PositionName = new Vector2(Position.X, Position.Y + 50);
-            base.Update(gameTime, sprites);
+            base.Update(sprites);
         }
 
         private float CalculateAngle(Vector2 A, Vector2 B)

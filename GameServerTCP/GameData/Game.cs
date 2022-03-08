@@ -9,7 +9,7 @@ namespace GameServerTCP.GameData
     {
         public static Dictionary<int, Player> Players;
         public static Timer timer;
-        public const int tickRate = 40; 
+        public const int tickRate = 30; 
         public static void Start()
         {
             timer = new Timer(new TimerCallback(gameTick));
@@ -45,24 +45,7 @@ namespace GameServerTCP.GameData
 
         private static void gameTick(object state)
         {
-            //Console.WriteLine("tik tok");
-            using (Packet packet = new Packet((int)ServerPackets.UdpUpdatePlayers))
-            {
-                lock (Game.Players)
-                {
-                    foreach (KeyValuePair<int, Player> entry in Game.Players)
-                    {
-                        packet.Write(true);
-                        packet.Write(entry.Value.ID);
-                        packet.Write(entry.Value.Position.X);
-                        packet.Write(entry.Value.Position.Y);
-                        packet.Write(entry.Value.LookAtRadian);
-                        packet.Write(entry.Value.FeetRadian);
-                    }
-                }
-                packet.Write(false);
-                ServerSend.SendUDPDataToAll(packet);
-            }
+            ServerSend.UdpUpdatePlayers(); 
         }
 
         public static void PrintDebug()

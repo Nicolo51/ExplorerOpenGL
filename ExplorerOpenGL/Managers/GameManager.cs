@@ -73,17 +73,17 @@ namespace ExplorerOpenGL.Managers
             networkManager = NetworkManager.Instance;
             scripterManager = ScripterManager.Instance; 
 
-            keyboardManager.KeyPressed += OnKeyPressed;
+            //keyboardManager.KeyPressed += OnKeyPressed;
 
             this.Camera = camera; 
             _sprites = sprites;
 
-            Terminal = new Terminal(textureManager.CreateTexture(700, 30, paint => Color.Black), fontManager.GetFont("Default")) { Position = new Vector2(0, 185) };
+            //Terminal = new Terminal(textureManager.CreateTexture(700, 30, paint => Color.Black), fontManager.GetFont("Default")) { Position = new Vector2(0, 185) };
             
-            MousePointer = new MousePointer(textureManager.LoadTexture("cursor"));
+            //MousePointer = new MousePointer(textureManager.LoadTexture("cursor"));
 
-            AddSprite(Terminal, this);
-            AddSprite(MousePointer, this);
+            //AddSprite(Terminal, this);
+            //AddSprite(MousePointer, this);
         }
 
         public void AddActionToUIThread(Action<object> action, object arg)

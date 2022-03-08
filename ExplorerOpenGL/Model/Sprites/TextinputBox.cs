@@ -124,11 +124,11 @@ namespace ExplorerOpenGL.Model.Sprites
             return Vector2.Zero;
         }
 
-        public override void Update(GameTime gameTime, List<Sprite> sprites)
+        public override void Update(List<Sprite> sprites)
         {
             if (IsFocused)
             {
-                cursorTimer += (float)gameTime.ElapsedGameTime.TotalSeconds;
+                cursorTimer += (float)timeManager.ElapsedUpdate.TotalSeconds;
                 if (cursorTimer > .9f)
                 {
                     cursorOpacity = (cursorOpacity == 1) ? 0 : 1;
@@ -167,7 +167,7 @@ namespace ExplorerOpenGL.Model.Sprites
             else
                 cursorOpacity = 0;
 
-            base.Update(gameTime, sprites);
+            base.Update(sprites);
         }
 
         private void CheckSubstring()
