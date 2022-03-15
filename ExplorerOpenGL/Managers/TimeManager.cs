@@ -19,8 +19,10 @@ namespace ExplorerOpenGL.Managers
         public TimeSpan ElapsedUpdate { get { return DateTime.Now - LastUpdateTime; } }
         public TimeSpan ElapsedDraw { get { return DateTime.Now - LastDrawTime; } }
         public TimeSpan ElapsedDrawUpdate { get { return DateTime.Now - LastDrawUpdateTime; } }
+        public float LerpAmount { get { float la = (float)((LastDrawTime - LastUpdateTime).TotalMilliseconds / TickRate); return(la < 0)?  0: la; } }
 
-        Timer UpdateTimer; 
+        Thread UpdateThread;
+        public int TickRate { get; private set; } = 16;
 
         public static event EventHandler Initialized;
         private static TimeManager instance; 
@@ -48,28 +50,66 @@ namespace ExplorerOpenGL.Managers
 
             gameManager = GameManager.Instance;
             debugManager = DebugManager.Instance; 
+            
         }
-        public void StartUpdateTimer(double UpdateRate)
+        public void StartUpdateThread()
         {
-            UpdateTimer = new Timer(new TimerCallback(Update));
-            UpdateTimer.Change(100, 16);
+            UpdateThread = new Thread(new ThreadStart(Update));
+            UpdateThread.Start(); 
         }
 
-        public void Update(object state)
+        public void Update()
         {
-            List<Sprite> sprites = gameManager._sprites; 
-            Texture2D texture = TextureManager.Instance.OutlineTextThread("coucou", "Default", Color.Black, Color.Black, 1);
-            sprites.Add(new Wall(texture));
-            LastUpdateTime = DateTime.Now; 
-            for (int i = 0; i < sprites.Count; i++)
+
+            while (true)
             {
-                if (sprites[i].IsRemove)
+                Sprite[] sprites; 
+                lock (gameManager.sprites)
                 {
-                    sprites.RemoveAt(i);
-                    i--;
+                    sprites = gameManager.sprites.ToArray(); 
                 }
-                sprites[i].Update(sprites);
+                //Texture2D texture = TextureManager.Instance.OutlineText("coucou", "Default", Color.Black, Color.Black, 1);
+                //Texture2D texture = TextureManager.Instance.CreateBorderedTexture(100, 100, 10, 3, backgroundPaint => Color.BlueViolet, backgroundPaint => Color.Yellow);
+                //Texture2D texture = TextureManager.Instance.CreateTexture(100, 100, paint => Color.Red);
+                //Texture2D texture = TextureManager.Instance.TextureText("coucou", "Default", Color.Red);
+
+                //sprites.Add(new Wall(texture));
+                LastUpdateTime = DateTime.Now;
+                //Parallel.For(0, sprites.Count, (int i) =>
+                //{
+                //    if (sprites[i] == null)
+                //        return;
+                //    sprites[i].Update(sprites);
+                //});
+                for (int i = 0; i < sprites.Length; i++)
+                {
+                    if (sprites[i] == null)
+                        continue;
+                    lock (sprites[i])
+                    {
+                        if (sprites[i].IsRemove)
+                        {
+                            gameManager.RemoveSprite(sprites[i]);
+                            continue;
+                        }
+                        sprites[i].Update(sprites);
+                    }
+                }
+                if ((DateTime.Now - LastUpdateTime).TotalMilliseconds > TickRate)
+                    continue; 
+                else
+                {
+                    int sleepTime = Convert.ToInt32(TickRate - (DateTime.Now - LastUpdateTime).TotalMilliseconds);
+                    if (sleepTime < 1)
+                        continue;
+                    Thread.Sleep(sleepTime);
+                }
             }
+        }
+
+        public void StopUpdateThread()
+        {
+            UpdateThread.Abort();
         }
     }
 }

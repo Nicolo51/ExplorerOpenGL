@@ -60,22 +60,23 @@ namespace ExplorerOpenGL.Model.Sprites
             }
         }
 
-        public override void Update(List<Sprite> sprites)
+        public override void Update(Sprite[] sprites)
         {
+            base.Update(sprites);
             if(currentMouseState != null)
             {
                 prevMouseState = currentMouseState; 
             }
             currentMouseState = Mouse.GetState();
             Position = new Vector2(currentMouseState.Position.X, currentMouseState.Position.Y);
+
             InWindowPosition = new Vector2((gameManager.Camera.Position.X - gameManager.Camera.Bounds.X / 2 + currentMouseState.Position.X), (gameManager.Camera.Position.Y - gameManager.Camera.Bounds.Y / 2 + currentMouseState.Position.Y)); 
 
-            base.Update(sprites);
         }
-        public override void Draw(SpriteBatch spriteBatch)
+        public override void Draw(SpriteBatch spriteBatch, float lerpAmount)
         {
-            spriteBatch.Draw(_texture, Position, SourceRectangle, Color.White * Opacity, Radian, origin, scale, Effects, layerDepth);
-            base.Draw(spriteBatch);
+            //spriteBatch.Draw(_texture, Position, SourceRectangle, Color.White * Opacity, Radian, origin, scale, Effects, layerDepth);
+            base.Draw(spriteBatch, lerpAmount);
         }
 
         public override string ToString()

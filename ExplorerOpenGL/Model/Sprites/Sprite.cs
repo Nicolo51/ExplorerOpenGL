@@ -17,11 +17,13 @@ namespace ExplorerOpenGL.Model.Sprites
         public bool IsRemove { get; set; }
 
         public Vector2 Position;
+        public Vector2 LastPosition; 
+
         protected Texture2D _texture;
         public float Radian { get; set; }
         public Rectangle SourceRectangle { get; set; }
         public virtual Rectangle HitBox { get {
-                if (_texture != null) return new Rectangle((int)Position.X - (int)origin.X, (int)Position.Y - (int)origin.Y, (int)(SourceRectangle.Width * scale), (int)(SourceRectangle.Height * scale));
+                if (_texture != null && SourceRectangle != null) return new Rectangle((int)Position.X - (int)origin.X, (int)Position.Y - (int)origin.Y, (int)(SourceRectangle.Width * scale), (int)(SourceRectangle.Height * scale));
                 else return new Rectangle((int)Position.X, (int)Position.Y, 1, 1); 
             } }
         public Vector2 origin;
@@ -60,32 +62,40 @@ namespace ExplorerOpenGL.Model.Sprites
             IsHUD = false; 
             scale = 1;
             Opacity = 1f;
+            layerDepth = 1f;
             gameManager = GameManager.Instance;
             timeManager = TimeManager.Instance;
-            layerDepth = 1f;
         }
 
         public Sprite(Texture2D texture)
         {
-            alignOption = AlignOption.None;
             _texture = texture;
             SourceRectangle = new Rectangle(0, 0, texture.Width, texture.Height);
+            alignOption = AlignOption.None;
+            isDraggable = false;
             IsHUD = false;
             scale = 1;
             Opacity = 1f;
             layerDepth = 1f; 
             timeManager = TimeManager.Instance;
             gameManager = GameManager.Instance;
-            isDraggable = false;
         }
 
-        public virtual void Update(List<Sprite> sprites)
+        public virtual void Update(Sprite[] sprites)
         {
+           LastPosition = Position; 
             if (IsClickable || isDraggable)
-                CheckMouseEvent(sprites); 
+                CheckMouseEvent(sprites);
         }
 
-        private void CheckMouseEvent(List<Sprite> sprites)
+        public virtual void SetTextureAsync(Texture2D texture)
+        {
+            _texture = texture;
+            if(SourceRectangle == null)
+                SourceRectangle = new Rectangle(0, 0, texture.Width, texture.Height);
+        }
+
+        private void CheckMouseEvent(Sprite[] sprites)
         {
             MousePointer mousePointer = gameManager.MousePointer; 
             if (!this.IsHUD && this.HitBox.Intersects(new Rectangle((int)gameManager.MousePointer.InWindowPosition.X, (int)gameManager.MousePointer.InWindowPosition.Y, 1, 1)) )
@@ -207,25 +217,25 @@ namespace ExplorerOpenGL.Model.Sprites
             origin += pad;
         }
 
-        private void OnMouseOver(List<Sprite> sprites)
+        private void OnMouseOver(Sprite[] sprites)
         {
             MouseOvered?.Invoke(this, gameManager.MousePointer);
         }
 
-        private void OnMouseLeave(List<Sprite> sprites)
+        private void OnMouseLeave(Sprite[] sprites)
         {
             MouseLeft?.Invoke(this, gameManager.MousePointer);
         }
 
-        private void OnMouseClick(List<Sprite> sprites, Vector2 clickPosition)
+        private void OnMouseClick(Sprite[] sprites, Vector2 clickPosition)
         {
             MouseClicked?.Invoke(this, gameManager.MousePointer, clickPosition);
         }
 
-        public virtual void Draw(SpriteBatch spriteBatch)
+        public virtual void Draw(SpriteBatch spriteBatch, float lerpAmount)
         {
-            if(_texture != null && !(this is MousePointer))
-                spriteBatch.Draw(_texture, Position, null, Color.White * Opacity * (isClicked && IsClickable ? .5f : 1f), Radian, origin, scale, Effects, layerDepth);
+            if(_texture != null)
+                spriteBatch.Draw(_texture, Vector2.Lerp(LastPosition, Position, lerpAmount), SourceRectangle, Color.White * Opacity * (isClicked && IsClickable ? .5f : 1f), Radian, origin, scale, Effects, layerDepth);
         }
     }
     public enum AlignOption

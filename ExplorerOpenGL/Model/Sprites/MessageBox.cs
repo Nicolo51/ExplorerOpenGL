@@ -47,14 +47,14 @@ namespace ExplorerOpenGL.Model.Sprites
             isDraggable = true;
         }
 
-        public override void Update(List<Sprite> sprites)
+        public override void Update(Sprite[] sprites)
         {
+            base.Update(sprites);
             for (int i = 0; i < childSprites.Count; i++)
             {
                 Sprite child = childSprites[i];
                 child.Position = Position + childSpritesPosition[i] - origin;
             }
-            base.Update(sprites);
         }
 
         public void AddChildSprite(Sprite sprite, Vector2 childPosition)
@@ -99,9 +99,9 @@ namespace ExplorerOpenGL.Model.Sprites
                 this.AddChildSprite(new TextZone(Title, fontManager.GetFont("Default"), Color.White, AlignOption.TopLeft), new Vector2(2, 2));
         }
 
-        public override void Draw(SpriteBatch spriteBatch)
+        public override void Draw(SpriteBatch spriteBatch, float lerpAmount )
         {
-            base.Draw(spriteBatch);
+            base.Draw(spriteBatch, lerpAmount);
             if(borderTexture  != null)
                 spriteBatch.Draw(borderTexture, Position, null, Color.White * Opacity * (isClicked && IsClickable ? .5f : 1f), Radian, origin, scale, Effects, layerDepth+0.1f);
         }

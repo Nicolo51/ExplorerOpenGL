@@ -43,7 +43,6 @@ namespace ExplorerOpenGL
             graphics = new GraphicsDeviceManager(this);
             graphics.SynchronizeWithVerticalRetrace = false;
             IsFixedTimeStep = false;
-            TargetElapsedTime = TimeSpan.FromMilliseconds(16);
             Window.AllowUserResizing = true; 
             Content.RootDirectory = "Content";
             graphics.PreferredBackBufferHeight = Height;
@@ -66,8 +65,8 @@ namespace ExplorerOpenGL
             GameManager.Initialized += OnManagerInitialization;
             FontManager.Initialized += OnManagerInitialization;
             TimeManager.Initialized += OnManagerInitialization;
+            Exiting += Game1_Exiting;
 
-            timeManager = TimeManager.Instance; 
             gameManager = GameManager.Instance;
             keyboardManager = KeyboardManager.Instance;
             textureManager = TextureManager.Instance;
@@ -76,23 +75,49 @@ namespace ExplorerOpenGL
             networkManager = NetworkManager.Instance;
             renderManager = RenderManager.Instance;
             scripterManager = ScripterManager.Instance;
+            timeManager = TimeManager.Instance; 
 
-            timeManager.StartUpdateTimer(16);
+            timeManager.StartUpdateThread();
 
             base.Initialize();
         }
 
+        private void Game1_Exiting(object sender, EventArgs e)
+        {
+            timeManager.StopUpdateThread();
+        }
 
         protected override void LoadContent()
         {
+            textureManager.AddTexTure("Terminal", textureManager.CreateTexture(700, 30, paint => Color.Black));
+            textureManager.AddTexTure("TerminalInput", textureManager.CreateTexture(700, 35, paint => Color.Black * .8f));
+            textureManager.AddTexTure("YesButtonOutline", textureManager.OutlineText("Yes", "Default", Color.Black, Color.Red, 2));
+            textureManager.AddTexTure("YesButton", textureManager.TextureText("Yes", "Default", Color.Red));
+            textureManager.AddTexTure("NoButtonOutline", textureManager.OutlineText("No", "Default", Color.Black, Color.Red, 2));
+            textureManager.AddTexTure("NoButton", textureManager.TextureText("No", "Default", Color.Red));
+            textureManager.AddTexTure("OkButton", textureManager.TextureText("OK", "Default", Color.Red));
+            textureManager.AddTexTure("OkButtonOutline", textureManager.OutlineText("OK", "Default", Color.Black, Color.Red, 2));
+            textureManager.AddTexTure("CancelButton", textureManager.TextureText("Cancel", "Default", Color.Red));
+            textureManager.AddTexTure("CancelButtonOuline", textureManager.OutlineText("Cancel", "Default", Color.Black, Color.Red, 2));
+            textureManager.AddTexTure("ContinueButton", textureManager.TextureText("Continue", "Default", Color.Red));
+            textureManager.AddTexTure("ContinueButtonOutline", textureManager.OutlineText("Continue", "Default", Color.Black, Color.Red, 2));
+            textureManager.AddTexTure("ConnectButtonOutline", textureManager.CreateTexture(700, 30, paint => Color.Black));
+            textureManager.AddTexTure("ConnectButton", textureManager.OutlineText("Connect", "Default", Color.CornflowerBlue, Color.Black, 1));
+            textureManager.AddTexTure("ContinueButtonOutline", textureManager.OutlineText("Connect", "Default", Color.CornflowerBlue, Color.Black, 2));
+            textureManager.AddTexTure("StartButton", textureManager.OutlineText("Start", "Default", Color.CornflowerBlue, Color.Black, 1));
+            textureManager.AddTexTure("StartButtonOutline", textureManager.OutlineText("Start", "Default", Color.CornflowerBlue, Color.Black, 2));
+            textureManager.AddTexTure("BackButton", textureManager.OutlineText("Back", "Default", Color.CornflowerBlue, Color.Black, 1));
+            textureManager.AddTexTure("BackButtonOutline", textureManager.OutlineText("Back", "Default", Color.CornflowerBlue, Color.Black, 2));
+            textureManager.AddTexTure("LoginScreen", textureManager.CreateBorderedTexture(350, 250, 3, 0, paint => Color.Black, paint => (paint < (Width * 30) ? new Color(22, 59, 224) : new Color(245, 231, 213))));
+            textureManager.AddTexTure("PickNameScreen", textureManager.CreateBorderedTexture(350, 150, 3, 0, paint => Color.Black, paint => (paint < (Width * 30) ? new Color(22, 59, 224) : new Color(245, 231, 213))));
+            textureManager.AddTexTure("SmallTextInput", textureManager.CreateTexture(250, 35, paint => Color.Black));
+            textureManager.AddTexTure("SingleplayerButtonOutline", textureManager.OutlineText("Singleplayer", "Menu", Color.Black, Color.Red, 2));
+            textureManager.AddTexTure("SingleplayerButton", textureManager.TextureText("Singleplayer", "Menu", Color.Red));
+            textureManager.AddTexTure("MultiplayerButtonOutline", textureManager.OutlineText("Multiplayer", "Menu", Color.Black, Color.Red, 2));
+            textureManager.AddTexTure("MultiplayerButton", textureManager.TextureText("Multiplayer", "Menu", Color.Red));
+            textureManager.AddTexTure("OptionsButtonOutline", textureManager.OutlineText("Options", "Menu", Color.Black, Color.Red, 2));
+            textureManager.AddTexTure("OptionsButton", textureManager.TextureText("Options", "Menu", Color.Red));
 
-            //new Thread(() =>
-            //{
-            //    _sprites.Add(new Wall(Manager.TextureManager.LoadNoneContentLoadedTexture(@"D:\Mes documents\Images\Wlop\2018 September 1\2_Invitation_4k.jpg"))
-            //    {
-            //        Position = new Vector2(100, 100),
-            //    });
-            //}).Start();
             //Player Player = new Player(player, playerfeet, Manager.MousePointer, "Nicolas", Manager.TextureManager)
             //{
             //    Position = new Vector2(0, 0),
@@ -115,8 +140,10 @@ namespace ExplorerOpenGL
             Window.ClientSizeChanged += UpdateDisplay;
             Window.AllowUserResizing = true;
 
-            //new MainMenu().Show();
-            Debug.WriteLine("Thread principal est : " + Thread.CurrentThread.ManagedThreadId); 
+            new Thread(() =>
+            {
+                new MainMenu().Show();
+            }).Start();
         }
 
        
@@ -140,17 +167,17 @@ namespace ExplorerOpenGL
         /// <param name="gameTime">Provides a snapshot of timing values.</param>
         protected override void Update(GameTime gameTime)
         {
-            timeManager.LastDrawUpdateTime = DateTime.Now; 
-            if(_sprites == null)
-                return;
-
-            gameManager.Camera.Update();
-            gameManager.Update(gameTime);
-            debugManager.Update(gameTime);
-            keyboardManager.Update();
-            networkManager.Update(gameTime);
-            textureManager.Update(); 
+            timeManager.LastDrawUpdateTime = DateTime.Now;
+                if(_sprites == null)
+                    return;
+            //gameManager.MousePointer.Update(_sprites);
+                gameManager.Camera.Update();
+                gameManager.Update(gameTime);
+                debugManager.Update(gameTime);
+                keyboardManager.Update();
+                networkManager.Update(gameTime);
             
+
             // TODO: Add your update logic here
 
             base.Update(gameTime);
@@ -196,33 +223,42 @@ namespace ExplorerOpenGL
         {
             timeManager.LastDrawTime = DateTime.Now;
             GraphicsDevice.Clear(Color.CornflowerBlue);
-            if (_sprites == null)
+            float la = timeManager.LerpAmount;
+            Sprite[] sprites = gameManager.GetSprites(); 
+            if (sprites == null)
                 return;
             spriteBatch.Begin(SpriteSortMode.BackToFront, transformMatrix: gameManager.Camera.Transform);
 
-            for(int i = 0; i < _sprites.Count; i++)
+            for (int i = 0; i < sprites.Length; i++)
             {
-                if(!_sprites[i].IsHUD)
-                    _sprites[i].Draw(spriteBatch);
+                lock (sprites[i])
+                {
+                    if (!sprites[i].IsHUD)
+                        sprites[i].Draw(spriteBatch, la);
+                }
             }
 
             spriteBatch.End();
 
             spriteBatch.Begin(SpriteSortMode.BackToFront);
 
-            for (int i = 0; i < _sprites.Count; i++)
+            for (int i = 0; i < sprites.Length; i++)
             {
-                if (_sprites[i].IsHUD)
-                    _sprites[i].Draw(spriteBatch);
+                lock (sprites[i])
+                {
+                    if (sprites[i].IsHUD)
+                        sprites[i].Draw(spriteBatch, la);
+                }
             }
 
             if (DebugManager.Instance.IsDebuging)
                 DebugManager.Instance.DebugDraw(spriteBatch);
-
-            spriteBatch.End(); 
-
+                
+            spriteBatch.End();
             base.Draw(gameTime);
-
+        }
+    }
+}
             /*
              * // Somewhere accessible
 const int TargetWidth = 480;
@@ -243,6 +279,3 @@ protected override void Draw(GameTime gameTime)
 
     base.Draw(gameTime);
 }*/
-        }
-    }
-}

@@ -36,7 +36,7 @@ namespace ExplorerOpenGL.Managers
         public Camera Camera { get; private set; } 
         public MousePointer MousePointer { get; private set; }
 
-        public List<Sprite> _sprites { get; private set; }
+        public List<Sprite> sprites { get; private set; }
 
         public static event EventHandler Initialized;
         private static GameManager instance;
@@ -73,23 +73,30 @@ namespace ExplorerOpenGL.Managers
             networkManager = NetworkManager.Instance;
             scripterManager = ScripterManager.Instance; 
 
-            //keyboardManager.KeyPressed += OnKeyPressed;
+            keyboardManager.KeyPressed += OnKeyPressed;
 
             this.Camera = camera; 
-            _sprites = sprites;
+            this.sprites = sprites;
 
-            //Terminal = new Terminal(textureManager.CreateTexture(700, 30, paint => Color.Black), fontManager.GetFont("Default")) { Position = new Vector2(0, 185) };
+            Terminal = new Terminal(textureManager.CreateTextureThread(700, 30, paint => Color.Black), fontManager.GetFont("Default")) { Position = new Vector2(0, 185) };
             
-            //MousePointer = new MousePointer(textureManager.LoadTexture("cursor"));
+            MousePointer = new MousePointer(textureManager.LoadTexture("cursor"));
 
-            //AddSprite(Terminal, this);
-            //AddSprite(MousePointer, this);
+            AddSprite(Terminal, this);
+            AddSprite(MousePointer, this);
         }
 
         public void AddActionToUIThread(Action<object> action, object arg)
         {
-            this.action.Add(action);
-            this.actionArg.Add(arg);
+            lock (action)
+            {
+                lock (actionArg)
+                {
+                    this.action.Add(action);
+                    this.actionArg.Add(arg);
+
+                }
+            }
         }
 
         public void StartGame(string name, string ip = null )
@@ -131,18 +138,25 @@ namespace ExplorerOpenGL.Managers
 
         public void Update(GameTime gametime)
         {
-            for(int i = 0; i < action.Count; i++)
+            lock (action)
             {
-                action[i].Invoke(actionArg[i]); 
+                lock (actionArg)
+                {
+                    for (int i = 0; i < action.Count; i++)
+                    {
+                        action[i].Invoke(actionArg[i]);
+                    }
+                }
             }
         }
 
         public void AddSprite(Sprite sprite, object issuer)
         {
             if (sprite is Player && issuer is GameManager)
-                Player = sprite as Player; 
+                Player = sprite as Player;
             SpriteAdded?.Invoke(sprite, issuer); 
-            _sprites.Add(sprite); 
+            lock (this.sprites)
+                this.sprites.Add(sprite); 
         }
 
         private void OnKeyPressed(KeysArray keys)
@@ -164,6 +178,10 @@ namespace ExplorerOpenGL.Managers
                 } 
                 Camera.ToggleFollow();
             }
+            if (keys.Contains(Keys.F1))
+            {
+                ClearScene(); 
+            }
         }
 
         public void OnWindowResize(object sender, EventArgs e)
@@ -173,19 +191,30 @@ namespace ExplorerOpenGL.Managers
 
         public void RemoveSprite(Sprite sprite)
         {
-            sprite.IsRemove = true; 
-            _sprites.Remove(sprite);
+            lock (sprites)
+            {
+                this.sprites.Remove(sprite);
+            }
+        }
+
+        public Sprite[] GetSprites()
+        {
+            lock (sprites)
+                return sprites.ToArray();
         }
 
         public void ClearScene()
         {
-            for (int i = 0; i < _sprites.Count; i++)
+            lock (sprites)
             {
-                var sprite = _sprites[i];
-                if (!(sprite is Terminal || sprite is MousePointer))
+                for (int i = 0; i < this.sprites.Count; i++)
                 {
-                    _sprites.Remove(sprite);
-                    i--;
+                    var sprite = this.sprites[i];
+                    if (!(sprite is Terminal || sprite is MousePointer))
+                    {
+                        sprites.RemoveAt(i);
+                        i--;
+                    }
                 }
             }
         }

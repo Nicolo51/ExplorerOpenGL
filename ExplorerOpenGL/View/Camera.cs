@@ -28,11 +28,15 @@ namespace ExplorerOpenGL.View
             Matrix position;
             if (IsFollowingSprite)
             {
+                Vector2 PositionSprite; 
+                lock (SpriteToFollow)
+                    PositionSprite = SpriteToFollow.Position; 
+
                 position = Matrix.CreateTranslation(
-                    -SpriteToFollow.Position.X,
-                    -SpriteToFollow.Position.Y,
+                    -PositionSprite.X,
+                    -PositionSprite.Y,
                     0);
-                Position = new Vector2(SpriteToFollow.Position.X, SpriteToFollow.Position.Y);
+                Position = new Vector2(PositionSprite.X, PositionSprite.Y);
             }
             else
             {

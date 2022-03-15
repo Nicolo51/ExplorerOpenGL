@@ -34,6 +34,7 @@ namespace ExplorerOpenGL.Model.Sprites
             layerDepth = 0.1f;
             isDraggable = true;
         }
+
         public override void SetAlignOption(AlignOption ao)
         {
             if (ao == alignOption)
@@ -72,9 +73,8 @@ namespace ExplorerOpenGL.Model.Sprites
             base.SetAlignOption(ao);
         }
 
-        public override void Update(List<Sprite> sprites)
+        public override void Update(Sprite[] sprites)
         {
-           
             base.Update(sprites);
         }
 
@@ -94,7 +94,7 @@ namespace ExplorerOpenGL.Model.Sprites
         {
 
         }
-        public override void Draw(SpriteBatch spriteBatch)
+        public override void Draw(SpriteBatch spriteBatch, float lerpAmount = 1)
         {
             if(isMouseOver)
                 spriteBatch.Draw(mouseOverTexture, Position, null, Color.White * Opacity * (isClicked ? .5f : 1f), Radian, originMouseOver, scale, Effects, layerDepth);

@@ -46,12 +46,14 @@ namespace ExplorerOpenGL.Model.Sprites
             keyboardManager = KeyboardManager.Instance; 
         }
 
-        public override void Update(List<Sprite> sprites)
+        public override void Update(Sprite[] sprites)
         {
+            base.Update(sprites);
+            //Position = mousePointer.Position;
+            playerFeet.Update(sprites); 
             Radian = CalculateAngle(Position, mousePointer.InWindowPosition);
             Move(sprites);
             PositionName = new Vector2(Position.X, Position.Y + 50);
-            base.Update(sprites);
         }
 
         private float CalculateAngle(Vector2 A, Vector2 B)
@@ -72,7 +74,7 @@ namespace ExplorerOpenGL.Model.Sprites
             OriginName = new Vector2(TextureName.Width / 2, TextureName.Height / 2);
         }
 
-        protected virtual void Move(List<Sprite> sprites)
+        protected virtual void Move(Sprite[] sprites)
         {
             Direction = Vector2.Zero;
             if (!keyboardManager.IsTextInputBoxFocused)
@@ -103,7 +105,7 @@ namespace ExplorerOpenGL.Model.Sprites
                     direction += (float)Math.PI;
                 }
                 playerFeet.SetDirection(direction);
-                for (int i = 0; i < sprites.Count; i++)
+                for (int i = 0; i < sprites.Length; i++)
                 {
                     var sprite = sprites[i];
                     if (sprites[i] is Wall)
@@ -123,11 +125,11 @@ namespace ExplorerOpenGL.Model.Sprites
         }
 
 
-        public override void Draw(SpriteBatch spriteBatch)
+        public override void Draw(SpriteBatch spriteBatch, float lerpAmount)
         {
-            playerFeet.Draw(spriteBatch);
+            playerFeet.Draw(spriteBatch, lerpAmount);
             spriteBatch.Draw(TextureName, PositionName , null, Color.White, 0f, OriginName, .75f, SpriteEffects.None, layerDepth); 
-            base.Draw(spriteBatch);
+            base.Draw(spriteBatch, lerpAmount);
         }
 
         private bool IsTouchingLeft(Sprite sprite)

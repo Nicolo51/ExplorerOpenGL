@@ -124,8 +124,9 @@ namespace ExplorerOpenGL.Model.Sprites
             return Vector2.Zero;
         }
 
-        public override void Update(List<Sprite> sprites)
+        public override void Update(Sprite[] sprites)
         {
+            base.Update(sprites);
             if (IsFocused)
             {
                 cursorTimer += (float)timeManager.ElapsedUpdate.TotalSeconds;
@@ -167,7 +168,6 @@ namespace ExplorerOpenGL.Model.Sprites
             else
                 cursorOpacity = 0;
 
-            base.Update(sprites);
         }
 
         private void CheckSubstring()
@@ -178,9 +178,9 @@ namespace ExplorerOpenGL.Model.Sprites
                 indexEndDrawing--;
         }
 
-        public override void Draw(SpriteBatch spriteBatch)
+        public override void Draw(SpriteBatch spriteBatch, float lerpAmount)
         {
-            base.Draw(spriteBatch);
+            base.Draw(spriteBatch, lerpAmount);
             spriteBatch.DrawString(spriteFont, "|", cursorPosition - origin, Color.White, 0f, Vector2.Zero, cursorOpacity, SpriteEffects.None, layerDepth - .01f);
             spriteBatch.DrawString(spriteFont, inputText.ToString().Substring(indexStartDrawing, indexEndDrawing), Position - origin, Color.White, 0f, Vector2.Zero, 1f, SpriteEffects.None, layerDepth - .01f);
         }

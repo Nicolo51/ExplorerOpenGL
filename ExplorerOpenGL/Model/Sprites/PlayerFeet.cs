@@ -15,7 +15,6 @@ namespace ExplorerOpenGL.Model.Sprites
         {
             _texture = texture;
             origin = new Vector2(texture.Width / 2, texture.Height / 2);
-
         }
 
         public void SetDirection(float direction)

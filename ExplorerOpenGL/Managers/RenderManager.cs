@@ -71,7 +71,7 @@ namespace ExplorerOpenGL.Managers
 
             for(int i = 0; i < _sprites.Count; i++)
             {
-                _sprites[i].Draw(spriteBatch); 
+                _sprites[i].Draw(spriteBatch, 1); 
             }
 
             spriteBatch.End();
@@ -127,6 +127,7 @@ namespace ExplorerOpenGL.Managers
             spriteBatch.DrawString(font, textToRender, targetBounds / 2, textColor, 0f, stringDimension / 2, 1f, SpriteEffects.None, 0f);
 
             spriteBatch.End();
+            spriteBatch.GraphicsDevice.SetRenderTarget(null);
             target.GetData(data);
             texture.SetData(data);
             data = null; 

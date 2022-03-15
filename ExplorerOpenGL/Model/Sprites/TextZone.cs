@@ -28,12 +28,12 @@ namespace ExplorerOpenGL.Model.Sprites
             SetAlignOption(ao);
         }
 
-        public override void Update(List<Sprite> sprites)
+        public override void Update(Sprite[] sprites)
         {
             base.Update(sprites);
         }
 
-        public override void Draw(SpriteBatch spriteBatch)
+        public override void Draw(SpriteBatch spriteBatch, float lerpAmount = 1)
         {
             spriteBatch.DrawString(Font, Text, Position, Color, Radian, origin, scale, Effects, layerDepth); 
         }

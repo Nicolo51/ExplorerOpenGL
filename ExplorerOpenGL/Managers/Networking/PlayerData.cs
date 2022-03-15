@@ -60,7 +60,7 @@ namespace ExplorerOpenGL.Managers.Networking
             networkManager = NetworkManager.Instance;
         }
 
-        public override void Update(List<Sprite> sprites)
+        public override void Update(Sprite[] sprites)
         {
             if (InGamePosition != ServerPosition && timeToTravel != 0)
             {
@@ -120,7 +120,7 @@ namespace ExplorerOpenGL.Managers.Networking
             return $"ID:{ID}, Position:{ServerPosition.ToString()}, LookAtRadian:{LookAtRadian}, FeetRadian:{FeetRadian}"; 
         }
 
-        public override void Draw(SpriteBatch spriteBatch)
+        public override void Draw(SpriteBatch spriteBatch, float lerpAmount = 1)
         {
             if (TextureName != null && playerFeetTexture != null && playerTexture != null)
             {

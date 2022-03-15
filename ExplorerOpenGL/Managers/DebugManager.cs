@@ -18,17 +18,17 @@ namespace ExplorerOpenGL.Managers
         public Color TextColor { get; set; }
         public Vector2 MaxLogVec { get; set; } //???
         float scale = 2f;
+        float timer = 0f; 
         StringBuilder debugMessage;
         MousePointer debugMouse;
         GraphicsDeviceManager graphics;
         private List<Sprite> sprites;
         public bool IsDebuging { get; private set; } 
         private static DebugManager instance;
-
-
         public static event EventHandler Initialized;
         private KeyboardManager keyboardManager;
         private FontManager fontManager;
+        private TimeManager timeManager;
         public static DebugManager Instance
         {
             get
@@ -55,6 +55,7 @@ namespace ExplorerOpenGL.Managers
         {
             keyboardManager = KeyboardManager.Instance;
             fontManager = FontManager.Instance;
+            timeManager = TimeManager.Instance; 
 
             keyboardManager.KeyPressedSubTo(Keys.F3, ToggleDebugMode);
             keyboardManager.KeyRealeased += AddEvent;
@@ -68,22 +69,28 @@ namespace ExplorerOpenGL.Managers
             if (!IsDebuging)
                 return;
 
-            MaxLogVec = Vector2.Zero; 
-            for(int i = 0; i < EventLogList.Count; i++)
+            if (timer > 100)
             {
-                EventLogList[i].Update(); 
-                if(EventLogList[i].IsRemove)
+                MaxLogVec = Vector2.Zero;
+                for (int i = 0; i < EventLogList.Count; i++)
                 {
-                    EventLogList.RemoveAt(i);
-                    continue; 
+                    EventLogList[i].Update();
+                    if (EventLogList[i].IsRemove)
+                    {
+                        EventLogList.RemoveAt(i);
+                        continue;
+                    }
+                    Vector2 temp = fontManager.GetFont("Default").MeasureString(EventLogList[i].Text);
+                    if (temp.X > MaxLogVec.X)
+                    {
+                        MaxLogVec = new Vector2(temp.X, 0);
+                    }
                 }
-                Vector2 temp = fontManager.GetFont("Default").MeasureString(EventLogList[i].Text);
-                if (temp.X > MaxLogVec.X)
-                {
-                    MaxLogVec = new Vector2(temp.X, 0); 
-                }
+                BuildDebugMessage(sprites, gameTime);
+                timer = 0f;
             }
-            BuildDebugMessage(sprites, gameTime);
+            else
+                timer += (float)gameTime.ElapsedGameTime.TotalMilliseconds; 
         }
 
         public void ToggleDebugMode()
@@ -134,7 +141,7 @@ namespace ExplorerOpenGL.Managers
 
             debugMessage.Append("Window dimension : " + graphics.PreferredBackBufferHeight + ", " + graphics.PreferredBackBufferWidth +"\n");
             debugMessage.Append("Total Time : " + gameTime.TotalGameTime.TotalSeconds.ToString("#.#") + "s\n");
-
+            debugMessage.Append("Fps : "+ (1000/gameTime.ElapsedGameTime.TotalMilliseconds).ToString("#.#") +" \n");
             debugMessage.Append("Sprite Count = " + sprites.Count.ToString() + "\n");
             Dictionary<Type, int> debugTypeList = new Dictionary<Type, int>();
             foreach(Sprite sprite in sprites)
@@ -162,6 +169,8 @@ namespace ExplorerOpenGL.Managers
         {
             debugMouse = null; 
         }
+
+        
 
         public void DebugDraw(SpriteBatch spriteBatch)
         {
