@@ -89,34 +89,7 @@ namespace ExplorerOpenGL
 
         protected override void LoadContent()
         {
-            textureManager.AddTexTure("Terminal", textureManager.CreateTexture(700, 30, paint => Color.Black));
-            textureManager.AddTexTure("TerminalInput", textureManager.CreateTexture(700, 35, paint => Color.Black * .8f));
-            textureManager.AddTexTure("YesButtonOutline", textureManager.OutlineText("Yes", "Default", Color.Black, Color.Red, 2));
-            textureManager.AddTexTure("YesButton", textureManager.TextureText("Yes", "Default", Color.Red));
-            textureManager.AddTexTure("NoButtonOutline", textureManager.OutlineText("No", "Default", Color.Black, Color.Red, 2));
-            textureManager.AddTexTure("NoButton", textureManager.TextureText("No", "Default", Color.Red));
-            textureManager.AddTexTure("OkButton", textureManager.TextureText("OK", "Default", Color.Red));
-            textureManager.AddTexTure("OkButtonOutline", textureManager.OutlineText("OK", "Default", Color.Black, Color.Red, 2));
-            textureManager.AddTexTure("CancelButton", textureManager.TextureText("Cancel", "Default", Color.Red));
-            textureManager.AddTexTure("CancelButtonOuline", textureManager.OutlineText("Cancel", "Default", Color.Black, Color.Red, 2));
-            textureManager.AddTexTure("ContinueButton", textureManager.TextureText("Continue", "Default", Color.Red));
-            textureManager.AddTexTure("ContinueButtonOutline", textureManager.OutlineText("Continue", "Default", Color.Black, Color.Red, 2));
-            textureManager.AddTexTure("ConnectButtonOutline", textureManager.CreateTexture(700, 30, paint => Color.Black));
-            textureManager.AddTexTure("ConnectButton", textureManager.OutlineText("Connect", "Default", Color.CornflowerBlue, Color.Black, 1));
-            textureManager.AddTexTure("ContinueButtonOutline", textureManager.OutlineText("Connect", "Default", Color.CornflowerBlue, Color.Black, 2));
-            textureManager.AddTexTure("StartButton", textureManager.OutlineText("Start", "Default", Color.CornflowerBlue, Color.Black, 1));
-            textureManager.AddTexTure("StartButtonOutline", textureManager.OutlineText("Start", "Default", Color.CornflowerBlue, Color.Black, 2));
-            textureManager.AddTexTure("BackButton", textureManager.OutlineText("Back", "Default", Color.CornflowerBlue, Color.Black, 1));
-            textureManager.AddTexTure("BackButtonOutline", textureManager.OutlineText("Back", "Default", Color.CornflowerBlue, Color.Black, 2));
-            textureManager.AddTexTure("LoginScreen", textureManager.CreateBorderedTexture(350, 250, 3, 0, paint => Color.Black, paint => (paint < (Width * 30) ? new Color(22, 59, 224) : new Color(245, 231, 213))));
-            textureManager.AddTexTure("PickNameScreen", textureManager.CreateBorderedTexture(350, 150, 3, 0, paint => Color.Black, paint => (paint < (Width * 30) ? new Color(22, 59, 224) : new Color(245, 231, 213))));
-            textureManager.AddTexTure("SmallTextInput", textureManager.CreateTexture(250, 35, paint => Color.Black));
-            textureManager.AddTexTure("SingleplayerButtonOutline", textureManager.OutlineText("Singleplayer", "Menu", Color.Black, Color.Red, 2));
-            textureManager.AddTexTure("SingleplayerButton", textureManager.TextureText("Singleplayer", "Menu", Color.Red));
-            textureManager.AddTexTure("MultiplayerButtonOutline", textureManager.OutlineText("Multiplayer", "Menu", Color.Black, Color.Red, 2));
-            textureManager.AddTexTure("MultiplayerButton", textureManager.TextureText("Multiplayer", "Menu", Color.Red));
-            textureManager.AddTexTure("OptionsButtonOutline", textureManager.OutlineText("Options", "Menu", Color.Black, Color.Red, 2));
-            textureManager.AddTexTure("OptionsButton", textureManager.TextureText("Options", "Menu", Color.Red));
+            
 
             //Player Player = new Player(player, playerfeet, Manager.MousePointer, "Nicolas", Manager.TextureManager)
             //{
@@ -171,14 +144,12 @@ namespace ExplorerOpenGL
                 if(_sprites == null)
                     return;
             //gameManager.MousePointer.Update(_sprites);
-                gameManager.Camera.Update();
-                gameManager.Update(gameTime);
-                debugManager.Update(gameTime);
-                keyboardManager.Update();
-                networkManager.Update(gameTime);
-            
-
-            // TODO: Add your update logic here
+            gameManager.Camera.Update();
+            textureManager.Update(); 
+            gameManager.Update(gameTime);
+            debugManager.Update(gameTime);
+            keyboardManager.Update();
+            networkManager.Update(gameTime);
 
             base.Update(gameTime);
         }
@@ -231,10 +202,22 @@ namespace ExplorerOpenGL
 
             for (int i = 0; i < sprites.Length; i++)
             {
-                lock (sprites[i])
+                bool lockAcquired = false;
+                try
                 {
-                    if (!sprites[i].IsHUD)
-                        sprites[i].Draw(spriteBatch, la);
+                    Monitor.TryEnter(sprites[i], 1, ref lockAcquired);
+                    if (lockAcquired)
+                    {
+                        if (!sprites[i].IsHUD)
+                            sprites[i].Draw(spriteBatch, la);
+                    }
+                    else
+                        debugManager.AddEvent("Draw skipped" + i);
+                }
+                finally
+                {
+                    if (lockAcquired)
+                        Monitor.Exit(sprites[i]); 
                 }
             }
 
@@ -244,10 +227,22 @@ namespace ExplorerOpenGL
 
             for (int i = 0; i < sprites.Length; i++)
             {
-                lock (sprites[i])
+                bool lockAcquired = false;
+                try
                 {
-                    if (sprites[i].IsHUD)
-                        sprites[i].Draw(spriteBatch, la);
+                    Monitor.TryEnter(sprites[i], 1, ref lockAcquired);
+                    if (lockAcquired)
+                    {
+                        if (sprites[i].IsHUD)
+                            sprites[i].Draw(spriteBatch, la);
+                    }
+                    else
+                        debugManager.AddEvent("Draw skipped" + i);
+                }
+                finally
+                {
+                    if (lockAcquired)
+                        Monitor.Exit(sprites[i]);
                 }
             }
 

@@ -39,6 +39,7 @@ namespace ExplorerOpenGL.View
 
             btnBack.MouseClicked += BtnBack_MouseClicked;
             btnStart.MouseClicked += BtnConnect_MouseClicked;
+
         }
 
         private void BtnConnect_MouseClicked(object sender, MousePointer mousePointer, Vector2 clickPosition)

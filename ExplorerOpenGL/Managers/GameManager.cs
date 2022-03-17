@@ -38,6 +38,10 @@ namespace ExplorerOpenGL.Managers
 
         public List<Sprite> sprites { get; private set; }
 
+        public int Height;
+        public int Width;
+
+
         public static event EventHandler Initialized;
         private static GameManager instance;
         public static GameManager Instance
@@ -59,6 +63,8 @@ namespace ExplorerOpenGL.Managers
 
         private GameManager()
         {
+            Height = 730;
+            Width = 1360;
             action = new List<Action<object>>();
             actionArg = new List<object>();
             isGameStarted = false; 

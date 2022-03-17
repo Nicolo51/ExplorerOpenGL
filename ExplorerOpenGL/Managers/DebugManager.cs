@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace ExplorerOpenGL.Managers
@@ -69,7 +70,7 @@ namespace ExplorerOpenGL.Managers
             if (!IsDebuging)
                 return;
 
-            if (timer > 100)
+            if (timer > 16)
             {
                 MaxLogVec = Vector2.Zero;
                 for (int i = 0; i < EventLogList.Count; i++)
@@ -140,8 +141,9 @@ namespace ExplorerOpenGL.Managers
             debugMessage.Clear();
 
             debugMessage.Append("Window dimension : " + graphics.PreferredBackBufferHeight + ", " + graphics.PreferredBackBufferWidth +"\n");
+            debugMessage.Append("ID Main Thread = " + Thread.CurrentThread.ManagedThreadId + "\n");
             debugMessage.Append("Total Time : " + gameTime.TotalGameTime.TotalSeconds.ToString("#.#") + "s\n");
-            debugMessage.Append("Fps : "+ (1000/gameTime.ElapsedGameTime.TotalMilliseconds).ToString("#.#") +" \n");
+            debugMessage.Append("Fps : "+ (1000/gameTime.ElapsedGameTime.TotalMilliseconds).ToString("#") +" \n");
             debugMessage.Append("Sprite Count = " + sprites.Count.ToString() + "\n");
             Dictionary<Type, int> debugTypeList = new Dictionary<Type, int>();
             foreach(Sprite sprite in sprites)

@@ -34,6 +34,7 @@ namespace ExplorerOpenGL.Model.Sprites
             childSpritesPosition = new List<Vector2>();
             //origin = new Vector2(texture.Width / 2, texture.Height / 2);
             isDraggable = true;
+            IsHUD = true; 
         }
 
         public MessageBox()
@@ -45,6 +46,7 @@ namespace ExplorerOpenGL.Model.Sprites
             childSprites = new List<Sprite>();
             childSpritesPosition = new List<Vector2>();
             isDraggable = true;
+            IsHUD = true; 
         }
 
         public override void Update(Sprite[] sprites)
@@ -59,6 +61,7 @@ namespace ExplorerOpenGL.Model.Sprites
 
         public void AddChildSprite(Sprite sprite, Vector2 childPosition)
         {
+            sprite.IsHUD = true; 
             sprite.layerDepth -= .01f;
             childSprites.Add(sprite);
             childSpritesPosition.Add(childPosition);

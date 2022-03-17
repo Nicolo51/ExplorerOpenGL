@@ -30,7 +30,6 @@ namespace ExplorerOpenGL.Managers
                 return instance;
             }
         }
-
         private FontManager()
         {
             loadedFonts = new Dictionary<string, SpriteFont>(); 

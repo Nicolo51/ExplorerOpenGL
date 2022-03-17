@@ -51,9 +51,10 @@ namespace ExplorerOpenGL.View
 
         public override void Show()
         {
-            AddChildSprite(btnSinglePlayer, new Vector2(0, -150)); 
-            AddChildSprite(btnMultiPlayer, new Vector2(0, 0)); 
-            AddChildSprite(btnOption, new Vector2(0, 150));
+
+            AddChildSprite(btnSinglePlayer, new Vector2(gameManager.Width / 2, gameManager.Height / 2 - 150)); 
+            AddChildSprite(btnMultiPlayer, new Vector2(gameManager.Width / 2, gameManager.Height/2)); 
+            AddChildSprite(btnOption, new Vector2(gameManager.Width / 2, gameManager.Height / 2 + 150));
             base.Show();
         }
     }

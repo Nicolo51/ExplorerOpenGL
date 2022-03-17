@@ -98,7 +98,7 @@ namespace ExplorerOpenGL.Model.Sprites
         private void CheckMouseEvent(Sprite[] sprites)
         {
             MousePointer mousePointer = gameManager.MousePointer; 
-            if (!this.IsHUD && this.HitBox.Intersects(new Rectangle((int)gameManager.MousePointer.InWindowPosition.X, (int)gameManager.MousePointer.InWindowPosition.Y, 1, 1)) )
+            if ((!this.IsHUD && this.HitBox.Intersects(new Rectangle((int)gameManager.MousePointer.InWindowPosition.X, (int)gameManager.MousePointer.InWindowPosition.Y, 1, 1))) || isDragged)
             {
                 if (!isOver)
                     OnMouseOver(sprites);
@@ -106,23 +106,23 @@ namespace ExplorerOpenGL.Model.Sprites
                 isOver = true;
                 if ((gameManager.MousePointer.currentMouseState.LeftButton == ButtonState.Pressed && gameManager.MousePointer.prevMouseState.LeftButton == ButtonState.Released) || isClicked)
                 {
-                    if(!isClicked)
+                    if (!isClicked)
                         ClickPosition = new Vector2(mousePointer.InWindowPosition.X - Position.X + origin.X, mousePointer.InWindowPosition.Y - Position.Y + origin.Y);
                     isClicked = true;
                     if (gameManager.MousePointer.currentMouseState.LeftButton == ButtonState.Released && !isDragged)
                     {
                         OnMouseClick(sprites, ClickPosition);
-                        isDragged = false; 
+                        isDragged = false;
                     }
                 }
                 if (gameManager.MousePointer.currentMouseState.LeftButton == ButtonState.Released)
                 {
                     isClicked = false;
-                    isDragged = false; 
+                    isDragged = false;
                 }
-                if(isClicked && isOver && isDraggable)
+                if (isClicked && isOver && isDraggable)
                 {
-                    if (!isDragged) 
+                    if (!isDragged)
                     {
                         Vector2 currentClickPosition = new Vector2(mousePointer.InWindowPosition.X - Position.X + origin.X, mousePointer.InWindowPosition.Y - Position.Y + origin.Y);
                         float distance = Vector2.Distance(ClickPosition, currentClickPosition);
@@ -133,11 +133,11 @@ namespace ExplorerOpenGL.Model.Sprites
                     }
                     else
                     {
-                        Position = mousePointer.InWindowPosition + origin -ClickPosition;
+                        Position = mousePointer.InWindowPosition + origin - ClickPosition;
                     }
                 }
             }
-            else if (this.IsHUD && gameManager.MousePointer.HitBox.Intersects(this.HitBox))
+            else if ((this.IsHUD && gameManager.MousePointer.HitBox.Intersects(this.HitBox)) || isDragged)
             {
                 if (!isOver)
                     OnMouseOver(sprites);
@@ -145,21 +145,40 @@ namespace ExplorerOpenGL.Model.Sprites
                 isOver = true;
                 if ((gameManager.MousePointer.currentMouseState.LeftButton == ButtonState.Pressed && gameManager.MousePointer.prevMouseState.LeftButton == ButtonState.Released) || isClicked)
                 {
+                    if (!isClicked)
+                        ClickPosition = new Vector2(mousePointer.Position.X - Position.X + origin.X, mousePointer.Position.Y - Position.Y + origin.Y);
                     isClicked = true;
-                    if (gameManager.MousePointer.currentMouseState.LeftButton == ButtonState.Released)
+                    if (gameManager.MousePointer.currentMouseState.LeftButton == ButtonState.Released && !isDragged)
                     {
-                        Vector2 ClickPosition = new Vector2(mousePointer.Position.X - Position.X + origin.X, mousePointer.Position.Y - Position.Y + origin.Y);
                         OnMouseClick(sprites, ClickPosition);
+                        isDragged = false;
                     }
                 }
                 if (gameManager.MousePointer.currentMouseState.LeftButton == ButtonState.Released)
                 {
                     isClicked = false;
+                    isDragged = false;
+                }
+                if (isClicked && isOver && isDraggable)
+                {
+                    if (!isDragged)
+                    {
+                        Vector2 currentClickPosition = new Vector2(mousePointer.Position.X - Position.X + origin.X, mousePointer.Position.Y - Position.Y + origin.Y);
+                        float distance = Vector2.Distance(ClickPosition, currentClickPosition);
+                        if (distance > 3)
+                        {
+                            isDragged = true;
+                        }
+                    }
+                    else
+                    {
+                        Position = mousePointer.Position + origin - ClickPosition;
+                    }
                 }
             }
             else if (gameManager.MousePointer.currentMouseState.LeftButton == ButtonState.Released)
             {
-                if (isOver)
+                if (isOver && !isDragged)
                 {
                     isClicked = false;
                     OnMouseLeave(sprites);

@@ -94,6 +94,7 @@
     <Compile Include="View\Camera.cs" />
     <Compile Include="View\LoginScreen.cs" />
     <Compile Include="View\MainMenu.cs" />
+    <Compile Include="View\PauseMenu.cs" />
     <Compile Include="View\PickNameScreen.cs" />
   </ItemGroup>
   <ItemGroup>
