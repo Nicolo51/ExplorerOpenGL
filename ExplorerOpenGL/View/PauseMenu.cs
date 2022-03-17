@@ -12,7 +12,6 @@ namespace ExplorerOpenGL.View
         public PauseMenu()
             : base()
         {
-
         }
 
         public override void Show()

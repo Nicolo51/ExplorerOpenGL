@@ -16,7 +16,7 @@ namespace ExplorerOpenGL.Model.Sprites
         Dictionary<MousePointerType, Rectangle> MousePointerTypes;
         public MouseState currentMouseState { get; private set; }
         public MouseState prevMouseState { get; private set; }
-        public Vector2 InWindowPosition { get; private set; }
+        public Vector2 InGamePosition { get; private set; }
         public override Rectangle HitBox { get { return new Rectangle((int)Position.X, (int)Position.Y, 1, 1); } }
         private MousePointerType defaultType; 
 
@@ -70,7 +70,7 @@ namespace ExplorerOpenGL.Model.Sprites
             currentMouseState = Mouse.GetState();
             Position = new Vector2(currentMouseState.Position.X, currentMouseState.Position.Y);
 
-            InWindowPosition = new Vector2((gameManager.Camera.Position.X - gameManager.Camera.Bounds.X / 2 + currentMouseState.Position.X), (gameManager.Camera.Position.Y - gameManager.Camera.Bounds.Y / 2 + currentMouseState.Position.Y)); 
+            InGamePosition = new Vector2((gameManager.Camera.Position.X - gameManager.Camera.Bounds.X / 2 + currentMouseState.Position.X), (gameManager.Camera.Position.Y - gameManager.Camera.Bounds.Y / 2 + currentMouseState.Position.Y)); 
 
         }
         public override void Draw(SpriteBatch spriteBatch, float lerpAmount)
@@ -81,7 +81,7 @@ namespace ExplorerOpenGL.Model.Sprites
 
         public override string ToString()
         {
-            return "InGamePos : " + InWindowPosition.X + " / "+ InWindowPosition.Y + "\nInWindowPos : " + Position.X + " / " + Position.Y;
+            return "Position as HUD : " + Position.X + " / "+ Position.Y + "\nPosition as NonHUD : " + InGamePosition.X + " / " + InGamePosition.Y;
         }
         private void InitMouseTypes()
         {

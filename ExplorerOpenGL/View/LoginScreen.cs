@@ -25,6 +25,7 @@ namespace ExplorerOpenGL.View
         public LoginScreen()
             :base()
         {
+            Position = new Vector2(gameManager.Width / 2, gameManager.Height / 2);
             SpriteFont font = fontManager.GetFont("Default");
             _texture = textureManager.CreateBorderedTexture(Width, Height, 3, 0, paint => Color.Black, paint => (paint < (Width * 30) ? new Color(22, 59, 224) : new Color(245, 231, 213)));
             SourceRectangle = new Rectangle(0, 0, _texture.Width, _texture.Height);

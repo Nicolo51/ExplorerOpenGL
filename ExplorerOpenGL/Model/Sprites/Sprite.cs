@@ -98,7 +98,7 @@ namespace ExplorerOpenGL.Model.Sprites
         private void CheckMouseEvent(Sprite[] sprites)
         {
             MousePointer mousePointer = gameManager.MousePointer; 
-            if ((!this.IsHUD && this.HitBox.Intersects(new Rectangle((int)gameManager.MousePointer.InWindowPosition.X, (int)gameManager.MousePointer.InWindowPosition.Y, 1, 1))) || isDragged)
+            if (!this.IsHUD && (this.HitBox.Intersects(new Rectangle((int)gameManager.MousePointer.InGamePosition.X, (int)gameManager.MousePointer.InGamePosition.Y, 1, 1)) || isDragged))
             {
                 if (!isOver)
                     OnMouseOver(sprites);
@@ -107,7 +107,7 @@ namespace ExplorerOpenGL.Model.Sprites
                 if ((gameManager.MousePointer.currentMouseState.LeftButton == ButtonState.Pressed && gameManager.MousePointer.prevMouseState.LeftButton == ButtonState.Released) || isClicked)
                 {
                     if (!isClicked)
-                        ClickPosition = new Vector2(mousePointer.InWindowPosition.X - Position.X + origin.X, mousePointer.InWindowPosition.Y - Position.Y + origin.Y);
+                        ClickPosition = new Vector2(mousePointer.InGamePosition.X - Position.X + origin.X, mousePointer.InGamePosition.Y - Position.Y + origin.Y);
                     isClicked = true;
                     if (gameManager.MousePointer.currentMouseState.LeftButton == ButtonState.Released && !isDragged)
                     {
@@ -124,7 +124,7 @@ namespace ExplorerOpenGL.Model.Sprites
                 {
                     if (!isDragged)
                     {
-                        Vector2 currentClickPosition = new Vector2(mousePointer.InWindowPosition.X - Position.X + origin.X, mousePointer.InWindowPosition.Y - Position.Y + origin.Y);
+                        Vector2 currentClickPosition = new Vector2(mousePointer.InGamePosition.X - Position.X + origin.X, mousePointer.InGamePosition.Y - Position.Y + origin.Y);
                         float distance = Vector2.Distance(ClickPosition, currentClickPosition);
                         if (distance > 3)
                         {
@@ -133,11 +133,12 @@ namespace ExplorerOpenGL.Model.Sprites
                     }
                     else
                     {
-                        Position = mousePointer.InWindowPosition + origin - ClickPosition;
+                        Position = mousePointer.InGamePosition + origin - ClickPosition;
+                        DebugManager.Instance.AddEvent(ClickPosition);
                     }
                 }
             }
-            else if ((this.IsHUD && gameManager.MousePointer.HitBox.Intersects(this.HitBox)) || isDragged)
+            else if (this.IsHUD && (gameManager.MousePointer.HitBox.Intersects(this.HitBox) || isDragged))
             {
                 if (!isOver)
                     OnMouseOver(sprites);
@@ -172,6 +173,7 @@ namespace ExplorerOpenGL.Model.Sprites
                     }
                     else
                     {
+                        DebugManager.Instance.AddEvent(ClickPosition);
                         Position = mousePointer.Position + origin - ClickPosition;
                     }
                 }

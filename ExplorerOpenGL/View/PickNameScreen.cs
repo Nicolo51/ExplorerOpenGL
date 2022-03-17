@@ -22,6 +22,7 @@ namespace ExplorerOpenGL.View
         public PickNameScreen()
             : base()
         {
+            Position = new Vector2(gameManager.Width / 2, gameManager.Height / 2);
             SpriteFont font = fontManager.GetFont("Default");
             _texture = textureManager.CreateBorderedTexture(Width, Height, 3, 0, paint => Color.Black, paint => (paint < (Width * 30) ? new Color(22, 59, 224) : new Color(245, 231, 213)));
             SourceRectangle = new Rectangle(0, 0, _texture.Width, _texture.Height);
@@ -36,6 +37,8 @@ namespace ExplorerOpenGL.View
             txtName.SetAlignOption(AlignOption.TopLeft);
             btnStart.SetAlignOption(AlignOption.Left);
             btnBack.SetAlignOption(AlignOption.Right);
+
+            SetAlignOption(AlignOption.Center);
 
             btnBack.MouseClicked += BtnBack_MouseClicked;
             btnStart.MouseClicked += BtnConnect_MouseClicked;

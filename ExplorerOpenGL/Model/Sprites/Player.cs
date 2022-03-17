@@ -51,7 +51,7 @@ namespace ExplorerOpenGL.Model.Sprites
             base.Update(sprites);
             //Position = mousePointer.Position;
             playerFeet.Update(sprites); 
-            Radian = CalculateAngle(Position, mousePointer.InWindowPosition);
+            Radian = CalculateAngle(Position, mousePointer.InGamePosition);
             Move(sprites);
             PositionName = new Vector2(Position.X, Position.Y + 50);
         }

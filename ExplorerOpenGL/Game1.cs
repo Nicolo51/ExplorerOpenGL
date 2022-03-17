@@ -108,7 +108,7 @@ namespace ExplorerOpenGL
             //_sprites.Add(new Wall(Manager.TextureManager.CreateTexture(1000, 50, paint => (paint % 2 == 0)? Color.White : Color.Black)));
             //_sprites.Add(new Button(Manager.TextureManager.CreateTexture(200, 200, paint => Color.Black), Manager.TextureManager.CreateTexture(200, 200, paint => Color.Red), fonts["Default"])); 
             //Manager.Camera.FollowSprite(Player);
-            gameManager.Camera.LookAt(0, 0);
+            //gameManager.Camera.LookAt(0, 0);
             
             Window.ClientSizeChanged += UpdateDisplay;
             Window.AllowUserResizing = true;
