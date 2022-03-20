@@ -162,7 +162,7 @@ namespace ExplorerOpenGL
                     tm.InitDependencies(graphics, Content, spriteBatch); 
                     break;
                 case DebugManager dm:
-                    dm.InitDependencies(graphics, _sprites);
+                    dm.InitDependencies(graphics);
                     break;
                 case KeyboardManager km:
                     Window.TextInput += KeyboardManager.Instance.OnTextInput;

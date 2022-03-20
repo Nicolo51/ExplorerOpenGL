@@ -14,10 +14,10 @@ namespace ExplorerOpenGL.View
         public const int Height = 150;
         public const int Width = 350;
 
-        TextinputBox tbName;
-        TextZone txtName;
-        Button btnStart;
-        Button btnBack;
+        public TextinputBox tbName;
+        public TextZone txtName;
+        public Button btnStart;
+        public Button btnBack;
 
         public PickNameScreen()
             : base()

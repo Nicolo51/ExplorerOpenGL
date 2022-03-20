@@ -29,6 +29,7 @@ namespace ExplorerOpenGL.Managers
         private NetworkManager networkManager;
         private FontManager fontManager;
         private ScripterManager scripterManager;
+        private PauseMenu pauseMenu; 
 
         private bool isGameStarted;  
         public Player Player { get; set; }
@@ -40,7 +41,11 @@ namespace ExplorerOpenGL.Managers
 
         public int Height;
         public int Width;
+        public GameState GameState { get; private set; }
+        private GameState lastGameState;
+        private bool hasGameStateChanged; 
 
+        public int MainThreadID;  
 
         public static event EventHandler Initialized;
         private static GameManager instance;
@@ -63,11 +68,12 @@ namespace ExplorerOpenGL.Managers
 
         private GameManager()
         {
+            hasGameStateChanged = false; 
             Height = 730;
             Width = 1360;
             action = new List<Action<object>>();
             actionArg = new List<object>();
-            isGameStarted = false; 
+            isGameStarted = false;
         }
 
         public void InitDependencies(List<Sprite> sprites, Camera camera)
@@ -80,16 +86,32 @@ namespace ExplorerOpenGL.Managers
             scripterManager = ScripterManager.Instance; 
 
             keyboardManager.KeyPressed += OnKeyPressed;
-
+            MainThreadID = Thread.CurrentThread.ManagedThreadId; 
             this.Camera = camera; 
             this.sprites = sprites;
 
-            Terminal = new Terminal(textureManager.CreateTextureThread(700, 30, paint => Color.Black), fontManager.GetFont("Default")) { Position = new Vector2(0, 185) };
+            Terminal = new Terminal(textureManager.CreateTexture(700, 30, paint => Color.Black), fontManager.GetFont("Default")) { Position = new Vector2(0, 185) };
             
             MousePointer = new MousePointer(textureManager.LoadTexture("cursor"));
+            pauseMenu = new PauseMenu();
+
+            keyboardManager.KeyPressedSubTo(Keys.Escape, OnEscapePress);
 
             AddSprite(Terminal, this);
             AddSprite(MousePointer, this);
+        }
+
+        private void OnEscapePress()
+        {
+            if ((GameState == GameState.Playing || GameState == GameState.OnlinePlaying) && !hasGameStateChanged)
+            {
+                pauseMenu.Show();
+                //Camera.FollowSprite(pauseMenu.ResumeButton);
+            }
+            else if (GameState == GameState.Pause)
+            {
+                pauseMenu.Close();
+            }
         }
 
         public void AddActionToUIThread(Action<object> action, object arg)
@@ -126,7 +148,10 @@ namespace ExplorerOpenGL.Managers
                 {
                     return; 
                 }
+                ChangeGameState(GameState.OnlinePlaying);
             }
+            else
+                ChangeGameState(GameState.Playing);
             AddSprite(Player, this);
             MousePointer.SetDefaultIcon(MousePointerType.Crosshair);
             MousePointer.SetCursorIcon(MousePointerType.Crosshair);
@@ -144,6 +169,7 @@ namespace ExplorerOpenGL.Managers
 
         public void Update(GameTime gametime)
         {
+            hasGameStateChanged = false; 
             lock (action)
             {
                 lock (actionArg)
@@ -152,6 +178,14 @@ namespace ExplorerOpenGL.Managers
                     {
                         action[i].Invoke(actionArg[i]);
                     }
+                }
+            }
+            if (Player != null)
+            {
+                lock (Player)
+                {
+                    if (Player.IsRemove)
+                        Player = null;
                 }
             }
         }
@@ -203,10 +237,27 @@ namespace ExplorerOpenGL.Managers
             }
         }
 
+        public void ChangeGameState(GameState gameState)
+        {
+            if (gameState == GameState)
+                return; 
+            lastGameState = GameState; 
+            GameState = gameState;
+            hasGameStateChanged = true;
+        }
+
+        public void ChangeToLastGameState()
+        {
+            GameState temps = GameState;
+            GameState = lastGameState;
+            lastGameState = temps;
+            hasGameStateChanged = true; 
+        }
+
         public Sprite[] GetSprites()
         {
             lock (sprites)
-                return sprites.ToArray();
+                return sprites.ToArray(); 
         }
 
         public void ClearScene()
@@ -224,5 +275,14 @@ namespace ExplorerOpenGL.Managers
                 }
             }
         }
+    }
+
+    public enum GameState
+    {
+        Playing, 
+        OnlinePlaying, 
+        Pause, 
+        MainMenu, 
+        Typing,
     }
 }

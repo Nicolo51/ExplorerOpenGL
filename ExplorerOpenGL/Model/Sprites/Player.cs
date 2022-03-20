@@ -48,12 +48,15 @@ namespace ExplorerOpenGL.Model.Sprites
 
         public override void Update(Sprite[] sprites)
         {
-            base.Update(sprites);
-            //Position = mousePointer.Position;
-            playerFeet.Update(sprites); 
-            Radian = CalculateAngle(Position, mousePointer.InGamePosition);
-            Move(sprites);
-            PositionName = new Vector2(Position.X, Position.Y + 50);
+            if (gameManager.GameState == GameState.Playing || gameManager.GameState == GameState.OnlinePlaying)
+            {
+                base.Update(sprites);
+                //Position = mousePointer.Position;
+                playerFeet.Update(sprites);
+                Radian = CalculateAngle(Position, mousePointer.InGamePosition);
+                Move(sprites);
+                PositionName = new Vector2(Position.X, Position.Y + 50);
+            }
         }
 
         private float CalculateAngle(Vector2 A, Vector2 B)
@@ -77,28 +80,26 @@ namespace ExplorerOpenGL.Model.Sprites
         protected virtual void Move(Sprite[] sprites)
         {
             Direction = Vector2.Zero;
-            if (!keyboardManager.IsTextInputBoxFocused)
+            
+            if (keyboardManager.IsKeyDown(input.Down))
             {
-                if (keyboardManager.IsKeyDown(input.Down))
-                {
-                    Direction.Y += 1;
-                }
-                if (keyboardManager.IsKeyDown(input.Up))
-                {
-                    Direction.Y -= 1;
-                }
-                if (keyboardManager.IsKeyDown(input.Right))
-                {
-                    Direction.X += 1;
-                }
-                if (keyboardManager.IsKeyDown(input.Left))
-                {
-                    Direction.X -= 1;
-                }
+                Direction.Y += 1;
             }
-
+            if (keyboardManager.IsKeyDown(input.Up))
+            {
+                Direction.Y -= 1;
+            }
+            if (keyboardManager.IsKeyDown(input.Right))
+            {
+                Direction.X += 1;
+            }
+            if (keyboardManager.IsKeyDown(input.Left))
+            {
+                Direction.X -= 1;
+            }
             if (Direction != Vector2.Zero)
             {
+                Direction = Vector2.Normalize(Direction); 
                 float direction = (float)Math.Atan((double)(Direction.Y / Direction.X));
                 if (Direction.X < 0)
                 {

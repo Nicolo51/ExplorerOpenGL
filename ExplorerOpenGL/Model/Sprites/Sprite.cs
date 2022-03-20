@@ -35,6 +35,10 @@ namespace ExplorerOpenGL.Model.Sprites
         public float Opacity { get; set; }
         public bool IsHUD { get; set; }
 
+        public bool IsDisplayed { get; set; }
+        public bool IsClickable { get; set; }
+        public  bool isDraggable { get; set; }
+
         public delegate void MouseOverEventHandler(object sender, MousePointer mousePointer);
         public event MouseOverEventHandler MouseOvered;
 
@@ -45,12 +49,11 @@ namespace ExplorerOpenGL.Model.Sprites
         public event MouseClickEventHandler MouseClicked;
 
         protected GameManager gameManager;
-        protected TimeManager timeManager; 
+        protected TimeManager timeManager;
+        protected DebugManager debugManager;
 
         protected bool isClicked;
         private bool isOver; 
-        public bool IsClickable;
-        public  bool isDraggable;
         private bool isDragged;
         Vector2 ClickPosition; 
 
@@ -65,34 +68,37 @@ namespace ExplorerOpenGL.Model.Sprites
             layerDepth = 1f;
             gameManager = GameManager.Instance;
             timeManager = TimeManager.Instance;
+            IsDisplayed = true; 
         }
 
         public Sprite(Texture2D texture)
         {
-            _texture = texture;
-            SourceRectangle = new Rectangle(0, 0, texture.Width, texture.Height);
+            SetTexture(texture);
             alignOption = AlignOption.None;
             isDraggable = false;
+            IsDisplayed = true; 
             IsHUD = false;
             scale = 1;
             Opacity = 1f;
             layerDepth = 1f; 
             timeManager = TimeManager.Instance;
             gameManager = GameManager.Instance;
+            debugManager = DebugManager.Instance; 
         }
 
         public virtual void Update(Sprite[] sprites)
         {
-           LastPosition = Position; 
+            if (!IsDisplayed)
+                return; 
+            LastPosition = Position; 
             if (IsClickable || isDraggable)
                 CheckMouseEvent(sprites);
         }
 
-        public virtual void SetTextureAsync(Texture2D texture)
+        public virtual void SetTexture(Texture2D texture)
         {
             _texture = texture;
-            if(SourceRectangle == null)
-                SourceRectangle = new Rectangle(0, 0, texture.Width, texture.Height);
+            SourceRectangle = new Rectangle(0, 0, texture.Width, texture.Height);
         }
 
         private void CheckMouseEvent(Sprite[] sprites)
@@ -255,8 +261,13 @@ namespace ExplorerOpenGL.Model.Sprites
 
         public virtual void Draw(SpriteBatch spriteBatch, float lerpAmount)
         {
-            if(_texture != null)
-                spriteBatch.Draw(_texture, Vector2.Lerp(LastPosition, Position, lerpAmount), SourceRectangle, Color.White * Opacity * (isClicked && IsClickable ? .5f : 1f), Radian, origin, scale, Effects, layerDepth);
+            if (_texture != null && IsDisplayed)
+            {
+                if(this is MessageBox)
+                    spriteBatch.Draw(_texture, Position , SourceRectangle, Color.White * Opacity * (isClicked && IsClickable ? .5f : 1f), Radian, origin, scale, Effects, layerDepth);
+                else
+                    spriteBatch.Draw(_texture, Vector2.Lerp(LastPosition, Position, lerpAmount), SourceRectangle, Color.White * Opacity * (isClicked && IsClickable ? .5f : 1f), Radian, origin, scale, Effects, layerDepth);
+            }
         }
     }
     public enum AlignOption

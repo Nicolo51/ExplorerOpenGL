@@ -18,7 +18,7 @@ namespace ExplorerOpenGL.Managers
         public List<LogElement> EventLogList { get; private set; }
         public Color TextColor { get; set; }
         public Vector2 MaxLogVec { get; set; } //???
-        float scale = 2f;
+        float scale = 1f;
         float timer = 0f; 
         StringBuilder debugMessage;
         MousePointer debugMouse;
@@ -30,6 +30,7 @@ namespace ExplorerOpenGL.Managers
         private KeyboardManager keyboardManager;
         private FontManager fontManager;
         private TimeManager timeManager;
+        private GameManager gameManager;
         public static DebugManager Instance
         {
             get
@@ -52,21 +53,22 @@ namespace ExplorerOpenGL.Managers
             EventLogList = new List<LogElement>();
         }
 
-        public void InitDependencies(GraphicsDeviceManager graphics, List<Sprite> sprites)
+        public void InitDependencies(GraphicsDeviceManager graphics)
         {
             keyboardManager = KeyboardManager.Instance;
             fontManager = FontManager.Instance;
-            timeManager = TimeManager.Instance; 
+            timeManager = TimeManager.Instance;
+            gameManager = GameManager.Instance; 
 
             keyboardManager.KeyPressedSubTo(Keys.F3, ToggleDebugMode);
             keyboardManager.KeyRealeased += AddEvent;
             keyboardManager.KeyPressed += AddEvent;
-            this.sprites = sprites;
             this.graphics = graphics;
         }
 
         public void Update(GameTime gameTime)
         {
+            Sprite[] sprites = gameManager.GetSprites(); 
             if (!IsDebuging)
                 return;
 
@@ -106,7 +108,7 @@ namespace ExplorerOpenGL.Managers
 
         public void AddEvent(object e)
         {
-            if (EventLogList.Count > 10)
+            if (EventLogList.Count > 15)
             {
                 EventLogList.RemoveAt(0);
             }
@@ -136,15 +138,18 @@ namespace ExplorerOpenGL.Managers
             }
         }
 
-        private void BuildDebugMessage(List<Sprite> sprites, GameTime gameTime)
+        private void BuildDebugMessage(Sprite[] sprites, GameTime gameTime)
         {
             debugMessage.Clear();
 
             debugMessage.Append("Window dimension : " + graphics.PreferredBackBufferHeight + ", " + graphics.PreferredBackBufferWidth +"\n");
             debugMessage.Append("ID Main Thread = " + Thread.CurrentThread.ManagedThreadId + "\n");
             debugMessage.Append("Total Time : " + gameTime.TotalGameTime.TotalSeconds.ToString("#.#") + "s\n");
+            debugMessage.Append("GameState : "+ gameManager.GameState +" \n");
             debugMessage.Append("Fps : "+ (1000/gameTime.ElapsedGameTime.TotalMilliseconds).ToString("#") +" \n");
-            debugMessage.Append("Sprite Count = " + sprites.Count.ToString() + "\n");
+            debugMessage.Append("Sprite Count = " + sprites.Length.ToString() + "\n");
+            debugMessage.Append("Elapse update = " + timeManager.ElapsedBetweenUpdates.TotalMilliseconds + "\n");
+
             Dictionary<Type, int> debugTypeList = new Dictionary<Type, int>();
             foreach(Sprite sprite in sprites)
             {

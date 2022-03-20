@@ -129,7 +129,7 @@ namespace ExplorerOpenGL.Model.Sprites
             base.Update(sprites);
             if (IsFocused)
             {
-                cursorTimer += (float)timeManager.ElapsedUpdate.TotalSeconds;
+                cursorTimer += (float)timeManager.ElapsedBetweenUpdates.TotalSeconds;
                 if (cursorTimer > .9f)
                 {
                     cursorOpacity = (cursorOpacity == 1) ? 0 : 1;

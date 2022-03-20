@@ -19,10 +19,11 @@ namespace ExplorerOpenGL.Managers
         public TimeSpan ElapsedUpdate { get { return DateTime.Now - LastUpdateTime; } }
         public TimeSpan ElapsedDraw { get { return DateTime.Now - LastDrawTime; } }
         public TimeSpan ElapsedDrawUpdate { get { return DateTime.Now - LastDrawUpdateTime; } }
+        public TimeSpan ElapsedBetweenUpdates { get; private set; }
         public float LerpAmount { get { float la = (float)((LastDrawTime - LastUpdateTime).TotalMilliseconds / TickRate); return(la < 0)?  0: la; } }
 
         Thread UpdateThread;
-        public int TickRate { get; private set; } = 16;
+        public int TickRate { get; private set; } = 16; //Targeted update timer in ms 
 
         public static event EventHandler Initialized;
         private static TimeManager instance; 
@@ -74,6 +75,7 @@ namespace ExplorerOpenGL.Managers
                 //Texture2D texture = TextureManager.Instance.TextureText("coucou", "Default", Color.Red);
 
                 //sprites.Add(new Wall(texture));
+                ElapsedBetweenUpdates = ElapsedUpdate; 
                 LastUpdateTime = DateTime.Now;
                 //Parallel.For(0, sprites.Count, (int i) =>
                 //{

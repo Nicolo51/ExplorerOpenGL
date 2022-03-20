@@ -83,7 +83,7 @@ namespace ExplorerOpenGL.Managers.Networking
             }
             if(playerFeetTexture == null || playerTexture == null)
             {
-                SetTextures(textureManager.LoadedTextures["player"], textureManager.LoadedTextures["playerfeet"]);
+                SetTextures(textureManager.LoadTexture("player"), textureManager.LoadTexture("playerfeet"));
             }
             base.Update(sprites);
         }

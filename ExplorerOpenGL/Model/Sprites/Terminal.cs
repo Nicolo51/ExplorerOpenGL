@@ -52,12 +52,11 @@ namespace ExplorerOpenGL.Model.Sprites
             _texture = texture; 
             Opacity = .5f;
 
-            terminalTexintput = new TextinputBox(textureManager.CreateTextureThread(700, 35, paint => Color.Black * .8f), fontManager.GetFont("Default"), true, true) { IsHUD = true, Position = new Vector2(0, 695), Opacity = 0f, };
+            terminalTexintput = new TextinputBox(textureManager.CreateTexture(700, 35, paint => Color.Black * .8f), fontManager.GetFont("Default"), true, true) { IsHUD = true, Position = new Vector2(0, 695), Opacity = 0f, };
             terminalTexintput.Validated += OnTextinputValidation;
             keyboardManager.KeyPressedSubTo(Keys.Enter, OnEnterPress);
             keyboardManager.KeyPressedSubTo(Keys.Escape, OnEscapePress);
             keyboardManager.TextInputed += KeyboardManager_TextInputed;
-
 
             keyboardManager.OnSpriteAdded(terminalTexintput, this);
             messages = new List<ChatElement>();
@@ -74,17 +73,21 @@ namespace ExplorerOpenGL.Model.Sprites
 
         private void OnEnterPress()
         {
-            if (keyboardManager.focusedTextInput == null || keyboardManager.focusedTextInput == terminalTexintput)
-                terminalTexintput.ToggleFocus(true);
+            if ((keyboardManager.focusedTextInput == null || keyboardManager.focusedTextInput == terminalTexintput) && gameManager.GameState != GameState.Pause)
+            {
+                if (terminalTexintput.ToggleFocus(true))
+                    gameManager.ChangeGameState(GameState.Typing);
+                else
+                    gameManager.ChangeToLastGameState(); 
+            }
         }
         private void OnEscapePress()
         {
-            terminalTexintput.UnFocus();
-        }
-
-        public void OnTextInput(object sender, TextInputEventArgs e)
-        {
-           
+            if (gameManager.GameState == GameState.Typing)
+            {
+                terminalTexintput.UnFocus();
+                gameManager.ChangeToLastGameState();
+            }
         }
 
         public void AddMessageToTerminal(string message, string name, Color color)
@@ -153,23 +156,29 @@ namespace ExplorerOpenGL.Model.Sprites
                 if (i > messages.Count)
                     continue;
                 if (message.Timer < 0)
-                    message.Opacity -= .01f;
+                    message.Opacity -= .02f;
                 else
-                    message.Timer -= timeManager.ElapsedUpdate.TotalSeconds;
+                    message.Timer -= timeManager.ElapsedBetweenUpdates.TotalMilliseconds;
             }
-            if (keyboardManager.IsKeyDown(Keys.H) && !keyboardManager.IsTextInputBoxFocused){
-                for (int i = 0; i < messages.Count; i++)
-                {
-                    if (i > messages.Count)
-                        continue;
-                    messages[i].Opacity = .5f;
-                }
-            }
+
+            if (keyboardManager.IsKeyDown(Keys.H) && !keyboardManager.IsTextInputBoxFocused)
+                displayChatElements(); 
+            if (terminalTexintput.IsFocused)
+                displayChatElements(); 
+
             terminalTexintput.Update( sprites); 
             base.Update(sprites);
         }
 
-
+        private void displayChatElements()
+        {
+            for (int i = 0; i < messages.Count; i++)
+            {
+                if (i > messages.Count)
+                    continue;
+                messages[i].Opacity = .5f;
+            }
+        }
 
         public override void Draw(SpriteBatch spriteBatch, float lerpAmount)
         {
@@ -260,7 +269,7 @@ namespace ExplorerOpenGL.Model.Sprites
         public ChatElement()
         {
             Opacity = .5f;
-            Timer = 5f; 
+            Timer = 1000f; 
         }
 
         public override string ToString()

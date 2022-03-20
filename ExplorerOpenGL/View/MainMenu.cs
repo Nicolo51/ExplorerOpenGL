@@ -1,4 +1,5 @@
-﻿using ExplorerOpenGL.Model.Sprites;
+﻿using ExplorerOpenGL.Managers;
+using ExplorerOpenGL.Model.Sprites;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -11,9 +12,9 @@ namespace ExplorerOpenGL.View
 {
     public class MainMenu : MessageBox
     {
-        Button btnSinglePlayer;
-        Button btnMultiPlayer;
-        Button btnOption;
+        public Button btnSinglePlayer;
+        public Button btnMultiPlayer;
+        public Button btnOption;
         public MainMenu()
             : base()
         {
@@ -51,7 +52,7 @@ namespace ExplorerOpenGL.View
 
         public override void Show()
         {
-
+            gameManager.ChangeGameState(GameState.MainMenu);
             AddChildSprite(btnSinglePlayer, new Vector2(gameManager.Width / 2, gameManager.Height / 2 - 150)); 
             AddChildSprite(btnMultiPlayer, new Vector2(gameManager.Width / 2, gameManager.Height/2)); 
             AddChildSprite(btnOption, new Vector2(gameManager.Width / 2, gameManager.Height / 2 + 150));

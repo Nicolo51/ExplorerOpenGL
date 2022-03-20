@@ -22,15 +22,16 @@ namespace ExplorerOpenGL.Managers
 
         private RenderManager renderManager;
         private FontManager fontManager;
+        private GameManager gameManager;
 
-        public Dictionary<string, Texture2D> LoadedTextures;
+        private Dictionary<string, Texture2D> LoadedTextures;
 
-        public Dictionary<int, Texture2D> IssuedTextures;
+        private Dictionary<int, Texture2D> IssuedTextures;
 
-        public Dictionary<int, OutlineTextRenderArgs> OutlineTextToDraw;
-        public Dictionary<int, CreateBorderTextureRenderArgs> CreateBorderTextureToDraw;
-        public Dictionary<int, CreateTextureRenderArgs> CreateTextureToDraw;
-        public Dictionary<int, TextToTextureRenderArgs> TextToTextureToDraw;
+        private Dictionary<int, OutlineTextRenderArgs> OutlineTextToDraw;
+        private Dictionary<int, CreateBorderTextureRenderArgs> CreateBorderTextureToDraw;
+        private Dictionary<int, CreateTextureRenderArgs> CreateTextureToDraw;
+        private Dictionary<int, TextToTextureRenderArgs> TextToTextureToDraw;
 
         public static event EventHandler Initialized;
 
@@ -128,9 +129,10 @@ namespace ExplorerOpenGL.Managers
             this.graphics = graphics;
             renderManager = RenderManager.Instance;
             fontManager = FontManager.Instance;
+            gameManager = GameManager.Instance; 
         }
 
-        public Texture2D CreateTextureThread(int width, int height, Func<int, Color> paint)
+        private Texture2D CreateTextureThread(int width, int height, Func<int, Color> paint)
         {
             Texture2D texture = new Texture2D(graphics.GraphicsDevice, width, height);
 
@@ -145,7 +147,9 @@ namespace ExplorerOpenGL.Managers
         }
         public Texture2D CreateTexture(int width, int height, Func<int, Color> paint)
         {
-            int id = getIdTicket();
+            if (gameManager.MainThreadID == Thread.CurrentThread.ManagedThreadId)
+                return CreateTextureThread(width, height, paint);
+                int id = getIdTicket();
             var ra = new CreateTextureRenderArgs()
             {
                 ID = id,
@@ -158,7 +162,7 @@ namespace ExplorerOpenGL.Managers
             return waitTexture(id);
         }
 
-        public Texture2D CreateBorderedTextureThread(int width, int height, int thickness, int distanceBorder, Func<int, Color> borderPaint, Func<int, Color> backgroundPaint)
+        private Texture2D CreateBorderedTextureThread(int width, int height, int thickness, int distanceBorder, Func<int, Color> borderPaint, Func<int, Color> backgroundPaint)
         {
             Texture2D texture = new Texture2D(graphics.GraphicsDevice, width, height);
             Color[] data = new Color[width * height];
@@ -197,6 +201,8 @@ namespace ExplorerOpenGL.Managers
         }
         public Texture2D CreateBorderedTexture(int width, int height, int thickness, int distanceBorder, Func<int, Color> borderPaint, Func<int, Color> backgroundPaint)
         {
+            if (gameManager.MainThreadID == Thread.CurrentThread.ManagedThreadId)
+                return CreateBorderedTextureThread(width, height, thickness, distanceBorder, borderPaint, backgroundPaint);
             int id = getIdTicket();
             var ra = new CreateBorderTextureRenderArgs()
             {
@@ -212,7 +218,7 @@ namespace ExplorerOpenGL.Managers
                 CreateBorderTextureToDraw.Add(id, ra);
             return waitTexture(id);
         }
-        public Texture2D OutlineTextThread(string input, string font, Color borderColor, Color textColor, int Thickness)
+        private Texture2D OutlineTextThread(string input, string font, Color borderColor, Color textColor, int Thickness)
         {
             Texture2D textTexture = renderManager.RenderTextToTexture(input, fontManager.GetFont(font), textColor, Thickness);
             Vector2 stringDimension = new Vector2(textTexture.Width, textTexture.Height);
@@ -264,6 +270,8 @@ namespace ExplorerOpenGL.Managers
         }
         public Texture2D OutlineText(string input, string font, Color borderColor, Color textColor, int Thickness)
         {
+            if (gameManager.MainThreadID == Thread.CurrentThread.ManagedThreadId)
+                return OutlineTextThread(input, font, borderColor, textColor, Thickness);
             int id = getIdTicket();
             var ra = new OutlineTextRenderArgs()
             {
@@ -278,12 +286,14 @@ namespace ExplorerOpenGL.Managers
                 OutlineTextToDraw.Add(id, ra);
             return waitTexture(id);
         }
-        public Texture2D TextureTextThread(string text, string font, Color color)
+        private Texture2D TextureTextThread(string text, string font, Color color)
         {
             return renderManager.RenderTextToTexture(text, fontManager.GetFont(font), color, 0);
         }
         public Texture2D TextureText(string text, string font, Color color)
         {
+            if (gameManager.MainThreadID == Thread.CurrentThread.ManagedThreadId)
+                return TextureTextThread(text, font, color);
             int id = getIdTicket();
             var ra = new TextToTextureRenderArgs()
             {
@@ -370,6 +380,9 @@ namespace ExplorerOpenGL.Managers
 
         public Texture2D LoadTexture(string path)
         {
+            if (LoadedTextures.ContainsKey(path))
+                return LoadedTextures[path];
+
             Texture2D texture = content.Load<Texture2D>(path);
             LoadedTextures.Add(path, texture);
             return texture;

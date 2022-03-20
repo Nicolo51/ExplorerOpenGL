@@ -15,12 +15,12 @@ namespace ExplorerOpenGL.View
         public const int Height = 250;
         public const int Width = 350;
 
-        TextinputBox tbName;
-        TextinputBox tbIP;
-        TextZone txtName;
-        TextZone txtIP;
-        Button btnConnect;
-        Button btnBack;
+        public TextinputBox tbName;
+        public TextinputBox tbIP;
+        public TextZone txtName;
+        public TextZone txtIP;
+        public Button btnConnect;
+        public Button btnBack;
 
         public LoginScreen()
             :base()
@@ -52,8 +52,8 @@ namespace ExplorerOpenGL.View
 
         private void BtnConnect_MouseClicked(object sender, MousePointer mousePointer, Vector2 clickPosition)
         {
-            //gameManager.StartGame("Test", "192.168.1.29");
-            gameManager.StartGame("Test", "127.0.0.1");
+            gameManager.StartGame("Test", "192.168.1.29");
+            //gameManager.StartGame("Test", "127.0.0.1");
             this.Close(); 
         }
 

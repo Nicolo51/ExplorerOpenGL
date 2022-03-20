@@ -12,15 +12,13 @@ namespace ExplorerOpenGL.Model.Sprites
     public class MessageBox : Sprite
     {
         public string Title { get; set; }
-
         protected List<Sprite> childSprites;
         protected List<Vector2> childSpritesPosition;
-        
         protected TextureManager textureManager;
+        
         protected FontManager fontManager;
 
         protected Texture2D borderTexture;
-
         public delegate void MessageBoxResultClickEventHandler(MessageBox sender, MessageBoxResultEventArgs e);
         public event MessageBoxResultClickEventHandler Result;
 
@@ -55,20 +53,31 @@ namespace ExplorerOpenGL.Model.Sprites
             for (int i = 0; i < childSprites.Count; i++)
             {
                 Sprite child = childSprites[i];
-                child.Position = Position + childSpritesPosition[i] - origin;
+                Vector2 pos = Position + childSpritesPosition[i] - origin;
+                child.Position = pos;
+                child.LastPosition = pos; 
             }
+        }
+
+        public Sprite GetChild(int index)
+        {
+            if(childSprites.Count < index)
+            {
+                return childSprites[index];
+            }
+            return null; 
         }
 
         public void AddChildSprite(Sprite sprite, Vector2 childPosition)
         {
             sprite.IsHUD = true; 
-            sprite.layerDepth -= .01f;
+            sprite.layerDepth = layerDepth - .01f;
             childSprites.Add(sprite);
             childSpritesPosition.Add(childPosition);
             gameManager.AddSprite(sprite, this);
         }
 
-        public void Close()
+        public virtual void Close()
         {
             foreach(Sprite s in childSprites)
             {
@@ -83,20 +92,10 @@ namespace ExplorerOpenGL.Model.Sprites
             childSpritesPosition.Clear();
             this.Remove(); 
         }
-
-        public void Hide()
-        {
-            foreach (Sprite s in childSprites)
-            {
-                s.Remove();
-            }
-            gameManager.MousePointer.SetCursorIcon(MousePointerType.Default);
-            childSprites.Clear();
-            childSpritesPosition.Clear();
-            this.Remove();
-        }
+        
         public virtual void Show()
         {
+            this.IsRemove = false;
             gameManager.AddSprite(this, this);
             if(Title != null)
                 this.AddChildSprite(new TextZone(Title, fontManager.GetFont("Default"), Color.White, AlignOption.TopLeft), new Vector2(2, 2));
@@ -108,7 +107,6 @@ namespace ExplorerOpenGL.Model.Sprites
             if(borderTexture  != null)
                 spriteBatch.Draw(borderTexture, Position, null, Color.White * Opacity * (isClicked && IsClickable ? .5f : 1f), Radian, origin, scale, Effects, layerDepth+0.1f);
         }
-
 
         public static MessageBox Show(string message)
         {
