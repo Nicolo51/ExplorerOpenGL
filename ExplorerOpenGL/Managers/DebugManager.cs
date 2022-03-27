@@ -23,7 +23,7 @@ namespace ExplorerOpenGL.Managers
         StringBuilder debugMessage;
         MousePointer debugMouse;
         GraphicsDeviceManager graphics;
-        private List<Sprite> sprites;
+        private Sprite[] sprites;
         public bool IsDebuging { get; private set; } 
         private static DebugManager instance;
         public static event EventHandler Initialized;
@@ -68,10 +68,10 @@ namespace ExplorerOpenGL.Managers
 
         public void Update(GameTime gameTime)
         {
-            Sprite[] sprites = gameManager.GetSprites(); 
             if (!IsDebuging)
                 return;
 
+            sprites = gameManager.GetSprites(); 
             if (timer > 16)
             {
                 MaxLogVec = Vector2.Zero;
@@ -98,11 +98,12 @@ namespace ExplorerOpenGL.Managers
 
         public void ToggleDebugMode()
         {
+            sprites = gameManager.GetSprites(); 
             IsDebuging = !IsDebuging; 
             if(IsDebuging)
             {
                 EventLogList.Clear();
-                SortSpriteToDebug(sprites);
+                SortSpriteToDebug();
             }
         }
 
@@ -126,16 +127,10 @@ namespace ExplorerOpenGL.Managers
             }
         }
 
-        public void SortSpriteToDebug(List<Sprite> _sprites)
+        public void SortSpriteToDebug()
         {
             ClearDebugMember();
-            foreach(var sprite in _sprites)
-            {
-                if(sprite is MousePointer pointer)
-                {
-                    debugMouse = pointer; 
-                }
-            }
+            debugMouse = sprites.FirstOrDefault(e => e is MousePointer) as MousePointer;
         }
 
         private void BuildDebugMessage(Sprite[] sprites, GameTime gameTime)
@@ -153,7 +148,15 @@ namespace ExplorerOpenGL.Managers
             Dictionary<Type, int> debugTypeList = new Dictionary<Type, int>();
             foreach(Sprite sprite in sprites)
             {
-                Type t = sprite.GetType();
+                Type t;
+                if (Monitor.TryEnter(sprite))
+                {
+                    t = sprite.GetType();
+                    Monitor.Exit(sprite);
+                }
+                else
+                    continue; 
+
                 if (debugTypeList.ContainsKey(t))
                     debugTypeList[t]++;
                 else

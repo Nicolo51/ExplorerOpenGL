@@ -205,7 +205,7 @@ namespace ExplorerOpenGL
                 bool lockAcquired = false;
                 try
                 {
-                    Monitor.TryEnter(sprites[i], 1, ref lockAcquired);
+                    lockAcquired = Monitor.TryEnter(sprites[i]);
                     if (lockAcquired)
                     {
                         if (!sprites[i].IsHUD)
@@ -230,7 +230,7 @@ namespace ExplorerOpenGL
                 bool lockAcquired = false;
                 try
                 {
-                    Monitor.TryEnter(sprites[i], 1, ref lockAcquired);
+                    lockAcquired = Monitor.TryEnter(sprites[i]);
                     if (lockAcquired)
                     {
                         if (sprites[i].IsHUD)
