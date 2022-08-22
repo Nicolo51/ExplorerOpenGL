@@ -55,6 +55,18 @@ namespace GameServerTCP
                 SendTcpData(toClient, packet);
             }
         }
+
+        public static void RequestChangePlayerPosition(int toClient, Vector2 pos)
+        {
+            using (Packet packet = new Packet((int)ServerPackets.ServerRequest))
+            {
+                packet.Write((int)ServerRequestTypes.MovePlayer);
+                packet.Write(pos.X);
+                packet.Write(pos.Y);
+                SendTcpData(toClient, packet);
+            }
+        }
+
         public static void UDPTest(int toClient)
         {
             using (Packet packet = new Packet((int)ServerPackets.UdpTest))
@@ -80,7 +92,6 @@ namespace GameServerTCP
                 SendTcpData(toClient, packet); 
             }
         }
-
         public static void DisconnectPlayer(int id, string playerName)
         {
             using (Packet packet = new Packet((int)ServerPackets.DisconnectPlayer))

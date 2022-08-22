@@ -60,7 +60,9 @@ namespace ExplorerOpenGL.Managers
             requestHandler = new Dictionary<ServerRequestTypes, ServerRequestHandler>() 
             {
                 {ServerRequestTypes.DeleteObject, DeleteObject },
-                {ServerRequestTypes.MoveObject, MoveObject},
+                {ServerRequestTypes.MoveObject, MoveObject },
+                {ServerRequestTypes.CreateObject, CreateObject },
+                {ServerRequestTypes.MovePlayer, MovePlayer },
                 {ServerRequestTypes.ModifyPlayerHealth, ModifyPlayerHealth },
             }; 
         }
@@ -243,6 +245,16 @@ namespace ExplorerOpenGL.Managers
         {
             int id = packet.ReadInt();
             gameManager.RemoveNetworkObjects(id); 
+        }
+        private void MovePlayer(Packet packet)
+        {
+            Vector2 pos = new Vector2(packet.ReadFloat(), packet.ReadFloat());
+            gameManager.Player.SetPosition(pos, false);
+        }
+
+        private void CreateObject(Packet packet)
+        {
+            throw new NotImplementedException();
         }
 
         public void Update(GameTime gameTime)

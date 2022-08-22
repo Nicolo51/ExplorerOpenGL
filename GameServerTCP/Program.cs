@@ -19,12 +19,14 @@ namespace GameServerTCP
                 string commande = query[0];
                 switch (commande.ToLower().Trim())
                 {
+                    case "tp":
+                        int id = int.Parse(query[1]);
+                        Vector2 pos = new Vector2(int.Parse(query[2]), int.Parse(query[3]));
+                        ServerSend.RequestChangePlayerPosition(id, pos);
+                    break;
                     case "fire":
                         ServerSend.UpdateGameObject();
                         break;
-                    case "move":
-                        Vector2 pos = new Vector2(Int32.Parse(query[2]), Int32.Parse(query[3]));
-                        break; 
                     case "udp":
                         int udpid = Int32.Parse(query[1]);
                         string udpmsg = query[2]; 

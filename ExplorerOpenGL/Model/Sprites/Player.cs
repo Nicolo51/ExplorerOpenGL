@@ -141,10 +141,14 @@ namespace ExplorerOpenGL.Model.Sprites
                     }
                 }
                 SetPosition(Position + Direction * Velocity, false); 
-                playerFeet.SetPosition(Position, false);
             }
         }
 
+        public override void SetPosition(Vector2 newPos, bool instant = true)
+        {
+            playerFeet.SetPosition(newPos, instant);
+            base.SetPosition(newPos, instant);
+        }
 
         public override void Draw(SpriteBatch spriteBatch, float lerpAmount)
         {

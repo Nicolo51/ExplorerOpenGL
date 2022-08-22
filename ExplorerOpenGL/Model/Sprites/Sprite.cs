@@ -212,7 +212,7 @@ namespace ExplorerOpenGL.Model.Sprites
             IsRemove = true; 
         }
 
-        public void SetPosition(Vector2 newPos, bool instant = true)
+        public virtual void SetPosition(Vector2 newPos, bool instant = true)
         {
             if (instant)
                 LastPosition = newPos;
