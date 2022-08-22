@@ -21,12 +21,14 @@ namespace ExplorerOpenGL.Managers.Networking
         public Texture2D playerTexture { get; set; }
         public Texture2D playerFeetTexture { get; set; }
         public Texture2D TextureName{ get; set; }
-        public Vector2 PositionName { get; set; }
+        public Vector2 PositionName { get { return new Vector2(ServerPosition.X, ServerPosition.Y + 50); }}
+        public Vector2 PositionHealth { get { return new Vector2(ServerPosition.X, ServerPosition.Y - 50); } }
         public Vector2 OriginName { get; set; }
         public float opacity;
         public bool NameHasChange { get; set; }
         private Vector2 originFeet;
         private TextureManager textureManager;
+        private SpriteFont font; 
         public double Health { get; set; }
 
         private NetworkManager networkManager;
@@ -40,7 +42,8 @@ namespace ExplorerOpenGL.Managers.Networking
 
         public PlayerData(int id, string name)
         {
-            textureManager = TextureManager.Instance; 
+            textureManager = TextureManager.Instance;
+            font = FontManager.Instance.GetFont("default");  
             NameHasChange = false; 
             this.Name = name; 
             scale = 1f;
@@ -64,7 +67,7 @@ namespace ExplorerOpenGL.Managers.Networking
         {
             if (InGamePosition != ServerPosition && timeToTravel != 0)
             {
-                lagCompProgress += timeManager.ElapsedUpdate.TotalMilliseconds / timeToTravel;
+                lagCompProgress += timeManager.ElapsedBetweenUpdates.TotalMilliseconds / timeToTravel;
                 if (lagCompProgress > 1)
                 {
                     InGamePosition = ServerPosition;
@@ -76,7 +79,6 @@ namespace ExplorerOpenGL.Managers.Networking
                 }
             }
 
-            PositionName = new Vector2(ServerPosition.X, ServerPosition.Y + 50);
             if(RenderName != Name)
             {
                 GenerateTexture(textureManager);
@@ -90,7 +92,7 @@ namespace ExplorerOpenGL.Managers.Networking
 
         public void SetTimeToTravel(double time, GameTime gameTime)
         {
-            timeToTravel = time;
+            timeToTravel = time; 
             lagCompProgress = 0; 
             lagCompDirection = new Vector2(ServerPosition.X - InGamePosition.X, ServerPosition.Y - InGamePosition.Y);
         }
@@ -124,11 +126,11 @@ namespace ExplorerOpenGL.Managers.Networking
         {
             if (TextureName != null && playerFeetTexture != null && playerTexture != null)
             {
+                spriteBatch.DrawString(font, Health.ToString("#"), PositionHealth, Color.White, 0f, font.MeasureString(Health.ToString("#")) / 2, 1f, SpriteEffects.None, layerDepth); 
                 spriteBatch.Draw(TextureName, PositionName, null, Color.White, 0f, OriginName, .75f, SpriteEffects.None, layerDepth);
                 spriteBatch.Draw(playerFeetTexture, InGamePosition, null, Color.White * opacity, FeetRadian, originFeet, scale , Effects, layerDepth + .01f);
                 spriteBatch.Draw(playerTexture, InGamePosition, null, Color.White * opacity, LookAtRadian, origin, scale * .5f, Effects, layerDepth);
             }
-            
         }
     }
 }

@@ -1,6 +1,7 @@
 ﻿using ExplorerOpenGL.Managers;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -21,18 +22,21 @@ namespace ExplorerOpenGL.Model.Sprites
         private Vector2 PositionName;
         private Vector2 OriginName; 
         public Vector2 Direction;
-        public long Health { get; private set;  }
+        public int Health { get; set;  }
         public string Name{ get; private set; }
         public int ID { get; private set; }
         public float PlayerFeetRadian { get { return playerFeet.Radian; } }
 
         private TextureManager textureManager;
-        private KeyboardManager keyboardManager; 
+        private KeyboardManager keyboardManager;
+        private NetworkManager networkManager;
+        private MouseManager mouseManager; 
 
         public Player(Texture2D texture, Texture2D playerFeetTexture, string name)
             : base(texture)
         {
             this.textureManager = TextureManager.Instance;
+            mouseManager = MouseManager.Instance; 
             mousePointer = gameManager.MousePointer; 
             ChangeName(name);
             Direction = new Vector2(0, 0);
@@ -43,7 +47,23 @@ namespace ExplorerOpenGL.Model.Sprites
             layerDepth = .9f;
             scale = .5f;
             Health = 100;
-            keyboardManager = KeyboardManager.Instance; 
+            keyboardManager = KeyboardManager.Instance;
+            networkManager = NetworkManager.Instance;
+
+            mouseManager.LeftClicked += FireBullet;
+        }
+
+        private void FireBullet(ButtonState buttonState)
+        {
+            if (!networkManager.IsConnectedToAServer || buttonState == ButtonState.Released)
+                return;
+            networkManager.CreateBullet(this); 
+        }
+
+        public override void Remove()
+        {
+            base.Remove();
+            mouseManager.LeftClicked -= FireBullet; 
         }
 
         public override void Update(Sprite[] sprites)
@@ -120,8 +140,8 @@ namespace ExplorerOpenGL.Model.Sprites
                             Direction.Y = 0;
                     }
                 }
-                Position += Direction * Velocity;
-                playerFeet.Position = Position;
+                SetPosition(Position + Direction * Velocity, false); 
+                playerFeet.SetPosition(Position, false);
             }
         }
 

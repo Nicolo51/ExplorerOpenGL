@@ -1,4 +1,5 @@
-﻿using System;
+﻿using SharedClasses;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -8,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace ExplorerOpenGL.Managers.Networking
 {
-    public class TCP
+    public class TCP : IDisposable
     {
         public TcpClient socket;
         public int dataBufferSize = 4096;
@@ -18,10 +19,12 @@ namespace ExplorerOpenGL.Managers.Networking
         private byte[] receiveBuffer;
         private SocketAddress socketAddress;
         private Client client;
+        private bool IsClose; 
 
        
         public TCP(SocketAddress socketAddress, Client client)
         {
+            IsClose = false; 
             this.client = client; 
             this.socketAddress = socketAddress; 
         }
@@ -63,10 +66,20 @@ namespace ExplorerOpenGL.Managers.Networking
             stream.BeginRead(receiveBuffer, 0, dataBufferSize, onReceive, null);
         }
 
+        internal void Close()
+        {
+            IsClose = true; 
+            socket.Client.Shutdown(SocketShutdown.Both);
+            socket.Client.Close(); 
+            socket.Close(); 
+        }
+
         private void onReceive(IAsyncResult ar)
         {
             try
             {
+                if (IsClose)
+                    return; 
                 int bytesLength = stream.EndRead(ar);
                 if (bytesLength <= 0)
                     return;
@@ -119,6 +132,29 @@ namespace ExplorerOpenGL.Managers.Networking
                 return true;
             }
             return false;
+        }
+
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                //get rid of managed resources
+                stream.Dispose();
+                socket.Dispose();
+                receiveData.Dispose();
+                receiveBuffer = null;
+                socketAddress = null;
+                client = null;
+            }
+            //get rid of unmanaged resources
+            //nothing for now
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this); 
         }
     }
 }

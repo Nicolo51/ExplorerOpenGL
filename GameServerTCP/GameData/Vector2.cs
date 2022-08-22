@@ -5,7 +5,7 @@ using System.Text;
 
 namespace GameServerTCP.GameData
 {
-    public class Vector2
+    public struct Vector2
     {
         public float X { get; }
         public float Y { get; }
@@ -13,6 +13,12 @@ namespace GameServerTCP.GameData
         {
             this.X = x;
             this.Y = y;
+        }
+
+        public Vector2(float radian)
+        {
+            this.X = (float)Math.Cos(radian); 
+            this.Y = (float)Math.Sin(radian); 
         }
 
         public byte[] ToBytes()
@@ -29,6 +35,11 @@ namespace GameServerTCP.GameData
 
         public static Vector2 One { get { return new Vector2(1f, 1f); } }
         public static Vector2 Zero { get { return new Vector2(0f,0f); } }
+
+        public static float Distance(Vector2 vector1, Vector2 vector2)
+        {
+            return (float)Math.Sqrt((Math.Pow(vector1.X - vector2.X, 2) + Math.Pow(vector1.Y - vector2.Y, 2)));
+        }
 
         public Point ToPoint()
         {

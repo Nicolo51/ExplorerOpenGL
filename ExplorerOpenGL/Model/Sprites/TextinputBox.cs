@@ -57,14 +57,40 @@ namespace ExplorerOpenGL.Model.Sprites
             inputText = new StringBuilder();
             keyboardManager = KeyboardManager.Instance;
             keyboardManager.KeyPressed += ArrowKeyPressed;
+            keyboardManager.KeyPressedSubTo(Keys.C, OnCopyShortCut); 
+            keyboardManager.KeyPressedSubTo(Keys.V, OnPasteShortCut);
         }
 
+        private void OnPasteShortCut()
+        {
+            debugManager.AddEvent("textinput event raised");
+            if (!this.IsFocused)
+                return; 
+            if (keyboardManager.IsKeyDown(Keys.RightControl) || keyboardManager.IsKeyDown(Keys.LeftControl))
+            {
+                string clipText = TextCopy.ClipboardService.GetText();
+                if (string.IsNullOrWhiteSpace(clipText))
+                    return;
+                AddRange(clipText);
+            }
+        }
+        private void OnCopyShortCut()
+        {
+            if(keyboardManager.IsKeyDown(Keys.RightControl) || keyboardManager.IsKeyDown(Keys.LeftControl))
+                TextCopy.ClipboardService.SetText(Text);
+        }
         public void Clear()
         {
             inputText.Clear();
             indexEndDrawing = 0;
             indexStartDrawing = 0;
             cursorIndex = 0;
+        }
+
+        public void AddRange(string s)
+        {
+            foreach (char c in s)
+                AddChar(c); 
         }
 
         public void AddChar(char c)
@@ -275,7 +301,12 @@ namespace ExplorerOpenGL.Model.Sprites
                 return;
             }
         }
-
+        public override void Remove()
+        {
+            keyboardManager.KeyPressedUnsubTo(Keys.C, OnCopyShortCut);
+            keyboardManager.KeyPressedUnsubTo(Keys.V, OnPasteShortCut);
+            base.Remove();
+        }
         public void Focus()
         {
             keyboardManager.FocusTextinput(this);

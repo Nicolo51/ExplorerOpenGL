@@ -1,4 +1,5 @@
-﻿using System;
+﻿using SharedClasses;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -8,15 +9,17 @@ using System.Threading.Tasks;
 
 namespace ExplorerOpenGL.Managers.Networking
 {
-    public class UDP
+    public class UDP : IDisposable
     {
         public UdpClient socket;
         public IPEndPoint endPoint;
         private SocketAddress socketAddress;
-        private Client client; 
+        private Client client;
+        private bool IsClosed;
 
         public UDP(SocketAddress socketAddress, Client client)
         {
+            IsClosed = false; 
             this.client = client; 
             this.socketAddress = socketAddress; 
             endPoint = new IPEndPoint(IPAddress.Parse(this.socketAddress.IP), socketAddress.Port);
@@ -55,6 +58,8 @@ namespace ExplorerOpenGL.Managers.Networking
         {
             try
             {
+                if (IsClosed)
+                    return; 
                 byte[] _data = socket.EndReceive(_result, ref endPoint);
                 socket.BeginReceive(ReceiveCallback, null);
 
@@ -72,6 +77,14 @@ namespace ExplorerOpenGL.Managers.Networking
             }
         }
 
+        internal void Close()
+        {
+            IsClosed = true; 
+            socket.Client.Shutdown(SocketShutdown.Both);
+            socket.Client.Close();
+            socket.Close();
+        }
+
         private void HandleData(byte[] _data)
         {
             using (Packet _packet = new Packet(_data))
@@ -86,6 +99,24 @@ namespace ExplorerOpenGL.Managers.Networking
             }
         }
 
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                //get rid of managed resources
+                socket.Dispose();
+                socketAddress = null;
+                client = null;
+                endPoint = null; 
+            }
+            //get rid of unmanaged resources
+            //nothing for now
+        }
 
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
     }
 }

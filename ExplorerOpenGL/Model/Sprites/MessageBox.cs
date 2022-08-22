@@ -54,8 +54,7 @@ namespace ExplorerOpenGL.Model.Sprites
             {
                 Sprite child = childSprites[i];
                 Vector2 pos = Position + childSpritesPosition[i] - origin;
-                child.Position = pos;
-                child.LastPosition = pos; 
+                child.SetPosition(pos);
             }
         }
 

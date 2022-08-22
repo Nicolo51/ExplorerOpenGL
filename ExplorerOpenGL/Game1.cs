@@ -7,10 +7,6 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Threading;
 
 namespace ExplorerOpenGL
@@ -28,7 +24,8 @@ namespace ExplorerOpenGL
         NetworkManager networkManager;
         FontManager fontManager;
         ScripterManager scripterManager;
-        TimeManager timeManager; 
+        TimeManager timeManager;
+        MouseManager mouseManager;
 
         GraphicsDeviceManager graphics;
         SpriteBatch spriteBatch;
@@ -65,6 +62,7 @@ namespace ExplorerOpenGL
             GameManager.Initialized += OnManagerInitialization;
             FontManager.Initialized += OnManagerInitialization;
             TimeManager.Initialized += OnManagerInitialization;
+            MouseManager.Initialized += OnManagerInitialization; 
             Exiting += Game1_Exiting;
 
             gameManager = GameManager.Instance;
@@ -75,7 +73,8 @@ namespace ExplorerOpenGL
             networkManager = NetworkManager.Instance;
             renderManager = RenderManager.Instance;
             scripterManager = ScripterManager.Instance;
-            timeManager = TimeManager.Instance; 
+            timeManager = TimeManager.Instance;
+            mouseManager = MouseManager.Instance; 
 
             timeManager.StartUpdateThread();
 
@@ -90,7 +89,7 @@ namespace ExplorerOpenGL
         protected override void LoadContent()
         {
             
-
+            
             //Player Player = new Player(player, playerfeet, Manager.MousePointer, "Nicolas", Manager.TextureManager)
             //{
             //    Position = new Vector2(0, 0),
@@ -150,6 +149,7 @@ namespace ExplorerOpenGL
             debugManager.Update(gameTime);
             keyboardManager.Update();
             networkManager.Update(gameTime);
+            mouseManager.Update(); 
 
             base.Update(gameTime);
         }
@@ -182,6 +182,9 @@ namespace ExplorerOpenGL
                     break;
                 case FontManager fm:
                     fm.InitDependencies(Content);
+                    break;
+                case MouseManager mm:
+                    mm.InitDependencies(); 
                     break;
             }
         }

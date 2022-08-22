@@ -1,8 +1,10 @@
 ﻿using ExplorerOpenGL.Managers.Networking;
 using ExplorerOpenGL.Managers.Networking.EventArgs;
+using ExplorerOpenGL.Managers.Networking.NetworkObject;
 using ExplorerOpenGL.Model.Sprites;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using SharedClasses;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -22,12 +24,14 @@ namespace ExplorerOpenGL.Managers
         private Client client; 
         GameManager gameManager;
         DebugManager debugManager;
-        Player player;
         private int port;
         private static NetworkManager instance;
         public static event EventHandler Initialized;
         private string playerNameOnConnection;
         private GameTime gameTime;
+
+        delegate void ServerRequestHandler(Packet packet);
+        private Dictionary<ServerRequestTypes, ServerRequestHandler> requestHandler; 
 
         double elapsedTimeSinceLastUpdatePlayer;
         double lastUpdate; 
@@ -46,24 +50,30 @@ namespace ExplorerOpenGL.Managers
             }
         }
 
-        public NetworkManager()
+        private NetworkManager()
         {
             ConnectionState = ConnectionState.NotConnected;
-            timer = 0d;
+            timer = 30;
             clock = 0d;
             port = 25789;
-            DoOnce = false; 
+            DoOnce = false;
+            requestHandler = new Dictionary<ServerRequestTypes, ServerRequestHandler>() 
+            {
+                {ServerRequestTypes.DeleteObject, DeleteObject },
+                {ServerRequestTypes.MoveObject, MoveObject},
+                {ServerRequestTypes.ModifyPlayerHealth, ModifyPlayerHealth },
+            }; 
         }
 
         public void InitDependencies()
         {
             gameManager = GameManager.Instance;
             debugManager = DebugManager.Instance;
-            client = new Client(gameManager);
         }
 
         public bool Connect(string ip, string name) //port is 25789 by default
         {
+            client = new Client(gameManager);
             playerNameOnConnection = name; 
 
             if (ip.IndexOf(':') != -1)
@@ -92,6 +102,15 @@ namespace ExplorerOpenGL.Managers
                 return false; 
             }
         }
+        public void Disconnect()
+        {
+            client.SendMessage(null, (int)ClientPackets.Disconnect); 
+            client.Disconnect();
+            client.Dispose();
+            client = null; 
+            GC.Collect(); 
+            ConnectionState = ConnectionState.NotConnected;
+        }
 
         public void SendMessageToServer(string message)
         {
@@ -103,23 +122,25 @@ namespace ExplorerOpenGL.Managers
             if(!string.IsNullOrWhiteSpace(name))
                 client.RequestNameChange(name); 
         }
+        public void CreateBullet(Player player)
+        {
+            client.CreateBullet(player); 
+        }
 
         public void OnPacketReceived(NetworkEventArgs e)
         {
-            if(!(e is PlayerUpdateEventArgs))
-                debugManager.AddEvent(e.Message);
             switch (e)
             {
                 case PlayerUpdateEventArgs puea:
                     elapsedTimeSinceLastUpdatePlayer = gameTime.TotalGameTime.TotalMilliseconds - lastUpdate;
                     lastUpdate = gameTime.TotalGameTime.TotalMilliseconds;
-                    debugManager.AddEvent(elapsedTimeSinceLastUpdatePlayer);
                     foreach(PlayerData pd in puea.PlayerData)
                     {
                         client.PlayersData[pd.ID].ServerPosition = pd.ServerPosition; 
                         client.PlayersData[pd.ID].LookAtRadian = pd.LookAtRadian; 
                         client.PlayersData[pd.ID].FeetRadian = pd.FeetRadian;
                         client.PlayersData[pd.ID].SetTimeToTravel(elapsedTimeSinceLastUpdatePlayer, gameTime);
+                        client.PlayersData[pd.ID].Health = pd.Health;
                     }
                     break;
                 case ChatMessageEventArgs cmea:
@@ -159,9 +180,29 @@ namespace ExplorerOpenGL.Managers
                     break;
                 case WelcomeEventArgs wea:
                     client.SendResponseWelcome(playerNameOnConnection);
-                    client.ConnectUdp();
+                    //client.ConnectUdp();
                     serverTickRate = wea.TickRate; 
                     ConnectionState = ConnectionState.WaitingForUdp;
+                    break;
+                case GameObjectsUpdateEventArgs gouea:
+                    foreach (var ngo in gouea.networkGameObjects)
+                    {
+                        bool contains = false;
+                        lock (gameManager.NetworkObjects)
+                            contains = gameManager.NetworkObjects.Keys.Contains(ngo.ID);
+
+                        if (contains)
+                        {
+                            gameManager.UpdateNetworkObjects(ngo);
+                            continue; 
+                        }
+                        var b = ngo as NetworkBullet; 
+                        Bullet bullet = new Bullet() { Direction = b.Direction, Velocity = b.Velocity, ID = b.ID, Position = b.Position, IdPlayer = b.IDPlayer };
+                        gameManager.AddNetworkObject(bullet);
+                    }
+                    break;
+                case ServerRequestEventArgs srea:
+                    requestHandler[srea.ServerRequestType](srea.Packet);
                     break; 
                 default:
                     if (e.MessageType == MessageType.OnUdpTestReceive)
@@ -181,6 +222,27 @@ namespace ExplorerOpenGL.Managers
             {
                 gameManager.Terminal.AddMessageToTerminal(e.Message, "System", Color.White);
             }
+        }
+
+        private void ModifyPlayerHealth(Packet packet)
+        {
+            int newHealth = packet.ReadInt(); 
+            gameManager.Player.Health = newHealth; 
+        }
+
+        private void MoveObject(Packet packet)
+        {
+            int id = packet.ReadInt(); 
+            Vector2 position = new Vector2(packet.ReadFloat(), packet.ReadFloat()); 
+            Sprite s = gameManager.GetNetworkObject(id);
+            if (s == null)
+                return;
+            s.Position = position; 
+        }
+        private void DeleteObject(Packet packet)
+        {
+            int id = packet.ReadInt();
+            gameManager.RemoveNetworkObjects(id); 
         }
 
         public void Update(GameTime gameTime)

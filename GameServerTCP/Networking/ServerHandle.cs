@@ -1,4 +1,6 @@
 ﻿using GameServerTCP.GameData;
+using GameServerTCP.GameData.GameObjects;
+using SharedClasses;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -13,20 +15,21 @@ namespace GameServerTCP
             string name = packet.ReadString();
             string msg = packet.ReadString();
             //Console.WriteLine(msg);
-            Console.WriteLine(GameServer.clients[fromClient].tcp.socket.Client.RemoteEndPoint + " successfully connected and is now connected as " + name + " with id : " + fromClient);
+            Console.WriteLine(GameServer.GetClient(fromClient).tcp.socket.Client.RemoteEndPoint + " successfully connected and is now connected as " + name + " with id : " + fromClient);
             if (clientIdCheck != fromClient)
             {
                 Console.WriteLine("L'id is corrupted " + clientIdCheck);
                 return; 
             }
-            Game.AddPlayer(new Player(clientIdCheck, name));
+            Game.AddPlayer(clientIdCheck, new Player(clientIdCheck, name));
+            ServerSend.RequestAcknowledgeme(fromClient, ClientPackets.WelcomeReceived, true); 
         }
 
         public static void UdpMessageReceived(int fromClient, Packet packet)
         {
             int id = packet.ReadInt(); 
             if(id == fromClient)
-                Console.WriteLine(fromClient + "-" + Game.Players[fromClient].Name + " : " + packet.ReadString()); 
+                Console.WriteLine(fromClient + "-" + Game.GetPlayer(fromClient).Name + " : " + packet.ReadString()); 
         }
 
         public static void UDPTestReceived(int fromClient, Packet packet)
@@ -53,7 +56,7 @@ namespace GameServerTCP
                 {
                     switch (cmd[0].ToLower())
                     {
-                        case "/tp":
+                        case "/tp": 
                             Console.WriteLine("Tp command issued");
                             break;
                         case "/w":
@@ -72,8 +75,8 @@ namespace GameServerTCP
                 Console.WriteLine("L'id is corrupted " + clientIdCheck);
                 return; 
             }
-            Console.WriteLine($"[{Game.Players[idClient].Name }, {idClient}]: { msg }");
-            ServerSend.TcpSpreadChatMessageToAll(Game.Players[idClient], msg); 
+            Console.WriteLine($"[{Game.GetPlayer(idClient).Name }, {idClient}]: { msg }");
+            ServerSend.TcpSpreadChatMessageToAll(Game.GetPlayer(idClient), msg); 
         }
 
         public static void UdpUpdatePlayer(int fromClient, Packet packet)
@@ -81,7 +84,7 @@ namespace GameServerTCP
             Vector2 position = new Vector2(packet.ReadFloat(), packet.ReadFloat());
             float feetRadian = packet.ReadFloat(); 
             float lookAtRadian = packet.ReadFloat();
-            long health = packet.ReadLong(); 
+            int health = packet.ReadInt(); 
 
             string msg = $"Posistion = {position.ToString()}, FeetRadian = {feetRadian.ToString("0.##")}, LookAtRadian = {lookAtRadian.ToString("0.##")}";
             Game.UpdatePlayer(fromClient, position, feetRadian, lookAtRadian, health);
@@ -92,14 +95,38 @@ namespace GameServerTCP
 
         public static void ChangeNameRequest(int fromClient, Packet packet)
         {
-            if(checkIdIntegrity(fromClient, packet))
-            {
-                string name = packet.ReadString();
-                Game.Players[fromClient].Name = name;
-                ServerSend.TcpChangeNameResult(fromClient, 200, name);
-            }
-            else
+            if(!checkIdIntegrity(fromClient, packet))
                 ServerSend.TcpChangeNameResult(fromClient, 403, string.Empty);
+
+            string name = packet.ReadString();
+            Game.GetPlayer(fromClient).Name = name;
+            ServerSend.TcpChangeNameResult(fromClient, 200, name);
+        }
+
+        public static void CreateBullet(int fromClient, Packet packet)
+        {
+            if (!checkIdIntegrity(fromClient, packet))
+                return;
+            var position = new Vector2(packet.ReadFloat(), packet.ReadFloat());
+            var direction = packet.ReadFloat();
+            var velocity = packet.ReadFloat();
+            var owner = Game.GetPlayer(packet.ReadInt());
+            Bullet bullet = new Bullet(position)
+            {
+                Direction = direction,
+                Velocity = velocity,
+                Owner = owner, 
+            };
+            Game.AddGameObject(bullet);
+            Console.WriteLine("Bullet created, id : " + bullet.ID);
+        }
+
+        public static void Disconnect(int fromClient, Packet packet)
+        {
+            if (!checkIdIntegrity(fromClient, packet))
+                return;
+            GameServer.GetClient(fromClient).tcp.DisconnectClient(); 
+            Game.RemovePlayer(fromClient);
         }
 
         public static bool checkIdIntegrity(int fromClient, Packet packet)

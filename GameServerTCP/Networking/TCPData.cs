@@ -1,4 +1,5 @@
-﻿using System;
+﻿using SharedClasses;
+using System;
 using System.Collections.Generic;
 using System.Net.Sockets;
 using System.Text;
@@ -45,7 +46,8 @@ namespace GameServerTCP
                 byte[] data = new byte[bytesLength];
                 Array.Copy(receivebuffer, data, bytesLength);
                 receivedData.Reset(HandlleData(data)); 
-                stream.BeginRead(receivebuffer, 0, dataBufferSize, OnReceive, null);
+                if(stream.CanRead)
+                    stream.BeginRead(receivebuffer, 0, dataBufferSize, OnReceive, null);
             }
             catch (Exception e)
             {

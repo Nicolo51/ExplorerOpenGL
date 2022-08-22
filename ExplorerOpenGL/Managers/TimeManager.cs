@@ -92,6 +92,8 @@ namespace ExplorerOpenGL.Managers
                         if (sprites[i].IsRemove)
                         {
                             gameManager.RemoveSprite(sprites[i]);
+                            if (i < 0)
+                                i--;
                             continue;
                         }
                         sprites[i].Update(sprites);

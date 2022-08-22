@@ -14,6 +14,8 @@ namespace ExplorerOpenGL.Model.Sprites
     public class Terminal : Sprite 
     {
         List<ChatElement> messages;
+        List<string> commandHistory;
+        int commandHistoryIndex; 
         SpriteFont font;
         public Color FontColor; 
         private KeyboardManager keyboardManager;
@@ -35,8 +37,6 @@ namespace ExplorerOpenGL.Model.Sprites
             } 
         }
 
-        public bool IsFocused { get; set; }
-
         public Terminal(Texture2D texture, SpriteFont Font)
             :base(texture)
         {
@@ -55,11 +55,34 @@ namespace ExplorerOpenGL.Model.Sprites
             terminalTexintput = new TextinputBox(textureManager.CreateTexture(700, 35, paint => Color.Black * .8f), fontManager.GetFont("Default"), true, true) { IsHUD = true, Position = new Vector2(0, 695), Opacity = 0f, };
             terminalTexintput.Validated += OnTextinputValidation;
             keyboardManager.KeyPressedSubTo(Keys.Enter, OnEnterPress);
+            keyboardManager.KeyPressedSubTo(Keys.Up, OnUpPress); 
+            keyboardManager.KeyPressedSubTo(Keys.Down, OnDownPress);
             keyboardManager.KeyPressedSubTo(Keys.Escape, OnEscapePress);
             keyboardManager.TextInputed += KeyboardManager_TextInputed;
-
             keyboardManager.OnSpriteAdded(terminalTexintput, this);
             messages = new List<ChatElement>();
+            commandHistory = new List<string>();
+            commandHistoryIndex = -1; 
+        }
+
+        private void OnDownPress()
+        {
+            if (!terminalTexintput.IsFocused || commandHistory.Count < 1 || commandHistoryIndex < 1)
+                return;
+
+            terminalTexintput.Clear();
+            commandHistoryIndex = commandHistoryIndex > 0  ? commandHistoryIndex -1 : 0;
+            terminalTexintput.AddRange(commandHistory[commandHistoryIndex]);
+        }
+
+        private void OnUpPress()
+        {
+            if (!terminalTexintput.IsFocused || commandHistory.Count < 1)
+                return;
+
+            terminalTexintput.Clear();
+            commandHistoryIndex = commandHistory.Count > commandHistoryIndex + 1 ? commandHistoryIndex+1: commandHistory.Count - 1;
+            terminalTexintput.AddRange(commandHistory[commandHistoryIndex]);
         }
 
         private void KeyboardManager_TextInputed(TextInputEventArgs e)
@@ -69,6 +92,7 @@ namespace ExplorerOpenGL.Model.Sprites
                 terminalTexintput.Clear();
                 terminalTexintput.Focus();
             }
+            commandHistoryIndex = -1;
         }
 
         private void OnEnterPress()
@@ -92,7 +116,7 @@ namespace ExplorerOpenGL.Model.Sprites
 
         public void AddMessageToTerminal(string message, string name, Color color)
         {
-            if (name == null || color == null || message == null)
+            if (name == null || color == null || string.IsNullOrWhiteSpace(message))
                 return;
            //Wrap 
             string[] SplitMessage = message.Split('\n');
@@ -137,6 +161,8 @@ namespace ExplorerOpenGL.Model.Sprites
                 messages.Add(chatElement);
             }
         }
+
+        public void AddMessageToTerminal(object o) => AddMessageToTerminal(o.ToString()); 
 
         public void AddMessageToTerminal(string message)
         {
@@ -192,6 +218,9 @@ namespace ExplorerOpenGL.Model.Sprites
         
         public void OnTextinputValidation(string s, TextinputBox t)
         {
+            if (String.IsNullOrWhiteSpace(s))
+                return;
+            commandHistory.Insert(0, s); 
             if (checkQuery(s))
             {
                 return; 
@@ -226,6 +255,13 @@ namespace ExplorerOpenGL.Model.Sprites
                     case "/help":
                         AddMessageToTerminal("/tp <X> <Y> or <Username> - Teleporte someone at specific coordinate or to someone \n/changeName <newName> - Change your name\n/w <Username> Send a private message to someone", "Info", Color.White); 
                         break;
+                    case "/checkbulletid":
+                        List<int> bullets = new List<int>(); 
+                        foreach(Sprite s in gameManager.GetSprites().Where(s => s is Bullet))
+                        {
+                            AddMessageToTerminal(s.ID); 
+                        } 
+                        break; 
                     default:
                         AddMessageToTerminal("Unknown query '" + commande[0] + "', type /help for more information.", "Error", new Color(181, 22, 11));
                         break; 

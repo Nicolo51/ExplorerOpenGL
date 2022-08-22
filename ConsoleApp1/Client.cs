@@ -1,4 +1,5 @@
 ﻿using GameServerTCP;
+using SharedClasses;
 using System;
 using System.Collections.Generic;
 using System.Text;

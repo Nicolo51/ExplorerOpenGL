@@ -59,6 +59,14 @@ namespace ExplorerOpenGL.Managers
             specificKeyPressed.Add(key, callback);
         }
 
+        public void KeyPressedUnsubTo(Keys key, SpecificKeySwitch callback)
+        {
+            if (specificKeyPressed.ContainsKey(key))
+            {
+                specificKeyPressed[key] -= callback;
+            }
+        }
+
         public void KeyReleasedSubTo(Keys key, SpecificKeySwitch callback)
         {
             if (specificKeyReleased.ContainsKey(key))
@@ -67,6 +75,13 @@ namespace ExplorerOpenGL.Managers
                 return;
             }
             specificKeyReleased.Add(key, callback);
+        }
+        public void KeyReleasedUnsubTo(Keys key, SpecificKeySwitch callback)
+        {
+            if (specificKeyReleased.ContainsKey(key))
+            {
+                specificKeyReleased[key] -= callback;
+            }
         }
 
         private void RaiseSpecificKeyPressed(Keys[] keys)
@@ -119,6 +134,8 @@ namespace ExplorerOpenGL.Managers
             if(IsTextInputBoxFocused)
                 ProcessTextInput(e, focusedTextInput);
         }
+
+
         public void Update()
         {
             previousKeyboardState = currentKeyboardState;

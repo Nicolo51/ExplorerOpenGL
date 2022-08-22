@@ -1,4 +1,5 @@
-﻿using System;
+﻿using SharedClasses;
+using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
@@ -12,9 +13,9 @@ namespace GameServerTCP
         public static int maxPlayer = 20 ; 
         private static TcpListener tcpListener;
         private static UdpClient udpListener; 
-        public static Dictionary<int, Client> clients;
-        public delegate void PackHandler(int fromClient, Packet packet);
-        public static Dictionary<int, PackHandler> packetHandlers;
+        private static Dictionary<int, Client> clients;
+        public delegate void PacketHandler(int fromClient, Packet packet);
+        public static Dictionary<int, PacketHandler> packetHandlers;
         
         public static void Start(int port)
         {
@@ -25,53 +26,56 @@ namespace GameServerTCP
             tcpListener.BeginAcceptTcpClient(new AsyncCallback(OnClientConnect), null);
 
             udpListener = new UdpClient(port);
+            udpListener.Client.IOControl(-1744830452, new byte[] { 0, 0, 0, 0 }, null); 
             udpListener.BeginReceive(OnUDPReceived, null);
 
             Console.WriteLine("Server started on port {0}", port); 
         }
 
-
         private static void OnUDPReceived(IAsyncResult ar)
         {
+            byte[] _data = null;
+            IPEndPoint _clientEndPoint = null; 
             try
             {
-                IPEndPoint _clientEndPoint = new IPEndPoint(IPAddress.Any, 0);
-                byte[] _data = udpListener.EndReceive(ar, ref _clientEndPoint);
+                _clientEndPoint = new IPEndPoint(IPAddress.Any, 0);
+                _data = udpListener.EndReceive(ar, ref _clientEndPoint);
                 udpListener.BeginReceive(OnUDPReceived, null);
-
-                if (_data.Length < 4)
-                {
-                    return;
-                }
-
-                using (Packet _packet = new Packet(_data))
-                {
-                    int _clientId = _packet.ReadInt();
-
-                    if (_clientId == 0)
-                    {
-                        return;
-                    }
-
-                    if (clients[_clientId].udp.endPoint == null)
-                    {
-                        clients[_clientId].udp.Connect(_clientEndPoint);
-                        return;
-                    }
-
-                    if (clients[_clientId].udp.endPoint.ToString() == _clientEndPoint.ToString())
-                    {
-                        clients[_clientId].udp.HandleData(_packet);
-                    }
-                }
             }
             catch (Exception _ex)
             {
                 Console.WriteLine($"Error receiving UDP data: {_ex}");
-                udpListener = new UdpClient(port);
-                udpListener.BeginReceive(OnUDPReceived, null);
+                //udpListener = new UdpClient(port);
+                //udpListener.BeginReceive(OnUDPReceived, null);
                 Console.WriteLine($"The UDP service has been reset");
 
+            }
+
+            if (_data.Length < 4)
+            {
+                return;
+            }
+
+            using (Packet _packet = new Packet(_data))
+            {
+                int _clientId = _packet.ReadInt();
+
+                if (_clientId == 0)
+                {
+                    return;
+                }
+
+                if (GetClient(_clientId).udp.endPoint == null)
+                {
+                    GetClient(_clientId).udp.Connect(_clientEndPoint);
+                    Console.WriteLine("A client has connect to udp stram");
+                    return;
+                }
+
+                if (GetClient(_clientId).udp.endPoint.ToString() == _clientEndPoint.ToString())
+                {
+                    GetClient(_clientId).udp.HandleData(_packet);
+                }
             }
         }
 
@@ -83,10 +87,13 @@ namespace GameServerTCP
 
             for (int i = 1; i <= maxPlayer; i++)
             {
-                if (clients[i].tcp.socket == null)
+                lock (clients)
                 {
-                    clients[i].tcp.Connect(client); 
-                    return; 
+                    if (clients[i].tcp.socket == null)
+                    {
+                            clients[i].tcp.Connect(client);
+                            return;
+                    }
                 }
             }
         }
@@ -105,6 +112,33 @@ namespace GameServerTCP
             }
         }
 
+        public static Client GetClient(int i)
+        {
+            lock (clients)
+            {
+                if(clients.ContainsKey(i))
+                    return clients[i]; 
+                Console.WriteLine("it does not contain the key");
+                return null; 
+            }
+        }
+
+        public static Client[] GetClients()
+        {
+            Client[] clientsArray;
+            lock (clients)
+            {
+                clientsArray = new Client[clients.Count];
+                clients.Values.CopyTo(clientsArray, 0); 
+            }
+            return clientsArray; 
+        }
+
+        public static void setClient(int i, Client client)
+        {
+
+        }
+
         private static void InitServerData()
         {
             clients = new Dictionary<int, Client>(); 
@@ -112,14 +146,16 @@ namespace GameServerTCP
             {
                 clients.Add(i, new Client(i));
             }
-            packetHandlers = new Dictionary<int, PackHandler>()
+            packetHandlers = new Dictionary<int, PacketHandler>()
             {
                 {(int)ClientPackets.WelcomeReceived, ServerHandle.WelcomeReceived },
                 {(int)ClientPackets.ChangeNameRequest, ServerHandle.ChangeNameRequest },
-                {(int)ClientPackets.UdpTest, ServerHandle.UDPTestReceived },
-                {(int)ClientPackets.TcpIssuedCommand, ServerHandle.TcpCommandReceived },
+                {(int)ClientPackets.UdpTestRecieved, ServerHandle.UDPTestReceived },
+                {(int)ClientPackets.TcpChatMessage, ServerHandle.TcpCommandReceived },
                 {(int)ClientPackets.UdpUpdatePlayer, ServerHandle.UdpUpdatePlayer },
-                {(int)ClientPackets.UdpMessage, ServerHandle.UdpMessageReceived },
+                {(int)ClientPackets.UdpMessageRecieved, ServerHandle.UdpMessageReceived },
+                {(int)ClientPackets.CreateBullet, ServerHandle.CreateBullet }, 
+                {(int)ClientPackets.Disconnect, ServerHandle.Disconnect },
             };
         }
     }

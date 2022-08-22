@@ -2,13 +2,13 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace ExplorerOpenGL.Managers.Networking
+namespace SharedClasses
 {
     /// <summary>Sent from server to client.</summary>
     public enum ServerPackets
     {
-        welcome = 1,
-        udpTest = 2,
+        Welcome = 1,
+        UdpTest = 2,
         TcpMessage = 3,
         UdpMessage = 4,
         UdpUpdatePlayers = 5,
@@ -16,19 +16,27 @@ namespace ExplorerOpenGL.Managers.Networking
         TcpPlayersSync = 7,
         TcpChatMessage = 8,
         ChangeNameResult = 9,
-        DisconnectPlayer = 10
+        DisconnectPlayer = 10, 
+        UpdateGameObject = 11, 
+        Sync = 12,
+        ServerRequest =13, 
+
     }
 
     /// <summary>Sent from client to server.</summary>
     public enum ClientPackets
     {
-        welcomeReceived = 1,
-        udpTestRecieved = 2,
+        WelcomeReceived = 1,
+        UdpTestRecieved = 2,
         TcpChatMessage = 3,
         UdpUpdatePlayer = 4,
         UdpMessageRecieved = 5,
-        ChangeNameRequest = 6, 
+        ChangeNameRequest = 6,
+        CreateBullet = 7,
+        UpdateGameObject = 8,
+        Disconnect = 9,
     }
+
     public class Packet : IDisposable
     {
         private List<byte> buffer;
@@ -152,7 +160,7 @@ namespace ExplorerOpenGL.Managers.Networking
             buffer.AddRange(BitConverter.GetBytes(_value));
         }
         /// <summary>Adds a double to the packet.</summary>
-         /// <param name="_value">The double to add.</param>
+        /// <param name="_value">The double to add.</param>
         public void Write(double _value)
         {
             buffer.AddRange(BitConverter.GetBytes(_value));
@@ -178,6 +186,7 @@ namespace ExplorerOpenGL.Managers.Networking
             Write(buf.Length);
             buffer.AddRange(buf); // Add the string itself
         }
+
         #endregion
 
         #region Read Data
@@ -224,27 +233,6 @@ namespace ExplorerOpenGL.Managers.Networking
             }
         }
 
-        /// <summary>Reads a short from the packet.</summary>
-        /// <param name="_moveReadPos">Whether or not to move the buffer's read position.</param>
-        public short ReadShort(bool _moveReadPos = true)
-        {
-            if (buffer.Count > readPos)
-            {
-                // If there are unread bytes
-                short _value = BitConverter.ToInt16(readableBuffer, readPos); // Convert the bytes to a short
-                if (_moveReadPos)
-                {
-                    // If _moveReadPos is true and there are unread bytes
-                    readPos += 2; // Increase readPos by 2
-                }
-                return _value; // Return the short
-            }
-            else
-            {
-                throw new Exception("Could not read value of type 'short'!");
-            }
-        }
-
         /// <summary>Reads a double from the packet.</summary>
         /// <param name="_moveReadPos">Whether or not to move the buffer's read position.</param>
         public double ReadDouble(bool _moveReadPos = true)
@@ -263,6 +251,28 @@ namespace ExplorerOpenGL.Managers.Networking
             else
             {
                 throw new Exception("Could not read value of type 'double'!");
+            }
+        }
+
+
+        /// <summary>Reads a short from the packet.</summary>
+        /// <param name="_moveReadPos">Whether or not to move the buffer's read position.</param>
+        public short ReadShort(bool _moveReadPos = true)
+        {
+            if (buffer.Count > readPos)
+            {
+                // If there are unread bytes
+                short _value = BitConverter.ToInt16(readableBuffer, readPos); // Convert the bytes to a short
+                if (_moveReadPos)
+                {
+                    // If _moveReadPos is true and there are unread bytes
+                    readPos += 2; // Increase readPos by 2
+                }
+                return _value; // Return the short
+            }
+            else
+            {
+                throw new Exception("Could not read value of type 'short'!");
             }
         }
 

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace GameServerTCP.GameData
+namespace GameServerTCP.GameData.GameObjects
 {
     public class Player
     {
@@ -11,7 +11,7 @@ namespace GameServerTCP.GameData
         public Vector2 Position { get; set; }
         public float LookAtRadian { get; set; }
         public float FeetRadian { get; set; }
-        public long Health { get; set; }
+        public int Health { get; set; }
         public Player(int id, string name)
         {
             ID = id;

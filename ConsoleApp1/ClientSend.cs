@@ -1,4 +1,5 @@
 ﻿using GameServerTCP;
+using SharedClasses;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -13,9 +14,7 @@ namespace Client
         public delegate void SendProtocol(object obj, int idHandler);
         public static Dictionary<int, SendProtocol> protocolHandlers = new Dictionary<int, SendProtocol>()
         {
-            {(int)ClientPackets.TcpIssuedCommand, SendTcpChatMessage},
             {(int)ClientPackets.UdpUpdatePlayer, UdpUpdatePlayer},
-            {(int)ClientPackets.UdpMessage, UdpMessage }
         };
 
         private static void SendTcpData(Packet packet)
@@ -61,12 +60,12 @@ namespace Client
 
         public static void UDPTestReceived()
         {
-            using (Packet _packet = new Packet((int)ClientPackets.UdpTest))
-            {
-                _packet.Write("Received a UDP packet.");
+            //using (Packet _packet = new Packet((int)ClientPackets.UdpTest))
+            //{
+            //    _packet.Write("Received a UDP packet.");
 
-                SendUdpData(_packet);
-            }
+            //    SendUdpData(_packet);
+            //}
         }
 
         public static void UdpUpdatePlayer(object obj, int idHandler)
@@ -77,12 +76,12 @@ namespace Client
         {
             if (obj is string)
             {
-                using (Packet packet = new Packet((int)ClientPackets.TcpIssuedCommand))
-                {
-                    packet.Write(Client.myId);
-                    packet.Write(obj as string);
-                    SendTcpData(packet);
-                }
+                //using (Packet packet = new Packet((int)ClientPackets.TcpIssuedCommand))
+                //{
+                //    packet.Write(Client.myId);
+                //    packet.Write(obj as string);
+                //    SendTcpData(packet);
+                //}
             }
             else
             {

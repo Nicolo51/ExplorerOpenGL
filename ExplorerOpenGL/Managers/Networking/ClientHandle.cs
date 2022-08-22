@@ -1,6 +1,8 @@
 ﻿using ExplorerOpenGL.Managers.Networking.EventArgs;
+using ExplorerOpenGL.Managers.Networking.NetworkObject;
 using ExplorerOpenGL.Model.Sprites;
 using Microsoft.Xna.Framework;
+using SharedClasses;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -21,7 +23,7 @@ namespace ExplorerOpenGL.Managers.Networking
         {
             this.client = client;
             this.debugManager = DebugManager.Instance; 
-            this.clientSend = clientSend; 
+            this.clientSend = clientSend;
         }
 
         public void OnWelcomeReceive(Packet packet)
@@ -104,6 +106,23 @@ namespace ExplorerOpenGL.Managers.Networking
             client.PacketReceived(e); 
         }
 
+        public void OnServerRequest(Packet packet)
+        {
+            ServerRequestTypes type = (ServerRequestTypes)packet.ReadInt();
+            ServerRequestEventArgs e = new ServerRequestEventArgs()
+            {
+                Message = string.Empty,
+                MessageType = MessageType.OnChatMessage,
+                Protocol = Protocol.TCP,
+                RequestType = RequestType.Receive,
+                Packet = packet,
+                ServerRequestType = type,
+
+            };
+            client.PacketReceived(e);
+
+        }
+
         public void OnChatMessage(Packet packet)
         {
             string sender = packet.ReadString();
@@ -162,6 +181,17 @@ namespace ExplorerOpenGL.Managers.Networking
             }
         }
 
+        public void OnResponse(Packet packet)
+        {
+            ServerPackets packetType = (ServerPackets)packet.ReadInt();
+            //pourquoi pas faire un switch pour handle les différent type de reponses
+            bool success = packet.ReadBool();
+            if (success)
+                client.ConnectUdp(); 
+
+            //a revoir; 
+        }
+
         public void OnTcpAddPlayer(Packet packet)
         {
             int idPlayer = packet.ReadInt();
@@ -195,7 +225,7 @@ namespace ExplorerOpenGL.Managers.Networking
                         ServerPosition = new Vector2(packet.ReadFloat(), packet.ReadFloat()),
                         LookAtRadian = packet.ReadFloat(),
                         FeetRadian = packet.ReadFloat(),
-                        Health = packet.ReadLong(), 
+                        Health = packet.ReadInt(), 
                     }); 
                 }
                 else
@@ -213,5 +243,52 @@ namespace ExplorerOpenGL.Managers.Networking
             };
             client.PacketReceived(e); 
         }
+
+        public void OnUpdateGameObject(Packet packet)
+        {
+            List<NetworkGameObject> gameObjectData = new List<NetworkGameObject>();
+            while (packet.ReadBool())
+            {
+                //string typeGameObject = packet.ReadString();
+                //int id = packet.ReadInt();
+                //bool isRemove = packet.ReadBool(); 
+                //Vector2 position = new Vector2(packet.ReadFloat(), packet.ReadFloat()); 
+                //Vector2 direction = new Vector2(packet.ReadFloat(), packet.ReadFloat());
+                //float velocity = packet.ReadFloat();
+                //int idPlayer = packet.ReadInt();
+                NetworkGameObject bullet = new NetworkBullet();
+                bullet.ReadPacket(packet); 
+                gameObjectData.Add(bullet); 
+            }
+            GameObjectsUpdateEventArgs e = new GameObjectsUpdateEventArgs()
+            {
+                MessageType = MessageType.OnUdpUpdatePlayers,
+                Packet = packet,
+                Protocol = Protocol.UDP,
+                networkGameObjects = gameObjectData.ToArray(), 
+                RequestType = RequestType.Receive,
+            };
+            client.PacketReceived(e); 
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                //get rid of managed resources
+                client = null;
+                clientSend = null;
+                debugManager = null;
+            }
+            //get rid of unmanaged resources
+            //nothing for now
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
     }
 }

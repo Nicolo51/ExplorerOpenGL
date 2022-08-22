@@ -1,5 +1,7 @@
 ﻿using ExplorerOpenGL.Managers.Networking.EventArgs;
 using ExplorerOpenGL.Model.Sprites;
+using Microsoft.Xna.Framework;
+using SharedClasses;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -9,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace ExplorerOpenGL.Managers.Networking
 {
-    public class ClientSend
+    public class ClientSend : IDisposable
     {
         private Client client; 
         public delegate void SendProtocol(object obj);
@@ -35,7 +37,7 @@ namespace ExplorerOpenGL.Managers.Networking
 
         public void SendResponseWelcome(string name)
         {
-            using (Packet packet = new Packet((int)ClientPackets.welcomeReceived))
+            using (Packet packet = new Packet((int)ClientPackets.WelcomeReceived))
             {
                 packet.Write(client.myId);
                 packet.Write(name);
@@ -46,7 +48,7 @@ namespace ExplorerOpenGL.Managers.Networking
 
         public void SendUDPTest()
         {
-            using (Packet _packet = new Packet((int)ClientPackets.udpTestRecieved))
+            using (Packet _packet = new Packet((int)ClientPackets.UdpTestRecieved))
             {
                 _packet.Write("Received a UDP packet.");
 
@@ -104,6 +106,21 @@ namespace ExplorerOpenGL.Managers.Networking
             }
         }
 
+        public void CreateBullet(object arg)
+        {
+            Player player = arg as Player;
+            using (Packet packet = new Packet((int)ClientPackets.CreateBullet))
+            {
+                packet.Write(client.myId);
+                packet.Write(player.Position.X); 
+                packet.Write(player.Position.Y); 
+                packet.Write(player.Radian); 
+                packet.Write(2f);
+                packet.Write(client.myId);
+                SendUdpData(packet); 
+            }
+        }
+
         public void SendMessage(object obj, int idHandler)
         {
             protocolHandlers[idHandler](obj);
@@ -116,8 +133,37 @@ namespace ExplorerOpenGL.Managers.Networking
                 {(int)ClientPackets.TcpChatMessage, SendTcpChatMessage},
                 {(int)ClientPackets.UdpUpdatePlayer, UdpUpdatePlayer},
                 {(int)ClientPackets.ChangeNameRequest, RequestChangeName },
+                {(int)ClientPackets.CreateBullet, CreateBullet },
+                {(int)ClientPackets.Disconnect, Disconnect},
             };
         }
 
+        public void Disconnect(object obj)
+        {
+            using (Packet packet = new Packet((int)ClientPackets.Disconnect))
+            {
+                packet.Write(client.myId);
+                SendTcpData(packet); 
+            }
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                //get rid of managed resources
+                client = null;
+                protocolHandlers.Clear();
+                protocolHandlers = null;
+            }
+            //get rid of unmanaged resources
+            //nothing for now
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
     }
 }

@@ -14,7 +14,6 @@ namespace ExplorerOpenGL.Managers
 {
     public class DebugManager
     {
-
         public List<LogElement> EventLogList { get; private set; }
         public Color TextColor { get; set; }
         public Vector2 MaxLogVec { get; set; } //???
@@ -27,6 +26,8 @@ namespace ExplorerOpenGL.Managers
         public bool IsDebuging { get; private set; } 
         private static DebugManager instance;
         public static event EventHandler Initialized;
+
+        private NetworkManager networkManager; 
         private KeyboardManager keyboardManager;
         private FontManager fontManager;
         private TimeManager timeManager;
@@ -58,7 +59,8 @@ namespace ExplorerOpenGL.Managers
             keyboardManager = KeyboardManager.Instance;
             fontManager = FontManager.Instance;
             timeManager = TimeManager.Instance;
-            gameManager = GameManager.Instance; 
+            gameManager = GameManager.Instance;
+            networkManager = NetworkManager.Instance; 
 
             keyboardManager.KeyPressedSubTo(Keys.F3, ToggleDebugMode);
             keyboardManager.KeyRealeased += AddEvent;
@@ -75,15 +77,19 @@ namespace ExplorerOpenGL.Managers
             if (timer > 16)
             {
                 MaxLogVec = Vector2.Zero;
-                for (int i = 0; i < EventLogList.Count; i++)
+                LogElement[] logList;
+                lock (EventLogList)
+                    logList = EventLogList.ToArray(); 
+                for (int i = 0; i < logList.Length; i++)
                 {
-                    EventLogList[i].Update();
-                    if (EventLogList[i].IsRemove)
+                    logList[i].Update();
+                    if (logList[i].IsRemove)
                     {
-                        EventLogList.RemoveAt(i);
+                        lock(EventLogList)
+                            EventLogList.Remove(logList[i]);
                         continue;
                     }
-                    Vector2 temp = fontManager.GetFont("Default").MeasureString(EventLogList[i].Text);
+                    Vector2 temp = fontManager.GetFont("Default").MeasureString(logList[i].Text);
                     if (temp.X > MaxLogVec.X)
                     {
                         MaxLogVec = new Vector2(temp.X, 0);
@@ -102,28 +108,32 @@ namespace ExplorerOpenGL.Managers
             IsDebuging = !IsDebuging; 
             if(IsDebuging)
             {
-                EventLogList.Clear();
+                lock(EventLogList)
+                    EventLogList.Clear();
                 SortSpriteToDebug();
             }
         }
 
         public void AddEvent(object e)
         {
-            if (EventLogList.Count > 15)
+            lock (EventLogList)
             {
-                EventLogList.RemoveAt(0);
-            }
-            switch (e)
-            {
-                case KeysArray k:
-                    EventLogList.Add(new LogElement(k.ToString()));
-                    break;
-                case string s:
-                    EventLogList.Add(new LogElement(s.ToString()));
-                    break;
-                default:
-                    EventLogList.Add(new LogElement(e.ToString()));
-                    break;
+                if (EventLogList.Count > 15)
+                {
+                    EventLogList.RemoveAt(0);
+                }
+                switch (e)
+                {
+                    case KeysArray k:
+                        EventLogList.Add(new LogElement(k.ToString()));
+                        break;
+                    case string s:
+                        EventLogList.Add(new LogElement(s.ToString()));
+                        break;
+                    default:
+                        EventLogList.Add(new LogElement(e.ToString()));
+                        break;
+                }
             }
         }
 
@@ -135,44 +145,47 @@ namespace ExplorerOpenGL.Managers
 
         private void BuildDebugMessage(Sprite[] sprites, GameTime gameTime)
         {
-            debugMessage.Clear();
-
-            debugMessage.Append("Window dimension : " + graphics.PreferredBackBufferHeight + ", " + graphics.PreferredBackBufferWidth +"\n");
-            debugMessage.Append("ID Main Thread = " + Thread.CurrentThread.ManagedThreadId + "\n");
-            debugMessage.Append("Total Time : " + gameTime.TotalGameTime.TotalSeconds.ToString("#.#") + "s\n");
-            debugMessage.Append("GameState : "+ gameManager.GameState +" \n");
-            debugMessage.Append("Fps : "+ (1000/gameTime.ElapsedGameTime.TotalMilliseconds).ToString("#") +" \n");
-            debugMessage.Append("Sprite Count = " + sprites.Length.ToString() + "\n");
-            debugMessage.Append("Elapse update = " + timeManager.ElapsedBetweenUpdates.TotalMilliseconds + "\n");
-
-            Dictionary<Type, int> debugTypeList = new Dictionary<Type, int>();
-            foreach(Sprite sprite in sprites)
+            lock (debugMessage)
             {
-                Type t;
-                if (Monitor.TryEnter(sprite))
+                debugMessage.Clear();
+
+                debugMessage.Append("Window dimension : " + graphics.PreferredBackBufferHeight + ", " + graphics.PreferredBackBufferWidth + "\n");
+                debugMessage.Append("ID Main Thread = " + Thread.CurrentThread.ManagedThreadId + "\n");
+                debugMessage.Append("Total Time : " + gameTime.TotalGameTime.TotalSeconds.ToString("#.#") + "s\n");
+                debugMessage.Append("GameState : " + gameManager.GameState + " \n");
+                debugMessage.Append("IsConnected : " + networkManager.IsConnectedToAServer + "\n");
+                debugMessage.Append("Fps : " + (1000 / gameTime.ElapsedGameTime.TotalMilliseconds).ToString("#") + " \n");
+                debugMessage.Append("Elapse update = " + timeManager.ElapsedBetweenUpdates.TotalMilliseconds.ToString("#.##") + "\n");
+                debugMessage.Append("Sprite Count = " + sprites.Length.ToString() + "\n");
+
+                Dictionary<Type, int> debugTypeList = new Dictionary<Type, int>();
+                foreach (Sprite sprite in sprites)
                 {
-                    t = sprite.GetType();
-                    Monitor.Exit(sprite);
+                    Type t;
+                    if (Monitor.TryEnter(sprite))
+                    {
+                        t = sprite.GetType();
+                        Monitor.Exit(sprite);
+                    }
+                    else
+                        continue;
+
+                    if (debugTypeList.ContainsKey(t))
+                        debugTypeList[t]++;
+                    else
+                        debugTypeList.Add(t, 1);
                 }
+
+                for (int i = 0; i < debugTypeList.Count; i++)
+                {
+                    debugMessage.Append("  - " + debugTypeList.ElementAt(i).Key.Name.ToString() + " : " + debugTypeList.ElementAt(i).Value.ToString() + "\n");
+                }
+
+                if (debugMouse != null)
+                    debugMessage.Append(debugMouse.ToString());
                 else
-                    continue; 
-
-                if (debugTypeList.ContainsKey(t))
-                    debugTypeList[t]++;
-                else
-                    debugTypeList.Add(t, 1); 
+                    debugMessage.Append("No MouseCursor Detected :(");
             }
-
-            for(int i = 0;  i < debugTypeList.Count; i++)
-            {
-                debugMessage.Append("  - " + debugTypeList.ElementAt(i).Key.Name.ToString() + " : " + debugTypeList.ElementAt(i).Value.ToString() + "\n");
-            }
-
-           
-            if (debugMouse != null)
-                debugMessage.Append(debugMouse.ToString());
-            else
-                debugMessage.Append("No MouseCursor Detected :("); 
         }
 
         private void ClearDebugMember()
@@ -184,11 +197,15 @@ namespace ExplorerOpenGL.Managers
 
         public void DebugDraw(SpriteBatch spriteBatch)
         {
+            LogElement[] logList;
+            lock (EventLogList)
+                logList = EventLogList.ToArray(); 
             for(int i = 0; i < EventLogList.Count; i++)
             {
-                spriteBatch.DrawString(fontManager.GetFont("Default"), EventLogList[i].Text, new Vector2(graphics.PreferredBackBufferWidth,  i * scale * 20) , Color.White * EventLogList[i].opacity, 0f, MaxLogVec, scale, SpriteEffects.None, 1f); 
+                spriteBatch.DrawString(fontManager.GetFont("Default"), logList[i].Text, new Vector2(graphics.PreferredBackBufferWidth,  i * scale * 20) , Color.White * logList[i].opacity, 0f, MaxLogVec, scale, SpriteEffects.None, 1f); 
             }
-            spriteBatch.DrawString(fontManager.GetFont("Default"), debugMessage, Vector2.Zero, Color.White, 0f, Vector2.Zero, scale, SpriteEffects.None, 1f);
+            lock(debugMessage)
+                spriteBatch.DrawString(fontManager.GetFont("Default"), debugMessage, Vector2.Zero, Color.White, 0f, Vector2.Zero, scale, SpriteEffects.None, 1f);
         }
     }
 }

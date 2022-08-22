@@ -1,4 +1,5 @@
-﻿using ExplorerOpenGL.Model;
+﻿using ExplorerOpenGL.Managers.Networking.NetworkObject;
+using ExplorerOpenGL.Model;
 using ExplorerOpenGL.Model.Sprites;
 using ExplorerOpenGL.View;
 using Microsoft.Xna.Framework;
@@ -38,6 +39,7 @@ namespace ExplorerOpenGL.Managers
         public MousePointer MousePointer { get; private set; }
 
         public List<Sprite> sprites { get; private set; }
+        public Dictionary<int, Sprite> NetworkObjects { get; private set; }
 
         public int Height;
         public int Width;
@@ -68,6 +70,7 @@ namespace ExplorerOpenGL.Managers
 
         private GameManager()
         {
+            NetworkObjects = new Dictionary<int, Sprite>(); 
             hasGameStateChanged = false; 
             Height = 730;
             Width = 1360;
@@ -126,6 +129,7 @@ namespace ExplorerOpenGL.Managers
                 }
             }
         }
+
 
         public void StartGame(string name, string ip = null )
         {
@@ -190,13 +194,32 @@ namespace ExplorerOpenGL.Managers
             }
         }
 
+        public void UpdateNetworkObjects(NetworkGameObject ngo)
+        {
+            lock (NetworkObjects)
+               NetworkObjects[ngo.ID].NetworkUpdate(ngo);
+        }
+
         public void AddSprite(Sprite sprite, object issuer)
         {
             if (sprite is Player && issuer is GameManager)
                 Player = sprite as Player;
-            SpriteAdded?.Invoke(sprite, issuer); 
+           
+            SpriteAdded?.Invoke(sprite, issuer);
+            sprite.SetPosition(sprite.Position);
             lock (this.sprites)
                 this.sprites.Add(sprite); 
+        }
+
+        public void AddNetworkObject(Sprite s)
+        {
+            lock (NetworkObjects)
+            {
+                if (NetworkObjects.Keys.Contains(s.ID))
+                    return; 
+                NetworkObjects.Add(s.ID, s);
+            }
+            AddSprite(s, networkManager);
         }
 
         private void OnKeyPressed(KeysArray keys)
@@ -206,7 +229,7 @@ namespace ExplorerOpenGL.Managers
             {
                 Texture2D screenshot = renderManager.RenderSceneToTexture();
 
-                Stream stream = File.Create(@"C:\Users\nicol\Desktop\image.png");
+                Stream stream = File.Create(Environment.SpecialFolder.Desktop + "\\image.png");
                 screenshot.SaveAsPng(stream, (int)Camera.Bounds.X, (int)Camera.Bounds.Y);
                 stream.Dispose();
             }
@@ -260,6 +283,37 @@ namespace ExplorerOpenGL.Managers
                 return sprites.ToArray(); 
         }
 
+        public Sprite[] GetNetworkObjects()
+        {
+            lock (NetworkObjects)
+                return NetworkObjects.Values.ToArray();
+        }
+
+        public Sprite GetNetworkObject(int id)
+        {
+            lock (NetworkObjects)
+            {
+                if (NetworkObjects.ContainsKey(id))
+                    return NetworkObjects[id];
+                return null; 
+            }
+        }
+
+        public void RemoveNetworkObjects(int id)
+        {
+            Sprite s = null;
+            lock (NetworkObjects)
+            {
+                if (NetworkObjects.ContainsKey(id))
+                {
+                    s = NetworkObjects[id];
+                    NetworkObjects.Remove(id);
+                }
+            }
+            if(s != null)
+                RemoveSprite(s); 
+        }
+
         public void ClearScene()
         {
             lock (sprites)
@@ -269,11 +323,21 @@ namespace ExplorerOpenGL.Managers
                     var sprite = this.sprites[i];
                     if (!(sprite is Terminal || sprite is MousePointer))
                     {
+                        sprites[i].Remove(); 
                         sprites.RemoveAt(i);
                         i--;
                     }
                 }
             }
+        }
+
+        public void ToMainMenu()
+        {
+            if (networkManager.IsConnectedToAServer)
+                networkManager.Disconnect();
+            ClearScene();
+            StopGame(); 
+            new MainMenu().Show();
         }
     }
 

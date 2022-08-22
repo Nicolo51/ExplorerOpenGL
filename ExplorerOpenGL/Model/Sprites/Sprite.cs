@@ -1,4 +1,6 @@
 ﻿using ExplorerOpenGL.Managers;
+using ExplorerOpenGL.Managers.Networking;
+using ExplorerOpenGL.Managers.Networking.NetworkObject;
 using ExplorerOpenGL.Model;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -15,9 +17,9 @@ namespace ExplorerOpenGL.Model.Sprites
     public class Sprite
     {
         public bool IsRemove { get; set; }
-
+        public int ID { get; set; }
         public Vector2 Position;
-        public Vector2 LastPosition; 
+        public Vector2 LastPosition;
 
         protected Texture2D _texture;
         public float Radian { get; set; }
@@ -84,6 +86,16 @@ namespace ExplorerOpenGL.Model.Sprites
             timeManager = TimeManager.Instance;
             gameManager = GameManager.Instance;
             debugManager = DebugManager.Instance; 
+        }
+
+        public virtual void NetworkUpdate(NetworkGameObject ngo)
+        {
+            if (ID != ngo.ID)
+                return; 
+            SetPosition(ngo.Position, false);
+            if (ngo.IsRemove)
+                Remove();
+            Radian = ngo.Direction;
         }
 
         public virtual void Update(Sprite[] sprites)
@@ -200,6 +212,13 @@ namespace ExplorerOpenGL.Model.Sprites
             IsRemove = true; 
         }
 
+        public void SetPosition(Vector2 newPos, bool instant = true)
+        {
+            if (instant)
+                LastPosition = newPos;
+            Position = newPos;
+        }
+
         public virtual void SetAlignOption(AlignOption ao)
         {
             if (ao == alignOption)
@@ -270,6 +289,7 @@ namespace ExplorerOpenGL.Model.Sprites
             }
         }
     }
+
     public enum AlignOption
     {
         None,

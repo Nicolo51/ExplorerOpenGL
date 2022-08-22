@@ -20,7 +20,7 @@ namespace ExplorerOpenGL.View
         {
             _texture = textureManager.CreateTexture(gameManager.Width, gameManager.Height, paint => Color.Black);
             isDraggable = false;
-            Position = Vector2.Zero;
+            SetPosition(Vector2.Zero);
 
             MainMenuButton = new Button(textureManager.OutlineText("Main Menu", "Default", Color.CornflowerBlue, Color.Black, 1), textureManager.OutlineText("Main Menu", "Default", Color.CornflowerBlue, Color.Black, 2));
             ResumeButton = new Button(textureManager.OutlineText("Resume", "Default", Color.CornflowerBlue, Color.Black, 1), textureManager.OutlineText("Resume", "Default", Color.CornflowerBlue, Color.Black, 2));
@@ -39,8 +39,7 @@ namespace ExplorerOpenGL.View
 
         private void MainMenuButton_MouseClicked(object sender, MousePointer mousePointer, Vector2 clickPosition)
         {
-            gameManager.ClearScene(); 
-            new MainMenu().Show(); 
+            gameManager.ToMainMenu(); 
             this.Close();
         }
 

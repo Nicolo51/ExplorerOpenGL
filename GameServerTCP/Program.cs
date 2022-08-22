@@ -1,5 +1,7 @@
 ﻿using GameServerTCP.GameData;
+using SharedClasses;
 using System;
+using System.Collections.Generic;
 using System.Threading;
 
 namespace GameServerTCP
@@ -17,6 +19,12 @@ namespace GameServerTCP
                 string commande = query[0];
                 switch (commande.ToLower().Trim())
                 {
+                    case "fire":
+                        ServerSend.UpdateGameObject();
+                        break;
+                    case "move":
+                        Vector2 pos = new Vector2(Int32.Parse(query[2]), Int32.Parse(query[3]));
+                        break; 
                     case "udp":
                         int udpid = Int32.Parse(query[1]);
                         string udpmsg = query[2]; 
@@ -51,6 +59,15 @@ namespace GameServerTCP
                             ServerSend.SendTcpDataToAll(packet);
                         }
                         break;
+                    case "show":
+                        var players = Game.GetPlayers();
+                        
+                        foreach (var p in players)
+                        {
+                            var player = Game.GetPlayer(p.ID); 
+                            Console.WriteLine($"{p.ID} : {p.Name}");
+                        }
+                        break; 
                 }
             }
         }
