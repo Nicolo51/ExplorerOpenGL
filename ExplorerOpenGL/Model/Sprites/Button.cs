@@ -94,7 +94,7 @@ namespace ExplorerOpenGL.Model.Sprites
         {
 
         }
-        public override void Draw(SpriteBatch spriteBatch, float lerpAmount = 1)
+        public override void Draw(SpriteBatch spriteBatch,  GameTime gameTime, float lerpAmount = 1)
         {
             if(isMouseOver)
                 spriteBatch.Draw(mouseOverTexture, Position, null, Color.White * Opacity * (isClicked ? .5f : 1f), Radian, originMouseOver, scale, Effects, layerDepth);

@@ -9,17 +9,10 @@ namespace ExplorerOpenGL.Managers.Networking.EventArgs
 {
     public class NetworkEventArgs
     {
-        public RequestType RequestType { get; set; }
         public Protocol Protocol { get; set; }
         public MessageType MessageType { get; set; }
         public string Message { get; set; }
         public Packet Packet { get; set; }
-    }
-
-    public enum RequestType : int
-    {
-        Send = 0, 
-        Receive =1, 
     }
 
     public enum MessageType : int 

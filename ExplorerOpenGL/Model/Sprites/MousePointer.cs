@@ -73,10 +73,10 @@ namespace ExplorerOpenGL.Model.Sprites
             InGamePosition = new Vector2((gameManager.Camera.Position.X - gameManager.Camera.Bounds.X / 2 + currentMouseState.Position.X), (gameManager.Camera.Position.Y - gameManager.Camera.Bounds.Y / 2 + currentMouseState.Position.Y)); 
 
         }
-        public override void Draw(SpriteBatch spriteBatch, float lerpAmount)
+        public override void Draw(SpriteBatch spriteBatch, GameTime gameTime, float lerpAmount)
         {
             //spriteBatch.Draw(_texture, Position, SourceRectangle, Color.White * Opacity, Radian, origin, scale, Effects, layerDepth);
-            base.Draw(spriteBatch, lerpAmount);
+            base.Draw(spriteBatch, gameTime, lerpAmount);
         }
 
         public override string ToString()

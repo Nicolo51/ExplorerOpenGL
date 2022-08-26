@@ -39,7 +39,8 @@ namespace ExplorerOpenGL.View
 
         private void MainMenuButton_MouseClicked(object sender, MousePointer mousePointer, Vector2 clickPosition)
         {
-            gameManager.ToMainMenu(); 
+            gameManager.ToMainMenu();
+            gameManager.Terminal.EnableMouseOver();
             this.Close();
         }
 
@@ -53,12 +54,16 @@ namespace ExplorerOpenGL.View
                 s.IsRemove = false;
             }
             gameManager.ChangeGameState(GameState.Pause);
+            gameManager.Terminal.DisableMouseOver(); 
             base.Show();
         }
         public override void Close()
         {
             if (gameManager.GameState == GameState.Pause)
-                gameManager.ChangeToLastGameState(); 
+            {
+                gameManager.ChangeToLastGameState();
+                gameManager.Terminal.EnableMouseOver();
+            }
             base.Close();
         }
     }

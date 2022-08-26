@@ -174,6 +174,16 @@ namespace ExplorerOpenGL.Model.Sprites
             AddMessageToTerminal(message, "System", Color.White);
         }
 
+        public void DisableMouseOver()
+        {
+            terminalTexintput.DisableMouseOver();
+        }
+
+        public void EnableMouseOver()
+        {
+            terminalTexintput.EnableMouseOver();
+        }
+
         public override void Update(Sprite[] sprites)
         {
             for(int i = 0; i < messages.Count; i++)
@@ -206,14 +216,14 @@ namespace ExplorerOpenGL.Model.Sprites
             }
         }
 
-        public override void Draw(SpriteBatch spriteBatch, float lerpAmount)
+        public override void Draw(SpriteBatch spriteBatch, GameTime gameTime, float lerpAmount)
         {
             for (int i = messages.Count - 1; i >= 0; i--)
             {
                 spriteBatch.Draw(_texture, new Vector2(Position.X, Position.Y + height - ((messages.Count - 1 - i) * 30)), null, Color.White * messages[i].Opacity, 0f, new Vector2(0, 30), 1f ,  SpriteEffects.None, layerDepth - .01f);
                 spriteBatch.DrawString(font, messages[i].ToString(), new Vector2(Position.X, Position.Y + height - ((messages.Count - 1 - i) *25)), messages[i].Color * messages[i].Opacity * 2, 0f, new Vector2(0, 30), 1f, SpriteEffects.None, layerDepth - .02f);
             }
-            terminalTexintput.Draw(spriteBatch, lerpAmount);
+            terminalTexintput.Draw(spriteBatch, gameTime, lerpAmount);
         }
         
         public void OnTextinputValidation(string s, TextinputBox t)

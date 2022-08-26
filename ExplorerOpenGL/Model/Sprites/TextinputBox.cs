@@ -23,7 +23,7 @@ namespace ExplorerOpenGL.Model.Sprites
         private Vector2 cursorPosition;
         private int cursorOpacity;
         private float cursorTimer;
-
+        private bool TriggerMouseOver; 
         public int width { get { return _texture.Width; } }
 
         public bool IsFocused { get; private set; }
@@ -38,9 +38,7 @@ namespace ExplorerOpenGL.Model.Sprites
         public TextinputBox(Texture2D texture, SpriteFont SpriteFont,  bool eraseWhenUnfocused = false, bool makeItTransparentUnfocused = false)
             : base(texture)
         {
-            MouseOvered += OnMouseOver;
-            MouseLeft += OnMouseLeft;
-            MouseClicked += OnMouseClick;
+            TriggerMouseOver = true; 
             DoEraseWhenUnfocused = eraseWhenUnfocused;
             MakeItTransparentWhenUnfocused = makeItTransparentUnfocused;
             cursorIndex = 0;
@@ -204,30 +202,49 @@ namespace ExplorerOpenGL.Model.Sprites
                 indexEndDrawing--;
         }
 
-        public override void Draw(SpriteBatch spriteBatch, float lerpAmount)
+        public override void Draw(SpriteBatch spriteBatch, GameTime gameTime, float lerpAmount)
         {
-            base.Draw(spriteBatch, lerpAmount);
+            base.Draw(spriteBatch, gameTime, lerpAmount);
             spriteBatch.DrawString(spriteFont, "|", cursorPosition - origin, Color.White, 0f, Vector2.Zero, cursorOpacity, SpriteEffects.None, layerDepth - .01f);
             spriteBatch.DrawString(spriteFont, inputText.ToString().Substring(indexStartDrawing, indexEndDrawing), Position - origin, Color.White, 0f, Vector2.Zero, 1f, SpriteEffects.None, layerDepth - .01f);
         }
 
-        public void OnMouseClick(object sender, MousePointer mousePointer, Vector2 clickPosition)
+        public override void OnMouseClick(Sprite[] sprites, Vector2 clickPosition, MousePointer mousePointer)
         {
+            if (gameManager.GameState == GameState.Pause)
+                return;
             if (IsFocused)
             {
                 SetCursor(clickPosition);
                 return;
             }
             Focus();
+            base.OnMouseClick(sprites, clickPosition, mousePointer);
         }
 
-        private void OnMouseOver(object sender, MousePointer mousePointer)
+        public override void OnMouseOver(Sprite[] sprites, MousePointer mousePointer)
         {
+            if (!TriggerMouseOver)
+                return; 
             mousePointer.SetCursorIcon(MousePointerType.Text);
+            base.OnMouseOver(sprites, mousePointer); 
         }
-        private void OnMouseLeft(object sender, MousePointer mousePointer)
+        
+        public override void OnMouseLeave(Sprite[] sprites, MousePointer mousePointer)
         {
             mousePointer.SetCursorIcon(MousePointerType.Default);
+            base.OnMouseLeave(sprites, mousePointer);
+
+        }
+
+        public void DisableMouseOver()
+        {
+            TriggerMouseOver = false; 
+        }
+
+        public void EnableMouseOver()
+        {
+            TriggerMouseOver = true;
         }
 
         public string Validate(bool unFocus = true)
@@ -309,7 +326,9 @@ namespace ExplorerOpenGL.Model.Sprites
         }
         public void Focus()
         {
+            
             keyboardManager.FocusTextinput(this);
+            gameManager.ChangeGameState(GameState.Typing);
             IsFocused = true;
             Opacity = 1f;
         }

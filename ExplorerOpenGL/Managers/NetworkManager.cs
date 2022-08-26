@@ -30,8 +30,8 @@ namespace ExplorerOpenGL.Managers
         private string playerNameOnConnection;
         private GameTime gameTime;
 
-        delegate void ServerRequestHandler(Packet packet);
-        private Dictionary<ServerRequestTypes, ServerRequestHandler> requestHandler; 
+        delegate void RequestHandler(Packet packet);
+        private Dictionary<RequestTypes, RequestHandler> requestHandler; 
 
         double elapsedTimeSinceLastUpdatePlayer;
         double lastUpdate; 
@@ -57,13 +57,13 @@ namespace ExplorerOpenGL.Managers
             clock = 0d;
             port = 25789;
             DoOnce = false;
-            requestHandler = new Dictionary<ServerRequestTypes, ServerRequestHandler>() 
+            requestHandler = new Dictionary<RequestTypes, RequestHandler>() 
             {
-                {ServerRequestTypes.DeleteObject, DeleteObject },
-                {ServerRequestTypes.MoveObject, MoveObject },
-                {ServerRequestTypes.CreateObject, CreateObject },
-                {ServerRequestTypes.MovePlayer, MovePlayer },
-                {ServerRequestTypes.ModifyPlayerHealth, ModifyPlayerHealth },
+                {RequestTypes.DeleteObject, DeleteObject },
+                {RequestTypes.MoveObject, MoveObject },
+                {RequestTypes.CreateObject, CreateObject },
+                {RequestTypes.MovePlayer, MovePlayer },
+                {RequestTypes.ModifyPlayerHealth, ModifyPlayerHealth },
             }; 
         }
 
@@ -203,8 +203,8 @@ namespace ExplorerOpenGL.Managers
                         gameManager.AddNetworkObject(bullet);
                     }
                     break;
-                case ServerRequestEventArgs srea:
-                    requestHandler[srea.ServerRequestType](srea.Packet);
+                case RequestEventArgs srea:
+                    requestHandler[srea.RequestType](srea.Packet);
                     break; 
                 default:
                     if (e.MessageType == MessageType.OnUdpTestReceive)

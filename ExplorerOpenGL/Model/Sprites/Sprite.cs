@@ -22,8 +22,10 @@ namespace ExplorerOpenGL.Model.Sprites
         public Vector2 LastPosition;
 
         protected Texture2D _texture;
+        protected Animation _animation; 
         public float Radian { get; set; }
         public Rectangle SourceRectangle { get; set; }
+        private Rectangle sourceReactangle { get; set; }
         public virtual Rectangle HitBox { get {
                 if (_texture != null && SourceRectangle != null) return new Rectangle((int)Position.X - (int)origin.X, (int)Position.Y - (int)origin.Y, (int)(SourceRectangle.Width * scale), (int)(SourceRectangle.Height * scale));
                 else return new Rectangle((int)Position.X, (int)Position.Y, 1, 1); 
@@ -73,6 +75,23 @@ namespace ExplorerOpenGL.Model.Sprites
             IsDisplayed = true; 
         }
 
+        public Sprite(Animation animation) 
+        {
+            SetTexture(animation.Texture);
+            _animation = animation;  
+            alignOption = AlignOption.None;
+            isDraggable = false;
+            IsDisplayed = true;
+            IsHUD = false;
+            scale = 1;
+            Opacity = 1f;
+            layerDepth = 1f;
+            timeManager = TimeManager.Instance;
+            gameManager = GameManager.Instance;
+            debugManager = DebugManager.Instance;
+
+        }
+
         public Sprite(Texture2D texture)
         {
             SetTexture(texture);
@@ -119,7 +138,7 @@ namespace ExplorerOpenGL.Model.Sprites
             if (!this.IsHUD && (this.HitBox.Intersects(new Rectangle((int)gameManager.MousePointer.InGamePosition.X, (int)gameManager.MousePointer.InGamePosition.Y, 1, 1)) || isDragged))
             {
                 if (!isOver)
-                    OnMouseOver(sprites);
+                    OnMouseOver(sprites, mousePointer);
 
                 isOver = true;
                 if ((gameManager.MousePointer.currentMouseState.LeftButton == ButtonState.Pressed && gameManager.MousePointer.prevMouseState.LeftButton == ButtonState.Released) || isClicked)
@@ -129,7 +148,7 @@ namespace ExplorerOpenGL.Model.Sprites
                     isClicked = true;
                     if (gameManager.MousePointer.currentMouseState.LeftButton == ButtonState.Released && !isDragged)
                     {
-                        OnMouseClick(sprites, ClickPosition);
+                        OnMouseClick(sprites, ClickPosition, mousePointer);
                         isDragged = false;
                     }
                 }
@@ -159,7 +178,7 @@ namespace ExplorerOpenGL.Model.Sprites
             else if (this.IsHUD && (gameManager.MousePointer.HitBox.Intersects(this.HitBox) || isDragged))
             {
                 if (!isOver)
-                    OnMouseOver(sprites);
+                    OnMouseOver(sprites, mousePointer);
 
                 isOver = true;
                 if ((gameManager.MousePointer.currentMouseState.LeftButton == ButtonState.Pressed && gameManager.MousePointer.prevMouseState.LeftButton == ButtonState.Released) || isClicked)
@@ -169,7 +188,7 @@ namespace ExplorerOpenGL.Model.Sprites
                     isClicked = true;
                     if (gameManager.MousePointer.currentMouseState.LeftButton == ButtonState.Released && !isDragged)
                     {
-                        OnMouseClick(sprites, ClickPosition);
+                        OnMouseClick(sprites, ClickPosition, mousePointer);
                         isDragged = false;
                     }
                 }
@@ -201,7 +220,7 @@ namespace ExplorerOpenGL.Model.Sprites
                 if (isOver && !isDragged)
                 {
                     isClicked = false;
-                    OnMouseLeave(sprites);
+                    OnMouseLeave(sprites, mousePointer);
                     isOver = false;
                 }
             }
@@ -263,25 +282,27 @@ namespace ExplorerOpenGL.Model.Sprites
             origin += pad;
         }
 
-        private void OnMouseOver(Sprite[] sprites)
+        public virtual void OnMouseOver(Sprite[] sprites, MousePointer mousePointer)
         {
             MouseOvered?.Invoke(this, gameManager.MousePointer);
         }
 
-        private void OnMouseLeave(Sprite[] sprites)
+        public virtual void OnMouseLeave(Sprite[] sprites, MousePointer mousePointer)
         {
             MouseLeft?.Invoke(this, gameManager.MousePointer);
         }
 
-        private void OnMouseClick(Sprite[] sprites, Vector2 clickPosition)
+        public virtual void OnMouseClick(Sprite[] sprites, Vector2 clickPosition, MousePointer mousePointer)
         {
             MouseClicked?.Invoke(this, gameManager.MousePointer, clickPosition);
         }
 
-        public virtual void Draw(SpriteBatch spriteBatch, float lerpAmount)
+        public virtual void Draw(SpriteBatch spriteBatch,  GameTime gameTime, float lerpAmount)
         {
             if (_texture != null && IsDisplayed)
             {
+                if(_animation != null)
+                    SourceRectangle = _animation.GetRectangle(gameTime); 
                 if(this is MessageBox)
                     spriteBatch.Draw(_texture, Position , SourceRectangle, Color.White * Opacity * (isClicked && IsClickable ? .5f : 1f), Radian, origin, scale, Effects, layerDepth);
                 else

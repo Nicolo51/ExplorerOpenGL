@@ -19,7 +19,7 @@ namespace SharedClasses
         DisconnectPlayer = 10, 
         UpdateGameObject = 11, 
         Sync = 12,
-        ServerRequest =13, 
+        ServerRequest = 13, 
 
     }
 
@@ -35,6 +35,7 @@ namespace SharedClasses
         CreateBullet = 7,
         UpdateGameObject = 8,
         Disconnect = 9,
+        ClientRequest = 13, 
     }
 
     public class Packet : IDisposable

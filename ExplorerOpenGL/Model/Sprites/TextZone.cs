@@ -33,7 +33,7 @@ namespace ExplorerOpenGL.Model.Sprites
             base.Update(sprites);
         }
 
-        public override void Draw(SpriteBatch spriteBatch, float lerpAmount = 1)
+        public override void Draw(SpriteBatch spriteBatch, GameTime gameTime, float lerpAmount = 1)
         {
             spriteBatch.DrawString(Font, Text, Position, Color, Radian, origin, scale, Effects, layerDepth); 
         }

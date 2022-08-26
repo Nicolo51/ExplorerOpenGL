@@ -89,7 +89,6 @@ namespace ExplorerOpenGL
         protected override void LoadContent()
         {
             
-            
             //Player Player = new Player(player, playerfeet, Manager.MousePointer, "Nicolas", Manager.TextureManager)
             //{
             //    Position = new Vector2(0, 0),
@@ -212,7 +211,7 @@ namespace ExplorerOpenGL
                     if (lockAcquired)
                     {
                         if (!sprites[i].IsHUD)
-                            sprites[i].Draw(spriteBatch, la);
+                            sprites[i].Draw(spriteBatch, gameTime, la);
                     }
                     else
                         debugManager.AddEvent("Draw skipped" + i);
@@ -237,7 +236,7 @@ namespace ExplorerOpenGL
                     if (lockAcquired)
                     {
                         if (sprites[i].IsHUD)
-                            sprites[i].Draw(spriteBatch, la);
+                            sprites[i].Draw(spriteBatch, gameTime, la);
                     }
                     else
                         debugManager.AddEvent("Draw skipped" + i);

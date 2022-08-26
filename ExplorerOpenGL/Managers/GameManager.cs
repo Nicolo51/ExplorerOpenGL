@@ -30,7 +30,9 @@ namespace ExplorerOpenGL.Managers
         private NetworkManager networkManager;
         private FontManager fontManager;
         private ScripterManager scripterManager;
-        private PauseMenu pauseMenu; 
+        private PauseMenu pauseMenu;
+
+        public bool IsOnline { get { return networkManager.IsConnectedToAServer; } }
 
         private bool isGameStarted;  
         public Player Player { get; set; }
@@ -146,6 +148,8 @@ namespace ExplorerOpenGL.Managers
                     Right = Keys.D,
                 }
             };
+            var wall = new Wall(new Animation(textureManager.LoadTexture("animTest"), 8, 500));
+            AddSprite(wall, this);
             if(!string.IsNullOrWhiteSpace(ip))
             {
                 if(!networkManager.Connect(ip, name))

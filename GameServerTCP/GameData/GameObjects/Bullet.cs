@@ -14,15 +14,15 @@ namespace GameServerTCP.GameData.GameObjects
         private Vector2 initialPosition; 
         public Bullet(Vector2 position)
         {
-            Velocity = 4;
+            Velocity = 300;
             Position = position;
             initialPosition = position; 
-            Range = 400; 
+            Range = 1200; 
         }
 
         public override void Update(TimeSpan lastUpdate, Player[] players, GameObject[] gameObjects)
         {
-            Position += new Vector2(Direction) * 10;
+            Position += (new Vector2(Direction) * 25);
             if(Vector2.Distance(initialPosition, Position) > Range)
             {
                 Remove(); 

@@ -14,5 +14,22 @@ namespace ExplorerOpenGL.Model.Sprites
         {
             _texture = texture;
         }
+
+        public Wall(Animation animation)
+            :base(animation)
+        {
+            isDraggable = true;
+        }
+
+        public override void OnMouseOver(Sprite[] sprites, MousePointer mousePointer)
+        {
+            debugManager.AddEvent("over wall"); 
+            base.OnMouseOver(sprites, mousePointer);
+        }
+        public override void OnMouseLeave(Sprite[] sprites, MousePointer mousePointer)
+        {
+            debugManager.AddEvent("leave wall");
+            base.OnMouseOver(sprites, mousePointer);
+        }
     }
 }

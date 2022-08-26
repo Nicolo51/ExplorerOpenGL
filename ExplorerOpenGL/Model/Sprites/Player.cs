@@ -30,7 +30,8 @@ namespace ExplorerOpenGL.Model.Sprites
         private TextureManager textureManager;
         private KeyboardManager keyboardManager;
         private NetworkManager networkManager;
-        private MouseManager mouseManager; 
+        private MouseManager mouseManager;
+        private SpriteFont font;
 
         public Player(Texture2D texture, Texture2D playerFeetTexture, string name)
             : base(texture)
@@ -49,13 +50,14 @@ namespace ExplorerOpenGL.Model.Sprites
             Health = 100;
             keyboardManager = KeyboardManager.Instance;
             networkManager = NetworkManager.Instance;
-
+            font = FontManager.Instance.GetFont();
             mouseManager.LeftClicked += FireBullet;
+            isDraggable = true; 
         }
 
         private void FireBullet(ButtonState buttonState)
         {
-            if (!networkManager.IsConnectedToAServer || buttonState == ButtonState.Released)
+            if (!networkManager.IsConnectedToAServer || buttonState == ButtonState.Released && (gameManager.GameState == GameState.OnlinePlaying || gameManager.GameState == GameState.Playing))
                 return;
             networkManager.CreateBullet(this); 
         }
@@ -150,11 +152,12 @@ namespace ExplorerOpenGL.Model.Sprites
             base.SetPosition(newPos, instant);
         }
 
-        public override void Draw(SpriteBatch spriteBatch, float lerpAmount)
+        public override void Draw(SpriteBatch spriteBatch, GameTime gameTime, float lerpAmount)
         {
-            playerFeet.Draw(spriteBatch, lerpAmount);
-            spriteBatch.Draw(TextureName, PositionName , null, Color.White, 0f, OriginName, .75f, SpriteEffects.None, layerDepth); 
-            base.Draw(spriteBatch, lerpAmount);
+            playerFeet.Draw(spriteBatch, gameTime, lerpAmount);
+            spriteBatch.Draw(TextureName, PositionName , null, Color.White, 0f, OriginName, .75f, SpriteEffects.None, layerDepth);
+            spriteBatch.DrawString(font, Health.ToString("#"), Position - new Vector2(0,50), Color.White, 0f, font.MeasureString(Health.ToString("#")) / 2, 1f, SpriteEffects.None, layerDepth);
+            base.Draw(spriteBatch, gameTime, lerpAmount);
         }
 
         private bool IsTouchingLeft(Sprite sprite)

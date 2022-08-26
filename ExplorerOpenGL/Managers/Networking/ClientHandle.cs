@@ -36,7 +36,7 @@ namespace ExplorerOpenGL.Managers.Networking
             PlayerData playerData = new PlayerData(id);
             client.PlayersData.Add(id, playerData); 
 
-            NetworkEventArgs e = new WelcomeEventArgs() { Message = msg + $".", MessageType = MessageType.OnWelcomeReceive, Protocol = Protocol.TCP, RequestType = RequestType.Receive, ID = id, PlayerData = playerData, TickRate = tickRate};
+            NetworkEventArgs e = new WelcomeEventArgs() { Message = msg + $".", MessageType = MessageType.OnWelcomeReceive, Protocol = Protocol.TCP,  ID = id, PlayerData = playerData, TickRate = tickRate};
             client.PacketReceived(e); 
         }
 
@@ -46,7 +46,7 @@ namespace ExplorerOpenGL.Managers.Networking
 
             clientSend.SendUDPTest();
 
-            NetworkEventArgs e = new NetworkEventArgs() { Message = msg + $".", MessageType = MessageType.OnUdpTestReceive, Protocol = Protocol.UDP, RequestType = RequestType.Receive };
+            NetworkEventArgs e = new NetworkEventArgs() { Message = msg + $".", MessageType = MessageType.OnUdpTestReceive, Protocol = Protocol.UDP  };
             client.PacketReceived(e);
         }
 
@@ -54,7 +54,7 @@ namespace ExplorerOpenGL.Managers.Networking
         {
             string msg = packet.ReadString();
 
-            NetworkEventArgs e = new NetworkEventArgs() { Message = msg + $".", MessageType = MessageType.OnTcpMessage, Protocol = Protocol.TCP, RequestType = RequestType.Receive, Packet = packet };
+            NetworkEventArgs e = new NetworkEventArgs() { Message = msg + $".", MessageType = MessageType.OnTcpMessage, Protocol = Protocol.TCP,  Packet = packet };
             client.PacketReceived(e);
         } 
         public void OnUdpMessage(Packet _packet)
@@ -84,7 +84,6 @@ namespace ExplorerOpenGL.Managers.Networking
                 PlayerData = playerData,
                 PlayerSyncedCount = count,
                 Protocol = Protocol.TCP,
-                RequestType = RequestType.Receive,
                 Packet = packet, 
             };
             client.PacketReceived(e); 
@@ -100,7 +99,6 @@ namespace ExplorerOpenGL.Managers.Networking
                 ID = idPlayer, 
                 Name = playerName, 
                 Protocol = Protocol.TCP,
-                RequestType = RequestType.Receive,
                 Packet = packet,
             };
             client.PacketReceived(e); 
@@ -108,15 +106,14 @@ namespace ExplorerOpenGL.Managers.Networking
 
         public void OnServerRequest(Packet packet)
         {
-            ServerRequestTypes type = (ServerRequestTypes)packet.ReadInt();
-            ServerRequestEventArgs e = new ServerRequestEventArgs()
+            RequestTypes type = (RequestTypes)packet.ReadInt();
+            RequestEventArgs e = new RequestEventArgs()
             {
                 Message = string.Empty,
                 MessageType = MessageType.OnChatMessage,
                 Protocol = Protocol.TCP,
-                RequestType = RequestType.Receive,
                 Packet = packet,
-                ServerRequestType = type,
+                RequestType = type,
 
             };
             client.PacketReceived(e);
@@ -134,7 +131,6 @@ namespace ExplorerOpenGL.Managers.Networking
                 Time = DateTime.Now,
                 MessageType = MessageType.OnChatMessage,
                 Protocol = Protocol.TCP,
-                RequestType = RequestType.Receive,
                 SenderColor = Color.White,
                 TextColor = Color.White, 
                 Text = msg, 
@@ -157,7 +153,6 @@ namespace ExplorerOpenGL.Managers.Networking
                     MessageType = MessageType.OnChangeNameResult,
                     Packet = packet,
                     Protocol = Protocol.TCP,
-                    RequestType = RequestType.Receive,
                     IDPlayer = IDClient, 
                     Name = name,
                 };
@@ -172,7 +167,6 @@ namespace ExplorerOpenGL.Managers.Networking
                     Packet = packet,
                     Protocol = Protocol.TCP,
                     RequestStatus = RequestStatus.Failed,
-                    RequestType = RequestType.Receive,
                     Request = "ChangeName",
                     Response = "403",
                     Arguments = new string[] { name },
@@ -206,7 +200,6 @@ namespace ExplorerOpenGL.Managers.Networking
                     Name = name, 
                     ID = idPlayer, 
                     Protocol = Protocol.TCP,
-                    RequestType = RequestType.Receive,
                 };
                 client.PacketReceived(e);
             }
@@ -239,7 +232,6 @@ namespace ExplorerOpenGL.Managers.Networking
                 Packet = packet,
                 Protocol = Protocol.UDP,
                 PlayerData = playerData.ToArray(),
-                RequestType = RequestType.Receive,
             };
             client.PacketReceived(e); 
         }
@@ -266,7 +258,6 @@ namespace ExplorerOpenGL.Managers.Networking
                 Packet = packet,
                 Protocol = Protocol.UDP,
                 networkGameObjects = gameObjectData.ToArray(), 
-                RequestType = RequestType.Receive,
             };
             client.PacketReceived(e); 
         }

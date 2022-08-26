@@ -7,10 +7,10 @@ using System.Threading.Tasks;
 
 namespace ExplorerOpenGL.Managers.Networking.EventArgs
 {
-    public class ServerRequestEventArgs : NetworkEventArgs
+    public class RequestEventArgs : NetworkEventArgs
     {
-        public ServerRequestTypes ServerRequestType { get; set; }
-        public ServerRequestEventArgs()
+        public RequestTypes RequestType { get; set; }
+        public RequestEventArgs()
         {
             
         }

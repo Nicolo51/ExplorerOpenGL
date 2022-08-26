@@ -4,7 +4,7 @@ using System.Text;
 
 namespace SharedClasses
 {
-    public enum ServerRequestTypes : int
+    public enum RequestTypes : int
     {
         MoveObject = 1, 
         DeleteObject = 2, 

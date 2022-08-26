@@ -42,7 +42,7 @@ namespace ExplorerOpenGL.Managers
             InitFonts(); 
         }
 
-        public SpriteFont GetFont(string font)
+        public SpriteFont GetFont(string font = "default")
         {
             string fontTL = font.ToLower().Trim();
             if (loadedFonts.ContainsKey(fontTL))

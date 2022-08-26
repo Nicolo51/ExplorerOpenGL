@@ -50,7 +50,7 @@ namespace GameServerTCP
         {
             using(Packet packet = new Packet((int)ServerPackets.ServerRequest))
             {
-                packet.Write((int)ServerRequestTypes.ModifyPlayerHealth);
+                packet.Write((int)RequestTypes.ModifyPlayerHealth);
                 packet.Write(health);
                 SendTcpData(toClient, packet);
             }
@@ -60,7 +60,7 @@ namespace GameServerTCP
         {
             using (Packet packet = new Packet((int)ServerPackets.ServerRequest))
             {
-                packet.Write((int)ServerRequestTypes.MovePlayer);
+                packet.Write((int)RequestTypes.MovePlayer);
                 packet.Write(pos.X);
                 packet.Write(pos.Y);
                 SendTcpData(toClient, packet);

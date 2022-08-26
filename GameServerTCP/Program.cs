@@ -10,6 +10,7 @@ namespace GameServerTCP
     {
         static void Main(string[] args)
         {
+            Console.WriteLine(3%0.3);
             Game.Start(); 
             GameServer.Start(25789);
             string input; 

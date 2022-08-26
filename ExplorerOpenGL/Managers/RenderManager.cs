@@ -71,7 +71,7 @@ namespace ExplorerOpenGL.Managers
 
             for(int i = 0; i < _sprites.Count; i++)
             {
-                _sprites[i].Draw(spriteBatch, 1); 
+                _sprites[i].Draw(spriteBatch, new GameTime(), 1); 
             }
 
             spriteBatch.End();

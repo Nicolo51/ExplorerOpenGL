@@ -100,9 +100,9 @@ namespace ExplorerOpenGL.Model.Sprites
                 this.AddChildSprite(new TextZone(Title, fontManager.GetFont("Default"), Color.White, AlignOption.TopLeft), new Vector2(2, 2));
         }
 
-        public override void Draw(SpriteBatch spriteBatch, float lerpAmount )
+        public override void Draw(SpriteBatch spriteBatch,  GameTime gameTime, float lerpAmount)
         {
-            base.Draw(spriteBatch, lerpAmount);
+            base.Draw(spriteBatch, gameTime, lerpAmount);
             if(borderTexture  != null)
                 spriteBatch.Draw(borderTexture, Position, null, Color.White * Opacity * (isClicked && IsClickable ? .5f : 1f), Radian, origin, scale, Effects, layerDepth+0.1f);
         }

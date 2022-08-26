@@ -20,6 +20,7 @@ namespace ExplorerOpenGL.Managers
         public TimeSpan ElapsedDraw { get { return DateTime.Now - LastDrawTime; } }
         public TimeSpan ElapsedDrawUpdate { get { return DateTime.Now - LastDrawUpdateTime; } }
         public TimeSpan ElapsedBetweenUpdates { get; private set; }
+        public TimeSpan TotalTime { get { return DateTime.Now - StartedTime;  } }
         public float LerpAmount { get { float la = (float)((LastDrawTime - LastUpdateTime).TotalMilliseconds / TickRate); return(la < 0)?  0: la; } }
 
         Thread UpdateThread;
