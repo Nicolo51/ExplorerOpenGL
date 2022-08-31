@@ -15,10 +15,11 @@ namespace ExplorerOpenGL.Model.Sprites
             _texture = texture;
         }
 
-        public Wall(Animation animation)
-            :base(animation)
+        public Wall(params Animation[] animations)
+            :base(animations)
         {
             isDraggable = true;
+            _animation.Play("run"); 
         }
 
         public override void OnMouseOver(Sprite[] sprites, MousePointer mousePointer)

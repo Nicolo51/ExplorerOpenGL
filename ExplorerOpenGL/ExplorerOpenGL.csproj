@@ -68,6 +68,7 @@
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="Managers\AnimationManager.cs" />
     <Compile Include="Managers\FontManager.cs" />
     <Compile Include="Managers\GameManager.cs" />
     <Compile Include="Managers\DebugManager.cs" />

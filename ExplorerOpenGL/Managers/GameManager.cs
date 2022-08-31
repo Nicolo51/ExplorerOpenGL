@@ -148,7 +148,11 @@ namespace ExplorerOpenGL.Managers
                     Right = Keys.D,
                 }
             };
-            var wall = new Wall(new Animation(textureManager.LoadTexture("animTest"), 8, 500));
+            Animation animation1 = new Animation(textureManager.LoadTexture("animTest"), 8, 500, "run", false, "runblue");
+            Animation animation2 = new Animation(textureManager.LoadTexture("animTest2"), 8, 500, "runblue",false, "run");
+            animation1.AddAfter("run");
+            animation2.AddAfter("runblue"); 
+            var wall = new Wall(animation1, animation2);
             AddSprite(wall, this);
             if(!string.IsNullOrWhiteSpace(ip))
             {

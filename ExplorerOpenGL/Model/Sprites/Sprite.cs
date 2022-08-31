@@ -22,26 +22,30 @@ namespace ExplorerOpenGL.Model.Sprites
         public Vector2 LastPosition;
 
         protected Texture2D _texture;
-        protected Animation _animation; 
+        protected AnimationManager _animation;
         public float Radian { get; set; }
         public Rectangle SourceRectangle { get; set; }
-        private Rectangle sourceReactangle { get; set; }
         public virtual Rectangle HitBox { get {
                 if (_texture != null && SourceRectangle != null) return new Rectangle((int)Position.X - (int)origin.X, (int)Position.Y - (int)origin.Y, (int)(SourceRectangle.Width * scale), (int)(SourceRectangle.Height * scale));
-                else return new Rectangle((int)Position.X, (int)Position.Y, 1, 1); 
+                else return new Rectangle((int)Position.X, (int)Position.Y, 1, 1);
             } }
         public Vector2 origin;
         protected AlignOption alignOption;
         public Rectangle Bounds { get { if (_texture != null) return _texture.Bounds; return Rectangle.Empty; } }
         public SpriteEffects Effects { get; set; }
-        public float  layerDepth { get; set; }
+        public float layerDepth { get; set; }
         protected float scale { get; set; }
         public float Opacity { get; set; }
-        public bool IsHUD { get; set; }
 
+        public bool IsHUD { get; set; }
         public bool IsDisplayed { get; set; }
         public bool IsClickable { get; set; }
-        public  bool isDraggable { get; set; }
+        public bool isDraggable { get; set; }
+
+        protected bool isClicked;
+        protected bool isOver;
+        protected bool isDragged;
+
 
         public delegate void MouseOverEventHandler(object sender, MousePointer mousePointer);
         public event MouseOverEventHandler MouseOvered;
@@ -49,36 +53,33 @@ namespace ExplorerOpenGL.Model.Sprites
         public delegate void MouseLeaveEventHandler(object sender, MousePointer mousePointer);
         public event MouseLeaveEventHandler MouseLeft;
 
-        public delegate void MouseClickEventHandler(object sender, MousePointer mousePointer,  Vector2 clickPosition);
+        public delegate void MouseClickEventHandler(object sender, MousePointer mousePointer, Vector2 clickPosition);
         public event MouseClickEventHandler MouseClicked;
 
         protected GameManager gameManager;
         protected TimeManager timeManager;
         protected DebugManager debugManager;
 
-        protected bool isClicked;
-        private bool isOver; 
-        private bool isDragged;
-        Vector2 ClickPosition; 
-
+        Vector2 ClickPosition;
 
         public Sprite()
         {
             alignOption = AlignOption.None;
             isDraggable = false;
-            IsHUD = false; 
+            IsHUD = false;
             scale = 1;
             Opacity = 1f;
             layerDepth = 1f;
             gameManager = GameManager.Instance;
             timeManager = TimeManager.Instance;
-            IsDisplayed = true; 
+            IsDisplayed = true;
         }
 
-        public Sprite(Animation animation) 
+        public Sprite(params Animation[] animations) 
         {
-            SetTexture(animation.Texture);
-            _animation = animation;  
+            _animation = new AnimationManager();
+            foreach (var a in animations)
+                _animation.Add(a.Name, a); 
             alignOption = AlignOption.None;
             isDraggable = false;
             IsDisplayed = true;
@@ -122,7 +123,7 @@ namespace ExplorerOpenGL.Model.Sprites
             if (!IsDisplayed)
                 return; 
             LastPosition = Position; 
-            if (IsClickable || isDraggable)
+             if (IsClickable || isDraggable)
                 CheckMouseEvent(sprites);
         }
 
@@ -299,19 +300,19 @@ namespace ExplorerOpenGL.Model.Sprites
 
         public virtual void Draw(SpriteBatch spriteBatch,  GameTime gameTime, float lerpAmount)
         {
-            if (_texture != null && IsDisplayed)
+            if ((_texture != null || _animation != null) && IsDisplayed)
             {
                 if(_animation != null)
                     SourceRectangle = _animation.GetRectangle(gameTime); 
                 if(this is MessageBox)
                     spriteBatch.Draw(_texture, Position , SourceRectangle, Color.White * Opacity * (isClicked && IsClickable ? .5f : 1f), Radian, origin, scale, Effects, layerDepth);
                 else
-                    spriteBatch.Draw(_texture, Vector2.Lerp(LastPosition, Position, lerpAmount), SourceRectangle, Color.White * Opacity * (isClicked && IsClickable ? .5f : 1f), Radian, origin, scale, Effects, layerDepth);
+                    spriteBatch.Draw(_texture ?? _animation.Texture, Vector2.Lerp(LastPosition, Position, lerpAmount), SourceRectangle, Color.White * Opacity * (isClicked && IsClickable ? .5f : 1f), Radian, origin, scale, Effects, layerDepth);
             }
         }
     }
 
-    public enum AlignOption
+    public enum AlignOption 
     {
         None,
         Left,
@@ -324,4 +325,5 @@ namespace ExplorerOpenGL.Model.Sprites
         TopRight,
         TopLeft
     }
+
 }
