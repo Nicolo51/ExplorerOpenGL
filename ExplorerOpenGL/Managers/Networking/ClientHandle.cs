@@ -2,6 +2,7 @@
 using ExplorerOpenGL.Managers.Networking.NetworkObject;
 using ExplorerOpenGL.Model.Sprites;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using SharedClasses;
 using System;
 using System.Collections.Generic;
@@ -36,7 +37,7 @@ namespace ExplorerOpenGL.Managers.Networking
             PlayerData playerData = new PlayerData(id);
             client.PlayersData.Add(id, playerData); 
 
-            NetworkEventArgs e = new WelcomeEventArgs() { Message = msg + $".", MessageType = MessageType.OnWelcomeReceive, Protocol = Protocol.TCP,  ID = id, PlayerData = playerData, TickRate = tickRate};
+            NetworkEventArgs e = new WelcomeEventArgs() { Message = msg + $".", PacketType = ServerPackets.Welcome,   ID = id, PlayerData = playerData, TickRate = tickRate};
             client.PacketReceived(e); 
         }
 
@@ -46,7 +47,7 @@ namespace ExplorerOpenGL.Managers.Networking
 
             clientSend.SendUDPTest();
 
-            NetworkEventArgs e = new NetworkEventArgs() { Message = msg + $".", MessageType = MessageType.OnUdpTestReceive, Protocol = Protocol.UDP  };
+            NetworkEventArgs e = new NetworkEventArgs() { Message = msg + $".", PacketType = ServerPackets.UdpTest };
             client.PacketReceived(e);
         }
 
@@ -54,7 +55,7 @@ namespace ExplorerOpenGL.Managers.Networking
         {
             string msg = packet.ReadString();
 
-            NetworkEventArgs e = new NetworkEventArgs() { Message = msg + $".", MessageType = MessageType.OnTcpMessage, Protocol = Protocol.TCP,  Packet = packet };
+            NetworkEventArgs e = new NetworkEventArgs() { Message = msg + $".", PacketType = ServerPackets.TcpMessage, Packet = packet };
             client.PacketReceived(e);
         } 
         public void OnUdpMessage(Packet _packet)
@@ -80,10 +81,9 @@ namespace ExplorerOpenGL.Managers.Networking
             PlayerSyncEventArgs e = new PlayerSyncEventArgs()
             {
                 Message = $"{count} were synced to the game.",
-                MessageType = MessageType.OnTcpPlayersSync,
+                PacketType = ServerPackets.TcpPlayersSync,
                 PlayerData = playerData,
                 PlayerSyncedCount = count,
-                Protocol = Protocol.TCP,
                 Packet = packet, 
             };
             client.PacketReceived(e); 
@@ -95,29 +95,12 @@ namespace ExplorerOpenGL.Managers.Networking
             string playerName = packet.ReadString();
             PlayerDisconnectionEventArgs e = new PlayerDisconnectionEventArgs() {
                 Message = $"{playerName} left the game.",
-                MessageType = MessageType.OnDisconnection,
+                PacketType = ServerPackets.DisconnectPlayer,
                 ID = idPlayer, 
                 Name = playerName, 
-                Protocol = Protocol.TCP,
                 Packet = packet,
             };
             client.PacketReceived(e); 
-        }
-
-        public void OnServerRequest(Packet packet)
-        {
-            RequestTypes type = (RequestTypes)packet.ReadInt();
-            RequestEventArgs e = new RequestEventArgs()
-            {
-                Message = string.Empty,
-                MessageType = MessageType.OnChatMessage,
-                Protocol = Protocol.TCP,
-                Packet = packet,
-                RequestType = type,
-
-            };
-            client.PacketReceived(e);
-
         }
 
         public void OnChatMessage(Packet packet)
@@ -129,8 +112,7 @@ namespace ExplorerOpenGL.Managers.Networking
                 Sender = sender,
                 Message = $"A message has been receive from {sender}.",
                 Time = DateTime.Now,
-                MessageType = MessageType.OnChatMessage,
-                Protocol = Protocol.TCP,
+                PacketType = ServerPackets.TcpChatMessage,
                 SenderColor = Color.White,
                 TextColor = Color.White, 
                 Text = msg, 
@@ -150,9 +132,8 @@ namespace ExplorerOpenGL.Managers.Networking
                 PlayerChangeNameEventArgs e = new PlayerChangeNameEventArgs()
                 {
                     Message = $"Successfuly change username to {name}.",
-                    MessageType = MessageType.OnChangeNameResult,
+                    PacketType = ServerPackets.ChangeNameResult,
                     Packet = packet,
-                    Protocol = Protocol.TCP,
                     IDPlayer = IDClient, 
                     Name = name,
                 };
@@ -163,9 +144,8 @@ namespace ExplorerOpenGL.Managers.Networking
                 RequestResponseEventArgs e = new RequestResponseEventArgs()
                 {
                     Message = $"Failed change username to {name}.",
-                    MessageType = MessageType.OnChangeNameResult,
+                    PacketType = ServerPackets.ChangeNameResult,
                     Packet = packet,
-                    Protocol = Protocol.TCP,
                     RequestStatus = RequestStatus.Failed,
                     Request = "ChangeName",
                     Response = "403",
@@ -195,11 +175,10 @@ namespace ExplorerOpenGL.Managers.Networking
                 PlayerConnectEventArgs e = new PlayerConnectEventArgs()
                 {
                     Message = $"{name} joined the game.",
-                    MessageType = MessageType.OnTcpAddPlayer,
+                    PacketType = ServerPackets.TcpAddPlayer,
                     Packet = packet,
                     Name = name, 
                     ID = idPlayer, 
-                    Protocol = Protocol.TCP,
                 };
                 client.PacketReceived(e);
             }
@@ -216,10 +195,10 @@ namespace ExplorerOpenGL.Managers.Networking
                     playerData.Add(new PlayerData(idPlayer)
                     {
                         ServerPosition = new Vector2(packet.ReadFloat(), packet.ReadFloat()),
-                        LookAtRadian = packet.ReadFloat(),
-                        FeetRadian = packet.ReadFloat(),
-                        Health = packet.ReadInt(), 
-                    }); 
+                        Health = packet.ReadInt(),
+                        CurrentAnimationName = packet.ReadString(),
+                        Effects = (SpriteEffects)packet.ReadInt(),
+                });
                 }
                 else
                 {
@@ -228,9 +207,8 @@ namespace ExplorerOpenGL.Managers.Networking
             }
             PlayerUpdateEventArgs e = new PlayerUpdateEventArgs()
             {
-                MessageType = MessageType.OnUdpUpdatePlayers,
+                PacketType = ServerPackets.UdpUpdatePlayers,
                 Packet = packet,
-                Protocol = Protocol.UDP,
                 PlayerData = playerData.ToArray(),
             };
             client.PacketReceived(e); 
@@ -254,12 +232,51 @@ namespace ExplorerOpenGL.Managers.Networking
             }
             GameObjectsUpdateEventArgs e = new GameObjectsUpdateEventArgs()
             {
-                MessageType = MessageType.OnUdpUpdatePlayers,
+                PacketType = ServerPackets.UpdateGameObject,
                 Packet = packet,
-                Protocol = Protocol.UDP,
                 networkGameObjects = gameObjectData.ToArray(), 
             };
             client.PacketReceived(e); 
+        }
+
+        public void OnChangeHealth(Packet packet)
+        {
+            int newHealth = packet.ReadInt();
+            NetworkEventArgs e = new UpdateSelfEventArgs()
+            {
+                Packet = packet,
+                PacketType = ServerPackets.ChangeHealth,
+                Health = newHealth,
+            };
+            client.PacketReceived(e);
+        }
+
+        public void OnTeleport(Packet packet)
+        {
+            Vector2 pos = new Vector2(packet.ReadFloat(), packet.ReadFloat());
+            NetworkEventArgs e = new UpdateSelfEventArgs()
+            {
+                Packet = packet,
+                PacketType = ServerPackets.Teleport,
+                Position = pos,
+            };
+            client.PacketReceived(e); 
+        }
+
+        public void OnMoveObject(Packet packet)
+        {
+            int id = packet.ReadInt();
+            Vector2 position = new Vector2(packet.ReadFloat(), packet.ReadFloat());
+        }
+
+        public void OnCreateObject(Packet packet)
+        {
+
+        }
+
+        public void OnRemoveObject(Packet packet)
+        {
+            int id = packet.ReadInt();
         }
 
         protected virtual void Dispose(bool disposing)

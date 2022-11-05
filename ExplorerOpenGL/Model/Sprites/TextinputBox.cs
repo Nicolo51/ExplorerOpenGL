@@ -24,7 +24,7 @@ namespace ExplorerOpenGL.Model.Sprites
         private int cursorOpacity;
         private float cursorTimer;
         private bool TriggerMouseOver; 
-        public int width { get { return _texture.Width; } }
+        public int width { get { return Texture.Width; } }
 
         public bool IsFocused { get; private set; }
         public bool DoEraseWhenUnfocused { get; private set; }
@@ -33,7 +33,10 @@ namespace ExplorerOpenGL.Model.Sprites
         public delegate void ValidateEventHandler(string message, TextinputBox textinput);
         public event ValidateEventHandler Validated;
 
-        public string Text { get { return inputText.ToString(); }}
+        public delegate void UnfocusEventHandler(string message, TextinputBox textinput);
+        public event UnfocusEventHandler Unfocused; 
+
+        public string Text { get { return inputText.ToString().Trim(); }}
 
         public TextinputBox(Texture2D texture, SpriteFont SpriteFont,  bool eraseWhenUnfocused = false, bool makeItTransparentUnfocused = false)
             : base(texture)
@@ -46,10 +49,10 @@ namespace ExplorerOpenGL.Model.Sprites
             cursorTimer = 0f;
 
             indexStartDrawing = 0;
-            _texture = texture;
+            //_texture = texture;
             spriteFont = SpriteFont;
             Opacity = 1f;
-            layerDepth = .09f;
+            LayerDepth = .09f;
             IsFocused = false;
             IsClickable = true;
             inputText = new StringBuilder();
@@ -90,6 +93,7 @@ namespace ExplorerOpenGL.Model.Sprites
             foreach (char c in s)
                 AddChar(c); 
         }
+
 
         public void AddChar(char c)
         {
@@ -202,11 +206,13 @@ namespace ExplorerOpenGL.Model.Sprites
                 indexEndDrawing--;
         }
 
-        public override void Draw(SpriteBatch spriteBatch, GameTime gameTime, float lerpAmount)
+        public override void Draw(SpriteBatch spriteBatch, GameTime gameTime, float lerpAmount, Vector2? position = null)
         {
-            base.Draw(spriteBatch, gameTime, lerpAmount);
-            spriteBatch.DrawString(spriteFont, "|", cursorPosition - origin, Color.White, 0f, Vector2.Zero, cursorOpacity, SpriteEffects.None, layerDepth - .01f);
-            spriteBatch.DrawString(spriteFont, inputText.ToString().Substring(indexStartDrawing, indexEndDrawing), Position - origin, Color.White, 0f, Vector2.Zero, 1f, SpriteEffects.None, layerDepth - .01f);
+            base.Draw(spriteBatch, gameTime, lerpAmount, position);
+            if (!IsDisplayed)
+                return; 
+            spriteBatch.DrawString(spriteFont, "|", cursorPosition - Origin, Color.White, 0f, Vector2.Zero, cursorOpacity, SpriteEffects.None, LayerDepth - .01f);
+            spriteBatch.DrawString(spriteFont, inputText.ToString().Substring(indexStartDrawing, indexEndDrawing), Position - Origin, Color.White, 0f, Vector2.Zero, 1f, SpriteEffects.None, LayerDepth - .01f);
         }
 
         public override void OnMouseClick(Sprite[] sprites, Vector2 clickPosition, MousePointer mousePointer)
@@ -283,6 +289,8 @@ namespace ExplorerOpenGL.Model.Sprites
 
         public void UnFocus()
         {
+            if (!IsFocused)
+                return; 
             if(MakeItTransparentWhenUnfocused)
                 Opacity = 0f;
             if (DoEraseWhenUnfocused)
@@ -290,6 +298,7 @@ namespace ExplorerOpenGL.Model.Sprites
             if(IsFocused)
                 keyboardManager.UnFocusTextinputBox(); 
             IsFocused = false;
+            Unfocused?.Invoke(Text, this);
         }
 
         public void RemoveChar(bool nextChar = false)

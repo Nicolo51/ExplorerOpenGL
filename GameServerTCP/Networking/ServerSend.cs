@@ -48,9 +48,8 @@ namespace GameServerTCP
 
         public static void RequestModifyHealth(int toClient, int health)
         {
-            using(Packet packet = new Packet((int)ServerPackets.ServerRequest))
+            using(Packet packet = new Packet((int)ServerPackets.ChangeHealth))
             {
-                packet.Write((int)RequestTypes.ModifyPlayerHealth);
                 packet.Write(health);
                 SendTcpData(toClient, packet);
             }
@@ -58,9 +57,8 @@ namespace GameServerTCP
 
         public static void RequestChangePlayerPosition(int toClient, Vector2 pos)
         {
-            using (Packet packet = new Packet((int)ServerPackets.ServerRequest))
+            using (Packet packet = new Packet((int)ServerPackets.Teleport))
             {
-                packet.Write((int)RequestTypes.MovePlayer);
                 packet.Write(pos.X);
                 packet.Write(pos.Y);
                 SendTcpData(toClient, packet);
@@ -114,9 +112,9 @@ namespace GameServerTCP
                     packet.Write(entry.ID);
                     packet.Write(entry.Position.X); 
                     packet.Write(entry.Position.Y); 
-                    packet.Write(entry.LookAtRadian);
-                    packet.Write(entry.FeetRadian);
-                    packet.Write(entry.Health); 
+                    packet.Write(entry.Health);
+                    packet.Write(entry.CurrentAnimationName);
+                    packet.Write(entry.SpriteEffect);
                 }
                 packet.Write(false);
                 SendUDPData(toClient, packet);

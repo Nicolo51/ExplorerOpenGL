@@ -19,8 +19,11 @@ namespace SharedClasses
         DisconnectPlayer = 10, 
         UpdateGameObject = 11, 
         Sync = 12,
-        ServerRequest = 13, 
-
+        ChangeHealth = 13, 
+        Teleport = 14, 
+        MoveObject = 15, 
+        CreateObject = 16, 
+        RemoveObject = 17, 
     }
 
     /// <summary>Sent from client to server.</summary>
@@ -35,7 +38,6 @@ namespace SharedClasses
         CreateBullet = 7,
         UpdateGameObject = 8,
         Disconnect = 9,
-        ClientRequest = 13, 
     }
 
     public class Packet : IDisposable

@@ -100,9 +100,13 @@ namespace ExplorerOpenGL.Managers.Networking
                 { (int)ServerPackets.TcpChatMessage, clientHandle.OnChatMessage },
                 { (int)ServerPackets.ChangeNameResult, clientHandle.OnChangeNameResult },
                 { (int)ServerPackets.DisconnectPlayer, clientHandle.OnDisconnectPlayer },
-                {(int)ServerPackets.UpdateGameObject, clientHandle.OnUpdateGameObject },
-                {(int)ServerPackets.Sync, clientHandle.OnResponse },
-                {(int)ServerPackets.ServerRequest, clientHandle.OnServerRequest },
+                { (int)ServerPackets.UpdateGameObject, clientHandle.OnUpdateGameObject },
+                { (int)ServerPackets.Sync, clientHandle.OnResponse },
+                { (int)ServerPackets.ChangeHealth, clientHandle.OnChangeHealth },
+                { (int)ServerPackets.Teleport, clientHandle.OnTeleport },
+                { (int)ServerPackets.MoveObject, clientHandle.OnMoveObject },
+                { (int)ServerPackets.RemoveObject, clientHandle.OnRemoveObject },
+                { (int)ServerPackets.CreateObject, clientHandle.OnCreateObject},
             };
             Console.WriteLine("Initialized packets.");
         }

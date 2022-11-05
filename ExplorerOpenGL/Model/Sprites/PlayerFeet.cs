@@ -13,7 +13,7 @@ namespace ExplorerOpenGL.Model.Sprites
         public PlayerFeet(Texture2D texture)
             :base(texture)
         {
-            _texture = texture;
+            //_texture = texture;
             origin = new Vector2(texture.Width / 2, texture.Height / 2);
         }
 

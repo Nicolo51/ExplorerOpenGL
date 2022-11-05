@@ -44,7 +44,7 @@ namespace Client
                 { (int)ServerPackets.TcpPlayersSync, ClientHandle.OnTcpPlayersSync },
                 { (int)ServerPackets.TcpMessage, ClientHandle.OnTcpMessage },
                 { (int)ServerPackets.UdpMessage, ClientHandle.OnUdpMessage },
-                { (int)ServerPackets.TcpChatMessage, ClientHandle.OnChatMessage }
+                { (int)ServerPackets.TcpChatMessage, ClientHandle.OnChatMessage },
             };
             Console.WriteLine("Initialized packets.");
         }

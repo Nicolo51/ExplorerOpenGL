@@ -12,25 +12,21 @@ namespace ExplorerOpenGL.Model.Sprites
         public Wall(Texture2D texture)
             :base(texture)
         {
-            _texture = texture;
+            //_texture = texture;
+            isCollidable = true; 
         }
 
         public Wall(params Animation[] animations)
             :base(animations)
         {
             isDraggable = true;
-            _animation.Play("run"); 
+            Play("run"); 
         }
 
-        public override void OnMouseOver(Sprite[] sprites, MousePointer mousePointer)
+        public Wall()
+            : base()
         {
-            debugManager.AddEvent("over wall"); 
-            base.OnMouseOver(sprites, mousePointer);
-        }
-        public override void OnMouseLeave(Sprite[] sprites, MousePointer mousePointer)
-        {
-            debugManager.AddEvent("leave wall");
-            base.OnMouseOver(sprites, mousePointer);
+
         }
     }
 }

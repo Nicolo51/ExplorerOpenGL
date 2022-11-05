@@ -49,7 +49,7 @@ namespace ExplorerOpenGL.Managers
         private GameState lastGameState;
         private bool hasGameStateChanged; 
 
-        public int MainThreadID;  
+        public int MainThreadID { get; set; }  
 
         public static event EventHandler Initialized;
         private static GameManager instance;
@@ -110,7 +110,8 @@ namespace ExplorerOpenGL.Managers
         {
             if ((GameState == GameState.Playing || GameState == GameState.OnlinePlaying) && !hasGameStateChanged)
             {
-                pauseMenu.Show();
+                pauseMenu = new PauseMenu();
+                pauseMenu.Show(); 
                 //Camera.FollowSprite(pauseMenu.ResumeButton);
             }
             else if (GameState == GameState.Pause)
@@ -133,13 +134,15 @@ namespace ExplorerOpenGL.Managers
         }
 
 
-        public void StartGame(string name, string ip = null )
+        public void StartGame(string name, string ip = null)
         {
             if (isGameStarted)
                 return;
-            Player Player = new Player(textureManager.LoadTexture("player"), textureManager.LoadTexture("playerfeet"), name)
+            Animation walking = textureManager.GetAnimation("walk");
+            Animation standing = textureManager.GetAnimation("stand");
+            Player Player = new Player(name, walking, standing)
             {
-                Position = new Vector2(0, 0),
+                Position = new Vector2(0, -100),
                 input = new Input()
                 {
                     Down = Keys.S,
@@ -148,13 +151,18 @@ namespace ExplorerOpenGL.Managers
                     Right = Keys.D,
                 }
             };
-            Animation animation1 = new Animation(textureManager.LoadTexture("animTest"), 8, 500, "run", false, "runblue");
-            Animation animation2 = new Animation(textureManager.LoadTexture("animTest2"), 8, 500, "runblue",false, "run");
-            animation1.AddAfter("run");
-            animation2.AddAfter("runblue"); 
-            var wall = new Wall(animation1, animation2);
-            AddSprite(wall, this);
-            if(!string.IsNullOrWhiteSpace(ip))
+
+            Texture2D texture = textureManager.CreateBorderedTexture(300, 75, 5, 0, paint => Color.Black, paint => Color.Beige); 
+
+            AddSprite(new Wall(texture) { Position = new Vector2(0, 100) }, this);
+            AddSprite(new Wall(texture) { Position = new Vector2(0, -150) }, this);
+            AddSprite(new Wall(texture) { Position = new Vector2(600, 0) }, this);
+            AddSprite(new Wall(texture) { Position = new Vector2(-100, 600) }, this);
+            //AddSprite(new Wall(textureManager.CreateBorderedTexture(300, 75, 5, 0, paint => Color.Black, paint => Color.Beige)) { Position = new Vector2(0, 100) }, this);
+            //AddSprite(new Wall(textureManager.CreateBorderedTexture(300, 75, 5, 0, paint => Color.Black, paint => Color.Beige)) { Position = new Vector2(0, 100) }, this);
+            //AddSprite(new Wall(textureManager.CreateBorderedTexture(300, 75, 5, 0, paint => Color.Black, paint => Color.Beige)) { Position = new Vector2(0, 100) }, this);
+
+            if (!string.IsNullOrWhiteSpace(ip))
             {
                 if(!networkManager.Connect(ip, name))
                 {
@@ -188,7 +196,10 @@ namespace ExplorerOpenGL.Managers
                 {
                     for (int i = 0; i < action.Count; i++)
                     {
+
                         action[i].Invoke(actionArg[i]);
+                        action.RemoveAt(i);
+                        actionArg.RemoveAt(i); 
                     }
                 }
             }
@@ -217,6 +228,12 @@ namespace ExplorerOpenGL.Managers
             sprite.SetPosition(sprite.Position);
             lock (this.sprites)
                 this.sprites.Add(sprite); 
+        }
+
+        public void AddSprite(Sprite[] sprites, object issuer)
+        {
+            foreach (Sprite s in sprites)
+                AddSprite(s, issuer); 
         }
 
         public void AddNetworkObject(Sprite s)
@@ -264,6 +281,7 @@ namespace ExplorerOpenGL.Managers
         {
             lock (sprites)
             {
+
                 this.sprites.Remove(sprite);
             }
         }
@@ -288,7 +306,7 @@ namespace ExplorerOpenGL.Managers
         public Sprite[] GetSprites()
         {
             lock (sprites)
-                return sprites.ToArray(); 
+                return sprites.OrderByDescending(s => s.LayerDepth).ToArray(); 
         }
 
         public Sprite[] GetNetworkObjects()

@@ -17,15 +17,14 @@ namespace ExplorerOpenGL.Model.Sprites
         private MousePointer mousePointer;
         public Input input;
         private PlayerFeet playerFeet;
-        private float Velocity;
         private Texture2D TextureName;
-        private Vector2 PositionName;
+        private Vector2 PositionName { get { return new Vector2(Position.X, Position.Y - 10); } }
         private Vector2 OriginName; 
-        public Vector2 Direction;
         public int Health { get; set;  }
         public string Name{ get; private set; }
         public int ID { get; private set; }
         public float PlayerFeetRadian { get { return playerFeet.Radian; } }
+        public string CurrentAnimationName { get { if (_animation != null) return _animation.currentAnimation.Name; else return string.Empty; } }
 
         private TextureManager textureManager;
         private KeyboardManager keyboardManager;
@@ -33,33 +32,37 @@ namespace ExplorerOpenGL.Model.Sprites
         private MouseManager mouseManager;
         private SpriteFont font;
 
-        public Player(Texture2D texture, Texture2D playerFeetTexture, string name)
-            : base(texture)
+        public Player(string name, params Animation[] animations)
+            : base(animations)
         {
-            this.textureManager = TextureManager.Instance;
-            mouseManager = MouseManager.Instance; 
-            mousePointer = gameManager.MousePointer; 
-            ChangeName(name);
-            Direction = new Vector2(0, 0);
-            playerFeet = new PlayerFeet(playerFeetTexture);
-            playerFeet.layerDepth = .9f;
-            origin = new Vector2(texture.Width / 2, texture.Height / 2);
-            Velocity = 5;
-            layerDepth = .9f;
-            scale = .5f;
-            Health = 100;
+            textureManager = TextureManager.Instance;
             keyboardManager = KeyboardManager.Instance;
             networkManager = NetworkManager.Instance;
+            mouseManager = MouseManager.Instance; 
+
+            mousePointer = gameManager.MousePointer; 
+            ChangeName(name);
+            direction = new Vector2(0, 0);
+            playerFeet = new PlayerFeet(textureManager.LoadTexture("playerfeet"));
+            playerFeet.LayerDepth = .9f;
+            Velocity = 3;
+            LayerDepth = .9f;
+            Scale = 1f;
+            Health = 100;
             font = FontManager.Instance.GetFont();
             mouseManager.LeftClicked += FireBullet;
-            isDraggable = true; 
+            Radian = 0; 
+            //isDraggable = true;
+            IsGravityAffected = true;
+            isCollidable = true;
+            Play("stand"); 
         }
 
         private void FireBullet(ButtonState buttonState)
         {
-            if (!networkManager.IsConnectedToAServer || buttonState == ButtonState.Released && (gameManager.GameState == GameState.OnlinePlaying || gameManager.GameState == GameState.Playing))
-                return;
-            networkManager.CreateBullet(this); 
+            //if (!networkManager.IsConnectedToAServer || buttonState == ButtonState.Released && (gameManager.GameState == GameState.OnlinePlaying || gameManager.GameState == GameState.Playing))
+            //    return;
+            //networkManager.CreateBullet(this); 
         }
 
         public override void Remove()
@@ -70,15 +73,12 @@ namespace ExplorerOpenGL.Model.Sprites
 
         public override void Update(Sprite[] sprites)
         {
-            if (gameManager.GameState == GameState.Playing || gameManager.GameState == GameState.OnlinePlaying)
-            {
-                base.Update(sprites);
-                //Position = mousePointer.Position;
-                playerFeet.Update(sprites);
-                Radian = CalculateAngle(Position, mousePointer.InGamePosition);
-                Move(sprites);
-                PositionName = new Vector2(Position.X, Position.Y + 50);
-            }
+            //Position = mousePointer.Position;
+            playerFeet.Update(sprites);
+            //Radian = CalculateAngle(Position, mousePointer.InGamePosition);
+            Move(sprites);
+            base.Update(sprites);
+            SetPosition(Position + direction, false);
         }
 
         private float CalculateAngle(Vector2 A, Vector2 B)
@@ -101,49 +101,42 @@ namespace ExplorerOpenGL.Model.Sprites
 
         protected virtual void Move(Sprite[] sprites)
         {
-            Direction = Vector2.Zero;
-            
-            if (keyboardManager.IsKeyDown(input.Down))
-            {
-                Direction.Y += 1;
-            }
+            direction.X = 0;
+            //Direction = Vector2.Zero; 
+
+            //if (keyboardManager.IsKeyDown(input.Down))
+            //    Direction.Y = Velocity;
             if (keyboardManager.IsKeyDown(input.Up))
-            {
-                Direction.Y -= 1;
-            }
+                Jump(); 
             if (keyboardManager.IsKeyDown(input.Right))
-            {
-                Direction.X += 1;
-            }
+                direction.X = Velocity;
             if (keyboardManager.IsKeyDown(input.Left))
+                direction.X = -Velocity;
+
+            if (direction != Vector2.Zero)
             {
-                Direction.X -= 1;
-            }
-            if (Direction != Vector2.Zero)
-            {
-                Direction = Vector2.Normalize(Direction); 
-                float direction = (float)Math.Atan((double)(Direction.Y / Direction.X));
-                if (Direction.X < 0)
+                //Direction = Vector2.Normalize(Direction); 
+                float direction = (float)Math.Atan((double)(base.direction.Y / base.direction.X));
+                if (base.direction.X < 0)
                 {
                     direction += (float)Math.PI;
                 }
                 playerFeet.SetDirection(direction);
-                for (int i = 0; i < sprites.Length; i++)
-                {
-                    var sprite = sprites[i];
-                    if (sprites[i] is Wall)
-                    {
-                        if ((Direction.X > 0 && this.IsTouchingLeft(sprite)) ||
-                            (Direction.X < 0 & this.IsTouchingRight(sprite)))
-                            Direction.X = 0;
-
-                        if ((Direction.Y > 0 && this.IsTouchingTop(sprite)) ||
-                            (Direction.Y < 0 & this.IsTouchingBottom(sprite)))
-                            Direction.Y = 0;
-                    }
-                }
-                SetPosition(Position + Direction * Velocity, false); 
+                if (base.direction.X < 0)
+                    Effects = SpriteEffects.FlipHorizontally;
+                if (base.direction.X > 0)
+                    Effects = SpriteEffects.None;
+                
             }
+            if (direction.X != 0)
+                Play("walk");
+            else
+                Play("stand");
+        }
+        private void Jump()
+        {
+            if (isGrounded)
+                direction.Y = -10; 
         }
 
         public override void SetPosition(Vector2 newPos, bool instant = true)
@@ -152,45 +145,15 @@ namespace ExplorerOpenGL.Model.Sprites
             base.SetPosition(newPos, instant);
         }
 
-        public override void Draw(SpriteBatch spriteBatch, GameTime gameTime, float lerpAmount)
+        public override void Draw(SpriteBatch spriteBatch, GameTime gameTime, float lerpAmount, Vector2? position = null)
         {
-            playerFeet.Draw(spriteBatch, gameTime, lerpAmount);
-            spriteBatch.Draw(TextureName, PositionName , null, Color.White, 0f, OriginName, .75f, SpriteEffects.None, layerDepth);
-            spriteBatch.DrawString(font, Health.ToString("#"), Position - new Vector2(0,50), Color.White, 0f, font.MeasureString(Health.ToString("#")) / 2, 1f, SpriteEffects.None, layerDepth);
+            //playerFeet.Draw(spriteBatch, gameTime, lerpAmount);
+            spriteBatch.Draw(TextureName, PositionName , null, Color.White, 0f, OriginName, .75f, SpriteEffects.None, LayerDepth);
+            //spriteBatch.DrawString(font, Health.ToString("#"), Position - new Vector2(0,50), Color.White, 0f, font.MeasureString(Health.ToString("#")) / 2, 1f, SpriteEffects.None, layerDepth);
             base.Draw(spriteBatch, gameTime, lerpAmount);
         }
 
-        private bool IsTouchingLeft(Sprite sprite)
-        {
-            return this.HitBox.Right + this.Velocity * Direction.X > sprite.HitBox.Left &&
-              this.HitBox.Left < sprite.HitBox.Left &&
-              this.HitBox.Bottom > sprite.HitBox.Top &&
-              this.HitBox.Top < sprite.HitBox.Bottom;
-        }
 
-        private bool IsTouchingRight(Sprite sprite)
-        {
-            return this.HitBox.Left + this.Velocity * Direction.X < sprite.HitBox.Right &&
-              this.HitBox.Right > sprite.HitBox.Right &&
-              this.HitBox.Bottom > sprite.HitBox.Top &&
-              this.HitBox.Top < sprite.HitBox.Bottom;
-        }
-
-        private bool IsTouchingTop(Sprite sprite)
-        {
-            return this.HitBox.Bottom + this.Velocity * Direction.Y > sprite.HitBox.Top &&
-              this.HitBox.Top < sprite.HitBox.Top &&
-              this.HitBox.Right > sprite.HitBox.Left &&
-              this.HitBox.Left < sprite.HitBox.Right;
-        }
-
-        private bool IsTouchingBottom(Sprite sprite)
-        {
-            return this.HitBox.Top + this.Velocity * Direction.Y < sprite.HitBox.Bottom &&
-              this.HitBox.Bottom > sprite.HitBox.Bottom &&
-              this.HitBox.Right > sprite.HitBox.Left &&
-              this.HitBox.Left < sprite.HitBox.Right;
-        }
 
         public string GetJSON()
         {

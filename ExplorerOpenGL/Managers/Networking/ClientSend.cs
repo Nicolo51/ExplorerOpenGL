@@ -65,9 +65,9 @@ namespace ExplorerOpenGL.Managers.Networking
                 {
                     packet.Write(player.Position.X);
                     packet.Write(player.Position.Y);
-                    packet.Write(player.PlayerFeetRadian);
-                    packet.Write(player.Radian);
                     packet.Write(player.Health);
+                    packet.Write(player.CurrentAnimationName); 
+                    packet.Write((int)player.Effects);
                     SendUdpData(packet);
                 }
             }

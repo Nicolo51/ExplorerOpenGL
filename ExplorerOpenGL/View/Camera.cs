@@ -23,14 +23,14 @@ namespace ExplorerOpenGL.View
             this.Bounds = bounds;
         }
 
-        public void Update()
+        public void Update(float lerpAmount)
         {
             Matrix position;
             if (IsFollowingSprite)
             {
                 Vector2 PositionSprite; 
                 lock (SpriteToFollow)
-                    PositionSprite = SpriteToFollow.Position; 
+                    PositionSprite = Vector2.Lerp(SpriteToFollow.LastPosition, SpriteToFollow.Position, lerpAmount); 
 
                 position = Matrix.CreateTranslation(
                     -PositionSprite.X,

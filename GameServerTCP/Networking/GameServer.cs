@@ -68,7 +68,7 @@ namespace GameServerTCP
                 if (GetClient(_clientId).udp.endPoint == null)
                 {
                     GetClient(_clientId).udp.Connect(_clientEndPoint);
-                    Console.WriteLine("A client has connect to udp stram");
+                    Console.WriteLine("A client has connect to udp stream");
                     return;
                 }
 

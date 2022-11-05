@@ -27,8 +27,8 @@ namespace ExplorerOpenGL.View
         {
             SetPosition(new Vector2(gameManager.Width / 2, gameManager.Height / 2));
             SpriteFont font = fontManager.GetFont("Default");
-            _texture = textureManager.CreateBorderedTexture(Width, Height, 3, 0, paint => Color.Black, paint => (paint < (Width * 30) ? new Color(22, 59, 224) : new Color(245, 231, 213)));
-            SourceRectangle = new Rectangle(0, 0, _texture.Width, _texture.Height);
+            SetTexture(textureManager.CreateBorderedTexture(Width, Height, 3, 0, paint => Color.Black, paint => (paint < (Width * 30) ? new Color(22, 59, 224) : new Color(245, 231, 213))));
+            SourceRectangle = new Rectangle(0, 0, Texture.Width, Texture.Height);
             Title = "Login in :";
 
             tbName = new TextinputBox(textureManager.CreateTexture(250, 35, paint => Color.Black), font);
@@ -38,13 +38,13 @@ namespace ExplorerOpenGL.View
             btnConnect = new Button(textureManager.OutlineText("Connect", "Default", Color.CornflowerBlue, Color.Black, 1), textureManager.OutlineText("Connect", "Default", Color.CornflowerBlue, Color.Black, 2));
             btnBack = new Button(textureManager.OutlineText("Back", "Default", Color.CornflowerBlue, Color.Black, 1), textureManager.OutlineText("Back", "Default", Color.CornflowerBlue, Color.Black, 2));
             
-            tbName.SetAlignOption(AlignOption.TopLeft);
-            tbIP.SetAlignOption(AlignOption.TopLeft);
-            txtName.SetAlignOption(AlignOption.TopLeft);
-            txtIP.SetAlignOption(AlignOption.TopLeft);
-            btnConnect.SetAlignOption(AlignOption.Left);
-            btnBack.SetAlignOption(AlignOption.Right);
-            SetAlignOption(AlignOption.Center);
+            tbName.SetAlignOption(AlignOptions.TopLeft);
+            tbIP.SetAlignOption(AlignOptions.TopLeft);
+            txtName.SetAlignOption(AlignOptions.TopLeft);
+            txtIP.SetAlignOption(AlignOptions.TopLeft);
+            btnConnect.SetAlignOption(AlignOptions.Left);
+            btnBack.SetAlignOption(AlignOptions.Right);
+            SetAlignOption(AlignOptions.Center);
 
             btnBack.MouseClicked += BtnBack_MouseClicked;
             btnConnect.MouseClicked += BtnConnect_MouseClicked;

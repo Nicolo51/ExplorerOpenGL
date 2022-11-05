@@ -26,6 +26,8 @@ namespace ExplorerOpenGL
         ScripterManager scripterManager;
         TimeManager timeManager;
         MouseManager mouseManager;
+        XmlManager xmlManager;
+        ShaderManager shaderManager;
 
         GraphicsDeviceManager graphics;
         SpriteBatch spriteBatch;
@@ -62,7 +64,10 @@ namespace ExplorerOpenGL
             GameManager.Initialized += OnManagerInitialization;
             FontManager.Initialized += OnManagerInitialization;
             TimeManager.Initialized += OnManagerInitialization;
-            MouseManager.Initialized += OnManagerInitialization; 
+            MouseManager.Initialized += OnManagerInitialization;
+            XmlManager.Initialized += OnManagerInitialization;
+            ShaderManager.Initialized += OnManagerInitialization;
+
             Exiting += Game1_Exiting;
 
             gameManager = GameManager.Instance;
@@ -74,7 +79,9 @@ namespace ExplorerOpenGL
             renderManager = RenderManager.Instance;
             scripterManager = ScripterManager.Instance;
             timeManager = TimeManager.Instance;
-            mouseManager = MouseManager.Instance; 
+            mouseManager = MouseManager.Instance;
+            xmlManager = XmlManager.Instance;
+            shaderManager = ShaderManager.Instance; 
 
             timeManager.StartUpdateThread();
 
@@ -111,6 +118,8 @@ namespace ExplorerOpenGL
             Window.ClientSizeChanged += UpdateDisplay;
             Window.AllowUserResizing = true;
 
+            textureManager.LoadAnimation("rouge", 3, 750, "walk", AlignOptions.Top);
+            textureManager.LoadAnimation("standingRouge", 4, 750, "stand", AlignOptions.Top);
             new Thread(() =>
             {
                 new MainMenu().Show();
@@ -142,7 +151,7 @@ namespace ExplorerOpenGL
                 if(_sprites == null)
                     return;
             //gameManager.MousePointer.Update(_sprites);
-            gameManager.Camera.Update();
+            
             textureManager.Update(); 
             gameManager.Update(gameTime);
             debugManager.Update(gameTime);
@@ -185,6 +194,12 @@ namespace ExplorerOpenGL
                 case MouseManager mm:
                     mm.InitDependencies(); 
                     break;
+                case XmlManager xm:
+                    xm.InitDependencies();
+                    break;
+                case ShaderManager sm:
+                    sm.InitDependencies(graphics, Content, spriteBatch);
+                    break; 
             }
         }
 
@@ -194,13 +209,15 @@ namespace ExplorerOpenGL
         /// <param name="gameTime">Provides a snapshot of timing values.</param>
         protected override void Draw(GameTime gameTime)
         {
+            var timeBeginDraw = gameTime.TotalGameTime; 
             timeManager.LastDrawTime = DateTime.Now;
             GraphicsDevice.Clear(Color.CornflowerBlue);
             float la = timeManager.LerpAmount;
-            Sprite[] sprites = gameManager.GetSprites(); 
+            gameManager.Camera.Update(la);
+            Sprite[] sprites = gameManager.GetSprites();
             if (sprites == null)
                 return;
-            spriteBatch.Begin(SpriteSortMode.BackToFront, transformMatrix: gameManager.Camera.Transform);
+            spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, transformMatrix: gameManager.Camera.Transform);
 
             for (int i = 0; i < sprites.Length; i++)
             {
@@ -211,7 +228,10 @@ namespace ExplorerOpenGL
                     if (lockAcquired)
                     {
                         if (!sprites[i].IsHUD)
+                        {
+                            //sprites[i].Shader.CurrentTechnique.Passes[0].Apply();
                             sprites[i].Draw(spriteBatch, gameTime, la);
+                        }
                     }
                     else
                         debugManager.AddEvent("Draw skipped" + i);
@@ -225,7 +245,7 @@ namespace ExplorerOpenGL
 
             spriteBatch.End();
 
-            spriteBatch.Begin(SpriteSortMode.BackToFront);
+            spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend);
 
             for (int i = 0; i < sprites.Length; i++)
             {
@@ -236,7 +256,10 @@ namespace ExplorerOpenGL
                     if (lockAcquired)
                     {
                         if (sprites[i].IsHUD)
+                        {
+                            //sprites[i].Shader.CurrentTechnique.Passes[0].Apply(); 
                             sprites[i].Draw(spriteBatch, gameTime, la);
+                        }
                     }
                     else
                         debugManager.AddEvent("Draw skipped" + i);
@@ -248,11 +271,13 @@ namespace ExplorerOpenGL
                 }
             }
 
-            if (DebugManager.Instance.IsDebuging)
-                DebugManager.Instance.DebugDraw(spriteBatch);
+            if (debugManager.IsDebuging)
+                debugManager.DebugDraw(spriteBatch);
                 
             spriteBatch.End();
             base.Draw(gameTime);
+            var timeEndDraw = gameTime.TotalGameTime;
+            debugManager.AddEvent((timeEndDraw - timeBeginDraw).TotalMilliseconds);
         }
     }
 }

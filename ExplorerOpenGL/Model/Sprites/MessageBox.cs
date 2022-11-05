@@ -12,16 +12,23 @@ namespace ExplorerOpenGL.Model.Sprites
     public class MessageBox : Sprite
     {
         public string Title { get; set; }
-        protected List<Sprite> childSprites;
-        protected List<Vector2> childSpritesPosition;
-        protected TextureManager textureManager;
         
+        protected List<Sprite> childSprites;
+        protected List<Vector2> childSpritesPosition; 
+        protected TextureManager textureManager;
         protected FontManager fontManager;
-
         protected Texture2D borderTexture;
+        
         public delegate void MessageBoxResultClickEventHandler(MessageBox sender, MessageBoxResultEventArgs e);
         public event MessageBoxResultClickEventHandler Result;
 
+        public Rectangle TitleBarHitBox { get 
+            {
+                if (Texture != null && SourceRectangle != null) return new Rectangle((int)Position.X - (int)(Origin.X * Scale), (int)Position.Y - (int)(Origin.Y * Scale), (int)(SourceRectangle.Width * Scale), (int)(35 * Scale));
+                else if (_animation != null && _animation.currentAnimation != null) return new Rectangle((int)Position.X - (int)(Origin.X * Scale), (int)Position.Y - (int)(Origin.Y * Scale), (int)(_animation.currentAnimation.Bounds.X * Scale), (int)(35 * Scale));
+                else return new Rectangle((int)Position.X, (int)Position.Y, 1, 1);
+            } 
+        }
         public MessageBox(Texture2D texture)
             : base(texture)
         {
@@ -53,7 +60,7 @@ namespace ExplorerOpenGL.Model.Sprites
             for (int i = 0; i < childSprites.Count; i++)
             {
                 Sprite child = childSprites[i];
-                Vector2 pos = Position + childSpritesPosition[i] - origin;
+                Vector2 pos = Position + childSpritesPosition[i] - Origin;
                 child.SetPosition(pos);
             }
         }
@@ -66,14 +73,38 @@ namespace ExplorerOpenGL.Model.Sprites
             }
             return null; 
         }
-
+        
         public void AddChildSprite(Sprite sprite, Vector2 childPosition)
         {
             sprite.IsHUD = true; 
-            sprite.layerDepth = layerDepth - .01f;
+            sprite.LayerDepth = LayerDepth - .01f;
             childSprites.Add(sprite);
             childSpritesPosition.Add(childPosition);
             gameManager.AddSprite(sprite, this);
+        }
+
+        public void AddChildSprite(Sprite sprite)
+        {
+            AddChildSprite(sprite, sprite.Position); 
+        }
+
+        public void SetChildPosition(Sprite child, Vector2 newPos)
+        {
+            childSpritesPosition[childSprites.IndexOf(child)] = newPos;
+        }
+
+        public void Hide()
+        {
+            IsDisplayed = false; 
+            foreach (var s in childSprites)
+                s.IsDisplayed = false; 
+        }
+
+        public void UnHide()
+        {
+            IsDisplayed = true;
+            foreach (var s in childSprites)
+                s.IsDisplayed = true;
         }
 
         public virtual void Close()
@@ -97,14 +128,14 @@ namespace ExplorerOpenGL.Model.Sprites
             this.IsRemove = false;
             gameManager.AddSprite(this, this);
             if(Title != null)
-                this.AddChildSprite(new TextZone(Title, fontManager.GetFont("Default"), Color.White, AlignOption.TopLeft), new Vector2(2, 2));
+                this.AddChildSprite(new TextZone(Title, fontManager.GetFont("Default"), Color.White, AlignOptions.TopLeft), new Vector2(2, 2));
         }
 
-        public override void Draw(SpriteBatch spriteBatch,  GameTime gameTime, float lerpAmount)
+        public override void Draw(SpriteBatch spriteBatch,  GameTime gameTime, float lerpAmount, Vector2? position = null)
         {
             base.Draw(spriteBatch, gameTime, lerpAmount);
-            if(borderTexture  != null)
-                spriteBatch.Draw(borderTexture, Position, null, Color.White * Opacity * (isClicked && IsClickable ? .5f : 1f), Radian, origin, scale, Effects, layerDepth+0.1f);
+            if(borderTexture  != null && IsDisplayed)
+                spriteBatch.Draw(borderTexture, Position, null, Color.White * Opacity, Radian, Origin, Scale, Effects, LayerDepth+0.1f);
         }
 
         public static MessageBox Show(string message)
@@ -147,8 +178,8 @@ namespace ExplorerOpenGL.Model.Sprites
             }
             MessageBox mb = new MessageBox(tm.CreateBorderedTexture((int)bounds.X + 50, lineCount * 35 + 90, 3, 0, paint => Color.Black, paint => (paint < ((int)bounds.X + 50) * 30)? new Color(22, 59, 224) : new Color(245, 231, 213)));
             mb.Title = title;
-            mb.AddChildSprite(new TextZone(title, font, Color.White, AlignOption.TopLeft), new Vector2(2,2));
-            mb.AddChildSprite(new TextZone(message, font, Color.Black, AlignOption.Center), new Vector2(mb.Bounds.Width / 2, mb.Bounds.Height / 2 - 10));
+            mb.AddChildSprite(new TextZone(title, font, Color.White, AlignOptions.TopLeft), new Vector2(2,2));
+            mb.AddChildSprite(new TextZone(message, font, Color.Black, AlignOptions.Center), new Vector2(mb.Bounds.X / 2, mb.Bounds.Y / 2 - 10));
             switch (messageBoxType)
             {
                 case MessageBoxType.YesNo:
@@ -158,8 +189,8 @@ namespace ExplorerOpenGL.Model.Sprites
                     yesButtonYesNo.MouseClicked += (object sender, MousePointer mousePointer, Vector2 clickPosition) => mb.Result?.Invoke(mb, new MessageBoxResultEventArgs() { MessageBoxResult = MessageBoxResult.Yes });
                     noButtonYesNo.MouseClicked += (object sender, MousePointer mousePointer, Vector2 clickPosition) => mb.Result?.Invoke(mb, new MessageBoxResultEventArgs() { MessageBoxResult = MessageBoxResult.No });
 
-                    mb.AddChildSprite(yesButtonYesNo, new Vector2(mb.Bounds.Width / 2 - 50, mb.Bounds.Height - 35));
-                    mb.AddChildSprite(noButtonYesNo, new Vector2(mb.Bounds.Width / 2 + 50, mb.Bounds.Height - 35));
+                    mb.AddChildSprite(yesButtonYesNo, new Vector2(mb.Bounds.X / 2 - 50, mb.Bounds.Y - 35));
+                    mb.AddChildSprite(noButtonYesNo, new Vector2(mb.Bounds.X / 2 + 50, mb.Bounds.Y - 35));
                     break;
                 case MessageBoxType.OkCancel:
                     var okButtonOkCancel = new Button(tm.TextureText("OK", "Default", Color.Red), tm.OutlineText("OK", "Default", Color.Black, Color.Red, 2));
@@ -168,15 +199,15 @@ namespace ExplorerOpenGL.Model.Sprites
                     okButtonOkCancel.MouseClicked += (object sender, MousePointer mousePointer, Vector2 clickPosition) => mb.Result?.Invoke(mb, new MessageBoxResultEventArgs() { MessageBoxResult = MessageBoxResult.Ok });
                     CancelButtonOkCancel.MouseClicked += (object sender, MousePointer mousePointer, Vector2 clickPosition) => mb.Result?.Invoke(mb, new MessageBoxResultEventArgs() { MessageBoxResult = MessageBoxResult.Cancel});
 
-                    mb.AddChildSprite(okButtonOkCancel, new Vector2(mb.Bounds.Width / 2 + 50, mb.Bounds.Height - 20));
-                    mb.AddChildSprite(CancelButtonOkCancel, new Vector2(mb.Bounds.Width / 2 - 50, mb.Bounds.Height - 35));
+                    mb.AddChildSprite(okButtonOkCancel, new Vector2(mb.Bounds.X / 2 + 50, mb.Bounds.Y - 20));
+                    mb.AddChildSprite(CancelButtonOkCancel, new Vector2(mb.Bounds.X / 2 - 50, mb.Bounds.Y - 35));
                     break;
                 case MessageBoxType.Ok:
                     var okButtonOk = new Button(tm.TextureText("OK", "Default", Color.Red), tm.OutlineText("OK", "Default", Color.Black, Color.Red, 2));
 
                     okButtonOk.MouseClicked += (object sender, MousePointer mousePointer, Vector2 clickPosition) => mb.Result?.Invoke(mb, new MessageBoxResultEventArgs() { MessageBoxResult = MessageBoxResult.Ok });
 
-                    mb.AddChildSprite(okButtonOk, new Vector2(mb.Bounds.Width / 2, mb.Bounds.Height - 35));
+                    mb.AddChildSprite(okButtonOk, new Vector2(mb.Bounds.X / 2, mb.Bounds.Y - 35));
                     break;
                 case MessageBoxType.ContinueCancel:
                     var ContinueButtonContinueCancel = new Button(tm.TextureText("Continue", "Default", Color.Red), tm.OutlineText("Continue", "Default", Color.Black, Color.Red, 2));
@@ -185,8 +216,8 @@ namespace ExplorerOpenGL.Model.Sprites
                     ContinueButtonContinueCancel.MouseClicked += (object sender, MousePointer mousePointer, Vector2 clickPosition) => mb.Result?.Invoke(mb, new MessageBoxResultEventArgs() { MessageBoxResult = MessageBoxResult.Continue });
                     CancelButtonContinueCancel.MouseClicked += (object sender, MousePointer mousePointer, Vector2 clickPosition) => mb.Result?.Invoke(mb, new MessageBoxResultEventArgs() { MessageBoxResult = MessageBoxResult.Cancel });
 
-                    mb.AddChildSprite(ContinueButtonContinueCancel, new Vector2(mb.Bounds.Width / 2 - 50, mb.Bounds.Height - 35));
-                    mb.AddChildSprite(CancelButtonContinueCancel, new Vector2(mb.Bounds.Width / 2 + 50, mb.Bounds.Height - 35));
+                    mb.AddChildSprite(ContinueButtonContinueCancel, new Vector2(mb.Bounds.X / 2 - 50, mb.Bounds.Y - 35));
+                    mb.AddChildSprite(CancelButtonContinueCancel, new Vector2(mb.Bounds.X / 2 + 50, mb.Bounds.Y - 35));
                     break;
                 case MessageBoxType.Custom:
                     var customButton = new Button(tm.TextureText(custom, "Default", Color.Red), tm.OutlineText(custom, "Default", Color.Black, Color.Red, 2));
@@ -195,8 +226,8 @@ namespace ExplorerOpenGL.Model.Sprites
                     customButton.MouseClicked += (object sender, MousePointer mousePointer, Vector2 clickPosition) => mb.Result?.Invoke(mb, new MessageBoxResultEventArgs() { MessageBoxResult = MessageBoxResult.Ok });
                     customButtonCancel.MouseClicked += (object sender, MousePointer mousePointer, Vector2 clickPosition) => mb.Result?.Invoke(mb, new MessageBoxResultEventArgs() { MessageBoxResult = MessageBoxResult.Cancel });
 
-                    mb.AddChildSprite(customButton, new Vector2(mb.Bounds.Width / 2 - 50, mb.Bounds.Height - 35));
-                    mb.AddChildSprite(customButtonCancel, new Vector2(mb.Bounds.Width / 2 + 50, mb.Bounds.Height - 35));
+                    mb.AddChildSprite(customButton, new Vector2(mb.Bounds.X / 2 - 50, mb.Bounds.Y - 35));
+                    mb.AddChildSprite(customButtonCancel, new Vector2(mb.Bounds.X / 2 + 50, mb.Bounds.Y - 35));
                     break;
                 default:
                     var defaultButton = new Button(tm.TextureText("OK", "Default", Color.Red), tm.OutlineText("OK", "Default", Color.Black, Color.Red, 2));
@@ -204,10 +235,11 @@ namespace ExplorerOpenGL.Model.Sprites
                         mb.Result?.Invoke(mb, new MessageBoxResultEventArgs() { MessageBoxResult = MessageBoxResult.Ok });
                         mb.Close();
                     };
-                    mb.AddChildSprite(defaultButton, new Vector2(mb.Bounds.Width / 2, mb.Bounds.Height - 35));
+                    mb.AddChildSprite(defaultButton, new Vector2(mb.Bounds.X / 2, mb.Bounds.Y - 35));
                     break; 
             }
-            mb.SetAlignOption(AlignOption.Center);
+            mb.SetAlignOption(AlignOptions.Center);
+            mb.Position = new Vector2(gm.Width / 2, gm.Height / 2);
             gm.AddSprite(mb, null);
             return mb;
         }

@@ -1,4 +1,5 @@
-﻿using ExplorerOpenGL.Model.Sprites;
+﻿using ExplorerOpenGL.Model;
+using ExplorerOpenGL.Model.Sprites;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
@@ -25,9 +26,9 @@ namespace ExplorerOpenGL.Managers
         private GameManager gameManager;
 
         private Dictionary<string, Texture2D> LoadedTextures;
+        private Dictionary<string, Animation> animations; 
 
         private Dictionary<int, Texture2D> IssuedTextures;
-
         private Dictionary<int, OutlineTextRenderArgs> OutlineTextToDraw;
         private Dictionary<int, CreateBorderTextureRenderArgs> CreateBorderTextureToDraw;
         private Dictionary<int, CreateTextureRenderArgs> CreateTextureToDraw;
@@ -36,6 +37,7 @@ namespace ExplorerOpenGL.Managers
         public static event EventHandler Initialized;
 
         private static TextureManager instance;
+        private int mainThreadID; 
 
         public static TextureManager Instance
         {
@@ -51,9 +53,12 @@ namespace ExplorerOpenGL.Managers
             }
         }
 
-        public TextureManager()
+        private TextureManager()
         {
+            mainThreadID = Thread.CurrentThread.ManagedThreadId;
+
             LoadedTextures = new Dictionary<string, Texture2D>();
+            animations = new Dictionary<string, Animation>(); 
             IssuedTextures = new Dictionary<int, Texture2D>();
 
             OutlineTextToDraw = new Dictionary<int, OutlineTextRenderArgs>();
@@ -147,7 +152,7 @@ namespace ExplorerOpenGL.Managers
         }
         public Texture2D CreateTexture(int width, int height, Func<int, Color> paint)
         {
-            if (gameManager.MainThreadID == Thread.CurrentThread.ManagedThreadId)
+            if (mainThreadID == Thread.CurrentThread.ManagedThreadId)
                 return CreateTextureThread(width, height, paint);
                 int id = getIdTicket();
             var ra = new CreateTextureRenderArgs()
@@ -201,7 +206,7 @@ namespace ExplorerOpenGL.Managers
         }
         public Texture2D CreateBorderedTexture(int width, int height, int thickness, int distanceBorder, Func<int, Color> borderPaint, Func<int, Color> backgroundPaint)
         {
-            if (gameManager.MainThreadID == Thread.CurrentThread.ManagedThreadId)
+            if (mainThreadID == Thread.CurrentThread.ManagedThreadId)
                 return CreateBorderedTextureThread(width, height, thickness, distanceBorder, borderPaint, backgroundPaint);
             int id = getIdTicket();
             var ra = new CreateBorderTextureRenderArgs()
@@ -270,7 +275,7 @@ namespace ExplorerOpenGL.Managers
         }
         public Texture2D OutlineText(string input, string font, Color borderColor, Color textColor, int Thickness)
         {
-            if (gameManager.MainThreadID == Thread.CurrentThread.ManagedThreadId)
+            if (mainThreadID == Thread.CurrentThread.ManagedThreadId)
                 return OutlineTextThread(input, font, borderColor, textColor, Thickness);
             int id = getIdTicket();
             var ra = new OutlineTextRenderArgs()
@@ -292,7 +297,7 @@ namespace ExplorerOpenGL.Managers
         }
         public Texture2D TextureText(string text, string font, Color color)
         {
-            if (gameManager.MainThreadID == Thread.CurrentThread.ManagedThreadId)
+            if (mainThreadID == Thread.CurrentThread.ManagedThreadId)
                 return TextureTextThread(text, font, color);
             int id = getIdTicket();
             var ra = new TextToTextureRenderArgs()
@@ -349,6 +354,8 @@ namespace ExplorerOpenGL.Managers
         }
         public Texture2D LoadNoneContentLoadedTexture(string path)
         {
+            if (LoadedTextures.ContainsKey(path))
+                return LoadedTextures[path]; 
             var image = (System.Drawing.Bitmap)System.Drawing.Image.FromFile(path);
 
             int ImageWidth = image.Width;
@@ -369,6 +376,7 @@ namespace ExplorerOpenGL.Managers
             }
             texture.SetData(data);
             LoadedTextures.Add(path, texture);
+            image.Dispose(); 
             return texture;
         }
 
@@ -388,6 +396,20 @@ namespace ExplorerOpenGL.Managers
             return texture;
         }
 
+        public Animation LoadAnimation(string textureName, int nbrFrame, int looptime, string name, AlignOptions alignOption = AlignOptions.None) 
+        {
+            if (animations.ContainsKey(name))
+                return animations[name]; 
+            Animation animation = new Animation(LoadTexture(textureName), nbrFrame, looptime, name, alignOption); 
+            animations.Add(animation.Name, animation); 
+            return animation; 
+        }
+        public Animation GetAnimation(string name)
+        {
+            if (animations.ContainsKey(name))
+                return animations[name];
+            return null; 
+        }
     }
     public class OutlineTextRenderArgs
     {

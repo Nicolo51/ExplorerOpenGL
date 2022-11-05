@@ -11,7 +11,6 @@ namespace ExplorerOpenGL.Managers.Networking
 {
     public class PlayerData : Sprite
     {
-        public int ID { get; private set; }
         public string Name { get; set; }
         private string RenderName { get; set; }
         public Vector2 ServerPosition { get; set; }
@@ -21,8 +20,9 @@ namespace ExplorerOpenGL.Managers.Networking
         public Texture2D playerTexture { get; set; }
         public Texture2D playerFeetTexture { get; set; }
         public Texture2D TextureName{ get; set; }
-        public Vector2 PositionName { get { return new Vector2(ServerPosition.X, ServerPosition.Y + 50); }}
-        public Vector2 PositionHealth { get { return new Vector2(ServerPosition.X, ServerPosition.Y - 50); } }
+        public Vector2 PositionName { get { return new Vector2(Position.X, Position.Y - 10); }}
+        public Vector2 PositionHealth { get { return new Vector2(Position.X, Position.Y - 50); } }
+        public string CurrentAnimationName { get; set; }
         public Vector2 OriginName { get; set; }
         public float opacity;
         public bool NameHasChange { get; set; }
@@ -32,75 +32,56 @@ namespace ExplorerOpenGL.Managers.Networking
         public double Health { get; set; }
 
         private NetworkManager networkManager;
-
-        private double timeToTravel;
-        private double lagCompProgress; 
-        private Vector2 lagCompDirection; 
-
+        
         public int idTexture { get; set; }
         public int idFeetTexture { get; set; }
 
         public PlayerData(int id, string name)
+            :base()
         {
-            textureManager = TextureManager.Instance;
-            font = FontManager.Instance.GetFont("default");  
-            NameHasChange = false; 
-            this.Name = name; 
-            scale = 1f;
-            opacity = 1f; 
-            ID = id;
-            layerDepth = .9f;
-            networkManager = NetworkManager.Instance;
+            this.Name = name;
+            Init(id);
         }
         public PlayerData(int id)
+            : base()
+        {
+            Init(id);
+        }
+
+        private void Init(int id)
         {
             textureManager = TextureManager.Instance;
+            networkManager = NetworkManager.Instance;
+            if (networkManager.IDClient != id)
+            {
+                _animation.Add(textureManager.GetAnimation("walk"));
+                _animation.Add(textureManager.GetAnimation("stand"));
+            }
             NameHasChange = false;
-            scale = 1f;
+            Scale = 1f;
             opacity = 1f;
             ID = id;
-            layerDepth = .9f;
-            networkManager = NetworkManager.Instance;
+            LayerDepth = .9f;
         }
 
         public override void Update(Sprite[] sprites)
         {
-            if (InGamePosition != ServerPosition && timeToTravel != 0)
-            {
-                lagCompProgress += timeManager.ElapsedBetweenUpdates.TotalMilliseconds / timeToTravel;
-                if (lagCompProgress > 1)
-                {
-                    InGamePosition = ServerPosition;
-                    lagCompProgress = 0; 
-                }
-                else
-                {
-                    InGamePosition = new Vector2((float)(ServerPosition.X - (lagCompDirection.X * (1-lagCompProgress))), (float)(ServerPosition.Y - (lagCompDirection.Y * (1-lagCompProgress))));
-                }
-            }
+            if(!string.IsNullOrWhiteSpace(CurrentAnimationName))
+                Play(CurrentAnimationName);
 
             if(RenderName != Name)
             {
                 GenerateTexture(textureManager);
             }
-            if(playerFeetTexture == null || playerTexture == null)
-            {
-                SetTextures(textureManager.LoadTexture("player"), textureManager.LoadTexture("playerfeet"));
-            }
             base.Update(sprites);
         }
 
-        public void SetTimeToTravel(double time, GameTime gameTime)
-        {
-            timeToTravel = time; 
-            lagCompProgress = 0; 
-            lagCompDirection = new Vector2(ServerPosition.X - InGamePosition.X, ServerPosition.Y - InGamePosition.Y);
-        }
+       
 
         private void SetTextures(Texture2D texture, Texture2D textureFeet)
         {
             playerFeetTexture = textureFeet;
-            playerTexture = texture; 
+            playerTexture = texture;
             origin = new Vector2(playerTexture.Width / 2, playerTexture.Height / 2);
             originFeet = new Vector2(playerFeetTexture.Width / 2, playerFeetTexture.Height / 2);
         }
@@ -122,15 +103,16 @@ namespace ExplorerOpenGL.Managers.Networking
             return $"ID:{ID}, Position:{ServerPosition.ToString()}, LookAtRadian:{LookAtRadian}, FeetRadian:{FeetRadian}"; 
         }
 
-        public override void Draw(SpriteBatch spriteBatch,  GameTime gameTime, float lerpAmount = 1)
+        public override void Draw(SpriteBatch spriteBatch,  GameTime gameTime, float lerpAmount = 1, Vector2? position = null)
         {
-            if (TextureName != null && playerFeetTexture != null && playerTexture != null)
+            if (TextureName != null)
             {
-                spriteBatch.DrawString(font, Health.ToString("#"), PositionHealth, Color.White, 0f, font.MeasureString(Health.ToString("#")) / 2, 1f, SpriteEffects.None, layerDepth); 
-                spriteBatch.Draw(TextureName, PositionName, null, Color.White, 0f, OriginName, .75f, SpriteEffects.None, layerDepth);
-                spriteBatch.Draw(playerFeetTexture, InGamePosition, null, Color.White * opacity, FeetRadian, originFeet, scale , Effects, layerDepth + .01f);
-                spriteBatch.Draw(playerTexture, InGamePosition, null, Color.White * opacity, LookAtRadian, origin, scale * .5f, Effects, layerDepth);
+                //spriteBatch.DrawString(font, Health.ToString("#"), PositionHealth, Color.White, 0f, font.MeasureString(Health.ToString("#")) / 2, 1f, SpriteEffects.None, layerDepth); 
+                spriteBatch.Draw(TextureName, PositionName, null, Color.White, 0f, OriginName, .75f, SpriteEffects.None, LayerDepth);
+                //spriteBatch.Draw(playerFeetTexture, InGamePosition, null, Color.White * opacity, FeetRadian, originFeet, scale , Effects, layerDepth + .01f);
+                //spriteBatch.Draw(playerTexture, InGamePosition, null, Color.White * opacity, LookAtRadian, origin, scale * .5f, Effects, layerDepth);
             }
+            base.Draw(spriteBatch, gameTime, lerpAmount); 
         }
     }
 }

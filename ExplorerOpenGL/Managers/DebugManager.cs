@@ -24,14 +24,16 @@ namespace ExplorerOpenGL.Managers
         GraphicsDeviceManager graphics;
         private Sprite[] sprites;
         public bool IsDebuging { get; private set; } 
-        private static DebugManager instance;
-        public static event EventHandler Initialized;
 
         private NetworkManager networkManager; 
         private KeyboardManager keyboardManager;
         private FontManager fontManager;
         private TimeManager timeManager;
         private GameManager gameManager;
+        public Texture2D debugTexture; 
+
+        private static DebugManager instance;
+        public static event EventHandler Initialized;
         public static DebugManager Instance
         {
             get
@@ -60,7 +62,8 @@ namespace ExplorerOpenGL.Managers
             fontManager = FontManager.Instance;
             timeManager = TimeManager.Instance;
             gameManager = GameManager.Instance;
-            networkManager = NetworkManager.Instance; 
+            networkManager = NetworkManager.Instance;
+            debugTexture = TextureManager.Instance.CreateTexture(11,11, paint => (paint % 2 == 0) ? Color.Red : Color.Transparent); 
 
             keyboardManager.KeyPressedSubTo(Keys.F3, ToggleDebugMode);
             keyboardManager.KeyRealeased += AddEvent;
@@ -187,20 +190,16 @@ namespace ExplorerOpenGL.Managers
                     debugMessage.Append("No MouseCursor Detected :(");
             }
         }
-
         private void ClearDebugMember()
         {
             debugMouse = null; 
         }
-
-        
-
         public void DebugDraw(SpriteBatch spriteBatch)
         {
             LogElement[] logList;
             lock (EventLogList)
                 logList = EventLogList.ToArray(); 
-            for(int i = 0; i < EventLogList.Count; i++)
+            for(int i = 0; i < logList.Length; i++)
             {
                 spriteBatch.DrawString(fontManager.GetFont("Default"), logList[i].Text, new Vector2(graphics.PreferredBackBufferWidth,  i * scale * 20) , Color.White * logList[i].opacity, 0f, MaxLogVec, scale, SpriteEffects.None, 1f); 
             }

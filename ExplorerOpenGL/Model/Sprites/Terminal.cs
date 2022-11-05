@@ -48,8 +48,8 @@ namespace ExplorerOpenGL.Model.Sprites
             width = texture.Width;
             IsHUD = true; 
             font = Font;
-            layerDepth = .1f; 
-            _texture = texture; 
+            LayerDepth = .1f; 
+            //SetTexture(texture); 
             Opacity = .5f;
 
             terminalTexintput = new TextinputBox(textureManager.CreateTexture(700, 35, paint => Color.Black * .8f), fontManager.GetFont("Default"), true, true) { IsHUD = true, Position = new Vector2(0, 695), Opacity = 0f, };
@@ -216,12 +216,12 @@ namespace ExplorerOpenGL.Model.Sprites
             }
         }
 
-        public override void Draw(SpriteBatch spriteBatch, GameTime gameTime, float lerpAmount)
+        public override void Draw(SpriteBatch spriteBatch, GameTime gameTime, float lerpAmount, Vector2? position = null)
         {
             for (int i = messages.Count - 1; i >= 0; i--)
             {
-                spriteBatch.Draw(_texture, new Vector2(Position.X, Position.Y + height - ((messages.Count - 1 - i) * 30)), null, Color.White * messages[i].Opacity, 0f, new Vector2(0, 30), 1f ,  SpriteEffects.None, layerDepth - .01f);
-                spriteBatch.DrawString(font, messages[i].ToString(), new Vector2(Position.X, Position.Y + height - ((messages.Count - 1 - i) *25)), messages[i].Color * messages[i].Opacity * 2, 0f, new Vector2(0, 30), 1f, SpriteEffects.None, layerDepth - .02f);
+                spriteBatch.Draw(Texture, new Vector2(Position.X, Position.Y + height - ((messages.Count - 1 - i) * 30)), null, Color.White * messages[i].Opacity, 0f, new Vector2(0, 30), 1f ,  SpriteEffects.None, LayerDepth - .01f);
+                spriteBatch.DrawString(font, messages[i].ToString(), new Vector2(Position.X, Position.Y + height - ((messages.Count - 1 - i) *25)), messages[i].Color * messages[i].Opacity * 2, 0f, new Vector2(0, 30), 1f, SpriteEffects.None, LayerDepth - .02f);
             }
             terminalTexintput.Draw(spriteBatch, gameTime, lerpAmount);
         }

@@ -31,14 +31,15 @@ namespace GameServerTCP.GameData
             Players.Add(player.ID, player); 
         }
 
-        public static void UpdatePlayer(int id, Vector2 postion, float feetRadian, float lootAtRadian, int health)
+        public static void UpdatePlayer(int id, Vector2 postion, int health, string currentAnimationName, int effect)
         {
             lock (Players)
             {
-                Players[id].Position = postion;
-                Players[id].FeetRadian = feetRadian;
-                Players[id].LookAtRadian = lootAtRadian;
-                Players[id].Health = health;
+                Player p = Players[id];
+                p.Position = postion;
+                p.Health = health;
+                p.CurrentAnimationName = currentAnimationName;
+                p.SpriteEffect = effect;
             }
         }
         public static void movePlayer(int id, Vector2 position)

@@ -259,7 +259,7 @@ namespace ExplorerOpenGL.Managers
 
         public void FocusTextinput(TextinputBox ti)//ti is the one which is going to be focused
         {
-            foreach(var t in textinputBoxes)
+            foreach(var t in textinputBoxes.Where(t => t.IsFocused).ToArray())
             {
                 t.UnFocus(); 
             }

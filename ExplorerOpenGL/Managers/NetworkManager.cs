@@ -30,11 +30,15 @@ namespace ExplorerOpenGL.Managers
         private string playerNameOnConnection;
         private GameTime gameTime;
 
+        public int IDClient { get { return client.myId; } }
+
         delegate void RequestHandler(Packet packet);
         private Dictionary<RequestTypes, RequestHandler> requestHandler; 
 
         double elapsedTimeSinceLastUpdatePlayer;
         double lastUpdate; 
+
+
 
         private bool DoOnce; 
 
@@ -129,85 +133,131 @@ namespace ExplorerOpenGL.Managers
             client.CreateBullet(player); 
         }
 
+        public void OnPlayerUpdate(PlayerUpdateEventArgs e)
+        {
+            elapsedTimeSinceLastUpdatePlayer = gameTime.TotalGameTime.TotalMilliseconds - lastUpdate;
+            lastUpdate = gameTime.TotalGameTime.TotalMilliseconds;
+            foreach (PlayerData pd in e.PlayerData)
+            {
+                if (pd.ID == IDClient)
+                    continue; 
+                PlayerData p = client.PlayersData[pd.ID];
+                p.SetPosition(pd.ServerPosition, false); 
+                p.Health = pd.Health;
+                p.Play(pd.CurrentAnimationName);
+                p.Effects = pd.Effects; 
+            }
+        }
+
+        public void OnGameObjectUpdate(GameObjectsUpdateEventArgs e)
+        {
+            foreach (var ngo in e.networkGameObjects)
+            {
+                bool contains = false;
+                lock (gameManager.NetworkObjects)
+                    contains = gameManager.NetworkObjects.Keys.Contains(ngo.ID);
+
+                if (contains)
+                {
+                    gameManager.UpdateNetworkObjects(ngo);
+                    continue;
+                }
+                var b = ngo as NetworkBullet;
+                Bullet bullet = new Bullet() { Direction = b.Direction, Velocity = b.Velocity, ID = b.ID, Position = b.Position, IdPlayer = b.IDPlayer };
+                gameManager.AddNetworkObject(bullet);
+            }
+        }
+
+
+        public void OnMessage(ChatMessageEventArgs e)
+        {
+            gameManager.Terminal.AddMessageToTerminal(e.Text, e.Sender, e.TextColor);
+
+        }
+        public void PlayerSync(PlayerSyncEventArgs e)
+        {
+            foreach (PlayerData pd in e.PlayerData)
+            {
+                PlayerData playerDataSync = new PlayerData(pd.ID, pd.Name);
+                client.PlayersData.Add(pd.ID, playerDataSync);
+                gameManager.AddSprite(playerDataSync, this);
+            }
+        }
+        public void OnRequestResponse(RequestResponseEventArgs e)
+        {
+            gameManager.Terminal.AddMessageToTerminal(e.Message, "System", Color.White);
+        }
+        public void OnPlayerDisconnection(PlayerDisconnectionEventArgs e)
+        {
+            gameManager.RemoveSprite(client.PlayersData[e.ID]);
+            client.PlayersData.Remove(e.ID);
+            gameManager.Terminal.AddMessageToTerminal(e.Message, "System", Color.White);
+        }
+        public void OnPlayerConnection(PlayerConnectEventArgs e)
+        {
+            PlayerData playerDataCo = new PlayerData(e.ID, e.Name);
+            client.PlayersData.Add(e.ID, playerDataCo);
+            gameManager.Terminal.AddMessageToTerminal(e.Message, "System", Color.White);
+            gameManager.AddSprite(playerDataCo, this);
+        }
+
+        public void OnPlayerChangeName(PlayerChangeNameEventArgs e)
+        {
+            string exName = client.PlayersData[e.IDPlayer].Name;
+            if (e.IDPlayer == client.myId)
+            {
+                gameManager.AddActionToUIThread(gameManager.Player.ChangeName, e.Name);
+                return;
+            }
+            client.PlayersData[e.IDPlayer].Name = e.Name;
+            gameManager.Terminal.AddMessageToTerminal(exName + " is now known as " + e.Name, "System", Color.Green);
+        }
+
+        public void OnWelcome(WelcomeEventArgs e)
+        {
+            client.SendResponseWelcome(playerNameOnConnection);
+            //client.ConnectUdp();
+            serverTickRate = e.TickRate;
+            ConnectionState = ConnectionState.WaitingForUdp;
+        }
+
+
         public void OnPacketReceived(NetworkEventArgs e)
         {
             switch (e)
             {
                 case PlayerUpdateEventArgs puea:
-                    elapsedTimeSinceLastUpdatePlayer = gameTime.TotalGameTime.TotalMilliseconds - lastUpdate;
-                    lastUpdate = gameTime.TotalGameTime.TotalMilliseconds;
-                    foreach(PlayerData pd in puea.PlayerData)
-                    {
-                        client.PlayersData[pd.ID].ServerPosition = pd.ServerPosition; 
-                        client.PlayersData[pd.ID].LookAtRadian = pd.LookAtRadian; 
-                        client.PlayersData[pd.ID].FeetRadian = pd.FeetRadian;
-                        client.PlayersData[pd.ID].SetTimeToTravel(elapsedTimeSinceLastUpdatePlayer, gameTime);
-                        client.PlayersData[pd.ID].Health = pd.Health;
-                    }
+                    OnPlayerUpdate(puea);
                     break;
                 case ChatMessageEventArgs cmea:
-                    gameManager.Terminal.AddMessageToTerminal(cmea.Text, cmea.Sender, cmea.TextColor);
+                    OnMessage(cmea);
                     break;
                 case PlayerSyncEventArgs psea:
-                    foreach(PlayerData pd in psea.PlayerData)
-                    {
-                        PlayerData playerDataSync = new PlayerData(pd.ID, pd.Name);
-                        client.PlayersData.Add(pd.ID, playerDataSync);
-                        gameManager.AddSprite(playerDataSync, this);
-                    }
+                    PlayerSync(psea);
                     break;
                 case RequestResponseEventArgs rrea:
-                    gameManager.Terminal.AddMessageToTerminal(rrea.Message, "System", Color.White);
+                    OnRequestResponse(rrea);
                     break;
                 case PlayerDisconnectionEventArgs pdea:
-                    gameManager.RemoveSprite(client.PlayersData[pdea.ID]);
-                    client.PlayersData.Remove(pdea.ID);
-                    gameManager.Terminal.AddMessageToTerminal(pdea.Message, "System", Color.White);
+                    OnPlayerDisconnection(pdea);
                     break;
                 case PlayerConnectEventArgs pcea:
-                    PlayerData playerDataCo = new PlayerData(pcea.ID, pcea.Name);
-                    client.PlayersData.Add(pcea.ID, playerDataCo);
-                    gameManager.Terminal.AddMessageToTerminal(pcea.Message, "System", Color.White);
-                    gameManager.AddSprite(playerDataCo, this);
+                    OnPlayerConnection(pcea);
                     break;
                 case PlayerChangeNameEventArgs pcnea:
-                    string exName = client.PlayersData[pcnea.IDPlayer].Name; 
-                    if (pcnea.IDPlayer == client.myId)
-                    {
-                        gameManager.AddActionToUIThread(gameManager.Player.ChangeName, pcnea.Name);
-                        return; 
-                    }
-                    client.PlayersData[pcnea.IDPlayer].Name = pcnea.Name;
-                    gameManager.Terminal.AddMessageToTerminal(exName + " is now known as " + pcnea.Name, "System", Color.Green);
+                    OnPlayerChangeName(pcnea);
                     break;
                 case WelcomeEventArgs wea:
-                    client.SendResponseWelcome(playerNameOnConnection);
-                    //client.ConnectUdp();
-                    serverTickRate = wea.TickRate; 
-                    ConnectionState = ConnectionState.WaitingForUdp;
+                    OnWelcome(wea);
                     break;
                 case GameObjectsUpdateEventArgs gouea:
-                    foreach (var ngo in gouea.networkGameObjects)
-                    {
-                        bool contains = false;
-                        lock (gameManager.NetworkObjects)
-                            contains = gameManager.NetworkObjects.Keys.Contains(ngo.ID);
-
-                        if (contains)
-                        {
-                            gameManager.UpdateNetworkObjects(ngo);
-                            continue; 
-                        }
-                        var b = ngo as NetworkBullet; 
-                        Bullet bullet = new Bullet() { Direction = b.Direction, Velocity = b.Velocity, ID = b.ID, Position = b.Position, IdPlayer = b.IDPlayer };
-                        gameManager.AddNetworkObject(bullet);
-                    }
+                    OnGameObjectUpdate(gouea);
                     break;
-                case RequestEventArgs srea:
-                    requestHandler[srea.RequestType](srea.Packet);
+                case UpdateSelfEventArgs usea:
+                    OnUpdateSelf(usea); 
                     break; 
                 default:
-                    if (e.MessageType == MessageType.OnUdpTestReceive)
+                    if (e.PacketType == ServerPackets.UdpTest)
                     {
                         gameManager.Terminal.AddMessageToTerminal($"Connected !", "System", Color.Green);
                         ConnectionState = ConnectionState.Connected;
@@ -216,6 +266,14 @@ namespace ExplorerOpenGL.Managers
                     gameManager.Terminal.AddMessageToTerminal(e.Message, "System", Color.White);
                     break;
             }
+        }
+
+        private void OnUpdateSelf(UpdateSelfEventArgs e)
+        {
+            if(e.PacketType == ServerPackets.Teleport)
+                gameManager.Player.SetPosition(e.Position, false);
+            if(e.PacketType == ServerPackets.ChangeHealth)
+                gameManager.Player.Health = e.Health;
         }
 
         public void OnPacketSent(NetworkEventArgs e)

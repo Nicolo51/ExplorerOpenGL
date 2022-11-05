@@ -18,15 +18,15 @@ namespace ExplorerOpenGL.View
         public PauseMenu()
             : base()
         {
-            _texture = textureManager.CreateTexture(gameManager.Width, gameManager.Height, paint => Color.Black);
+            SetTexture(textureManager.CreateTexture(gameManager.Width, gameManager.Height, paint => Color.Black));
             isDraggable = false;
             SetPosition(Vector2.Zero);
 
             MainMenuButton = new Button(textureManager.OutlineText("Main Menu", "Default", Color.CornflowerBlue, Color.Black, 1), textureManager.OutlineText("Main Menu", "Default", Color.CornflowerBlue, Color.Black, 2));
             ResumeButton = new Button(textureManager.OutlineText("Resume", "Default", Color.CornflowerBlue, Color.Black, 1), textureManager.OutlineText("Resume", "Default", Color.CornflowerBlue, Color.Black, 2));
             SetTexture(textureManager.CreateTexture(gameManager.Width, gameManager.Height, paint => new Color(Color.Black, .5f))); 
-            ResumeButton.SetAlignOption(AlignOption.Center); 
-            MainMenuButton.SetAlignOption(AlignOption.Center); 
+            ResumeButton.SetAlignOption(AlignOptions.Center); 
+            MainMenuButton.SetAlignOption(AlignOptions.Center); 
 
             MainMenuButton.MouseClicked += MainMenuButton_MouseClicked;
             ResumeButton.MouseClicked += ResumeButton_MouseClicked;

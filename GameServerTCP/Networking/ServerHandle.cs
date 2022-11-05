@@ -82,12 +82,12 @@ namespace GameServerTCP
         public static void UdpUpdatePlayer(int fromClient, Packet packet)
         {
             Vector2 position = new Vector2(packet.ReadFloat(), packet.ReadFloat());
-            float feetRadian = packet.ReadFloat(); 
-            float lookAtRadian = packet.ReadFloat();
-            int health = packet.ReadInt(); 
+            int health = packet.ReadInt();
+            string animationName = packet.ReadString();
+            int effect = packet.ReadInt();
 
-            string msg = $"Posistion = {position.ToString()}, FeetRadian = {feetRadian.ToString("0.##")}, LookAtRadian = {lookAtRadian.ToString("0.##")}";
-            Game.UpdatePlayer(fromClient, position, feetRadian, lookAtRadian, health);
+            string msg = $"Posistion = {position.ToString()}";
+            Game.UpdatePlayer(fromClient, position, health, animationName, effect);
             //ServerSend.UdpUpdatePlayers(fromClient);
             //Console.WriteLine($"Received packet via UDP from ID { fromClient }. Contains message: {msg}");
             //Game.PrintDebug(); 

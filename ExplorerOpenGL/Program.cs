@@ -1,4 +1,5 @@
 ﻿using ExplorerOpenGL.Model;
+using ExplorerOpenGL.Model.Attributes;
 using System;
 using System.Diagnostics;
 

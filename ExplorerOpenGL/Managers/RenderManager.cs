@@ -5,6 +5,7 @@ using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -87,6 +88,17 @@ namespace ExplorerOpenGL.Managers
             return texture;
         }
 
+        public void SaveTextureAsPng(object args)
+        {
+            if (args.GetType() != typeof(SaveTextureAsPngArg))
+                throw new Exception("the argument of this function need to be of type SaveTextureAsPngArg");
+            Texture2D texture = (args as SaveTextureAsPngArg).Texture;
+
+            Stream stream = File.Create((args as SaveTextureAsPngArg).Path);
+            texture.SaveAsPng(stream, texture.Width, texture.Height);
+            stream.Dispose();
+        }
+
         public Texture2D RenderTextToTexture(string input, SpriteFont font, Color textColor, int outlineOffset)
         {
             StringBuilder temp = new StringBuilder();
@@ -101,7 +113,7 @@ namespace ExplorerOpenGL.Managers
 
             string textToRender = temp.ToString(); 
             Vector2 stringDimension = font.MeasureString(temp.ToString());
-            Vector2 targetBounds = new Vector2(stringDimension.X + outlineOffset * 4, stringDimension.Y + outlineOffset * 4); 
+            Vector2 targetBounds = new Vector2(stringDimension.X + outlineOffset *2 , stringDimension.Y + outlineOffset * 2); 
 
             Texture2D texture = new Texture2D(graphics.GraphicsDevice, (int)targetBounds.X, (int)targetBounds.Y);
 
@@ -192,6 +204,18 @@ namespace ExplorerOpenGL.Managers
 
             return outputs; 
         }
+
+        public class SaveTextureAsPngArg
+        {
+            public SaveTextureAsPngArg(string path, Texture2D texture)
+            {
+                Path = path;
+                Texture = texture; 
+            }
+            public string Path { get; set; }
+            public Texture2D Texture { get; set; }
+        }
+
     }
     
 }

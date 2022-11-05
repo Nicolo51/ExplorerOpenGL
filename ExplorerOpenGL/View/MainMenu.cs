@@ -23,10 +23,10 @@ namespace ExplorerOpenGL.View
             btnSinglePlayer = new Button(textureManager.OutlineText("Singleplayer", "Menu", Color.Black, Color.White, 2), textureManager.OutlineText("Singleplayer", "Menu", Color.Black, Color.White, 4));
             btnMultiPlayer = new Button(textureManager.OutlineText("Multiplayer", "Menu", Color.Black, Color.White, 2), textureManager.OutlineText("Multiplayer", "Menu", Color.Black, Color.White, 4));
             btnOption = new Button(textureManager.OutlineText("Options", "Menu", Color.Black, Color.White, 2), textureManager.OutlineText("Options", "Menu", Color.Black, Color.White, 4));
-
-            btnSinglePlayer.SetAlignOption(AlignOption.Center);
-            btnMultiPlayer.SetAlignOption(AlignOption.Center);
-            btnOption.SetAlignOption(AlignOption.Center);
+            
+            btnSinglePlayer.SetAlignOption(AlignOptions.Center);
+            btnMultiPlayer.SetAlignOption(AlignOptions.Center);
+            btnOption.SetAlignOption(AlignOptions.Center);
 
             btnSinglePlayer.MouseClicked += BtnSinglePlayer_MouseClicked;
             btnMultiPlayer.MouseClicked += BtnMultiPlayer_MouseClicked;
@@ -35,7 +35,7 @@ namespace ExplorerOpenGL.View
 
         private void BtnSinglePlayer_MouseClicked(object sender, MousePointer mousePointer, Vector2 clickPosition)
         {
-            new PickNameScreen().Show();
+            new SinglePlayerMenu().Show();
             this.Close(); 
         }
 
@@ -48,6 +48,14 @@ namespace ExplorerOpenGL.View
         private void BtnOption_MouseClicked(object sender, MousePointer mousePointer, Vector2 clickPosition)
         {
             
+        }
+
+        public override void Close()
+        {
+            btnSinglePlayer.MouseClicked -= BtnSinglePlayer_MouseClicked;
+            btnMultiPlayer.MouseClicked -= BtnMultiPlayer_MouseClicked;
+            btnOption.MouseClicked -= BtnOption_MouseClicked;
+            base.Close();
         }
 
         public override void Show()
