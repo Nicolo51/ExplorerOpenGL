@@ -87,7 +87,7 @@ namespace ExplorerOpenGL.Model.Sprites
             for (int i = 0; i < sprites.Length && !isDragging; i++)
             {
                 Sprite sprite = sprites[i];
-                if (!sprite.IsClickable && !sprite.isDraggable)
+                if ((!sprite.IsClickable && !sprite.isDraggable) || !sprite.IsDisplayed)
                     continue;
                 lock (sprite)
                 {

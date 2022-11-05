@@ -86,7 +86,7 @@ namespace ExplorerOpenGL.Managers
             {
                 if(!Int32.TryParse(ip.Split(':')[1], out port))
                 {
-                    MessageBox.Show("Error", "Port unreadable.");
+                    MessageBox.Show("Port unreadable.", "Error");
                     return false; 
                 } 
             }

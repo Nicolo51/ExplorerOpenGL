@@ -209,7 +209,6 @@ namespace ExplorerOpenGL
         /// <param name="gameTime">Provides a snapshot of timing values.</param>
         protected override void Draw(GameTime gameTime)
         {
-            var timeBeginDraw = gameTime.TotalGameTime; 
             timeManager.LastDrawTime = DateTime.Now;
             GraphicsDevice.Clear(Color.CornflowerBlue);
             float la = timeManager.LerpAmount;
@@ -276,8 +275,6 @@ namespace ExplorerOpenGL
                 
             spriteBatch.End();
             base.Draw(gameTime);
-            var timeEndDraw = gameTime.TotalGameTime;
-            debugManager.AddEvent((timeEndDraw - timeBeginDraw).TotalMilliseconds);
         }
     }
 }
