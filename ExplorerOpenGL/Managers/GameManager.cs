@@ -34,7 +34,7 @@ namespace ExplorerOpenGL.Managers
 
         public bool IsOnline { get { return networkManager.IsConnectedToAServer; } }
 
-        private bool isGameStarted;  
+        private bool isGameStarted;
         public Player Player { get; set; }
         public Terminal Terminal { get; private set; }
         public Camera Camera { get; private set; } 
@@ -50,7 +50,7 @@ namespace ExplorerOpenGL.Managers
         private bool hasGameStateChanged; 
 
         public int MainThreadID { get; set; }  
-
+        
         public static event EventHandler Initialized;
         private static GameManager instance;
         public static GameManager Instance
@@ -227,7 +227,10 @@ namespace ExplorerOpenGL.Managers
             SpriteAdded?.Invoke(sprite, issuer);
             sprite.SetPosition(sprite.Position);
             lock (this.sprites)
-                this.sprites.Add(sprite); 
+            {
+                this.sprites.Add(sprite);
+                sprites = sprites.OrderByDescending(s => s.LayerDepth).ToList();  
+            }
         }
 
         public void AddSprite(Sprite[] sprites, object issuer)
@@ -303,10 +306,18 @@ namespace ExplorerOpenGL.Managers
             hasGameStateChanged = true; 
         }
 
+        public void SortSprites()
+        {
+            lock (sprites)
+            {
+                sprites = sprites.OrderByDescending(s => s.LayerDepth).ToList(); 
+            }
+        }
+
         public Sprite[] GetSprites()
         {
             lock (sprites)
-                return sprites.OrderByDescending(s => s.LayerDepth).ToArray(); 
+                return sprites.ToArray(); 
         }
 
         public Sprite[] GetNetworkObjects()

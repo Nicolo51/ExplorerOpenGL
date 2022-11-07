@@ -113,7 +113,8 @@ namespace ExplorerOpenGL.Model.Sprites
                     LastOverSprite.OnMouseLeave(sprites, this);
                 OverSprite.OnMouseOver(sprites, this);
             }
-
+            if (OverSprite == null)
+                return; 
             if (isClicking || (this.currentMouseState.LeftButton == ButtonState.Pressed && this.prevMouseState.LeftButton == ButtonState.Released))
             {
                 if (!isClicking)

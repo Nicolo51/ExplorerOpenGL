@@ -62,14 +62,14 @@ namespace ExplorerOpenGL.Managers
 
         public void Update()
         {
-
+            byte count = 0; 
             while (true)
             {
-                Sprite[] sprites; 
-                lock (gameManager.sprites)
-                {
-                    sprites = gameManager.sprites.ToArray(); 
-                }
+                count++;
+                if (count % 5 == 0)
+                    gameManager.SortSprites(); 
+                Sprite[] sprites;
+                sprites = gameManager.GetSprites();                
                 //Texture2D texture = TextureManager.Instance.OutlineText("coucou", "Default", Color.Black, Color.Black, 1);
                 //Texture2D texture = TextureManager.Instance.CreateBorderedTexture(100, 100, 10, 3, backgroundPaint => Color.BlueViolet, backgroundPaint => Color.Yellow);
                 //Texture2D texture = TextureManager.Instance.CreateTexture(100, 100, paint => Color.Red);
