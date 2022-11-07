@@ -140,10 +140,10 @@ namespace ExplorerOpenGL.Model.Sprites
 
         public static MessageBox Show(string message)
         {
-            return Show("Info", message);
+            return Show(message, "Info");
         }
 
-        public static MessageBox Show(string title, string message, MessageBoxType messageBoxType = MessageBoxType.None, string custom = null)
+        public static MessageBox Show(string message, string title, MessageBoxType messageBoxType = MessageBoxType.None, string custom = null)
         {
             const int maxWidth = 500; 
             if(messageBoxType == MessageBoxType.Custom && custom == null)
@@ -205,7 +205,10 @@ namespace ExplorerOpenGL.Model.Sprites
                 case MessageBoxType.Ok:
                     var okButtonOk = new Button(tm.TextureText("OK", "Default", Color.Red), tm.OutlineText("OK", "Default", Color.Black, Color.Red, 2));
 
-                    okButtonOk.MouseClicked += (object sender, MousePointer mousePointer, Vector2 clickPosition) => mb.Result?.Invoke(mb, new MessageBoxResultEventArgs() { MessageBoxResult = MessageBoxResult.Ok });
+                    okButtonOk.MouseClicked += (object sender, MousePointer mousePointer, Vector2 clickPosition) => {
+                        mb.Result?.Invoke(mb, new MessageBoxResultEventArgs() { MessageBoxResult = MessageBoxResult.Ok });
+                        mb.Close();
+                    };
 
                     mb.AddChildSprite(okButtonOk, new Vector2(mb.Bounds.X / 2, mb.Bounds.Y - 35));
                     break;

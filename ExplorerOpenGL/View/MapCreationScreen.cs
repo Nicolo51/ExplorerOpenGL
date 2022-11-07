@@ -42,6 +42,15 @@ namespace ExplorerOpenGL.View
 
         private void BtnCreate_MouseClicked(object sender, MousePointer mousePointer, Vector2 clickPosition)
         {
+            if (string.IsNullOrWhiteSpace(tbName.Text))
+            {
+                var mb = MessageBox.Show("Can't create a map with an empty name.", "Error", MessageBoxType.Ok);
+                mb.Result += Mb_Result;
+                Hide();
+                return; 
+            }
+            if (!Directory.Exists("./maps"))
+                Directory.CreateDirectory("./maps");
             if (File.Exists($@".\maps\{tbName.Text}.xml"))
             {
                 var mb = MessageBox.Show("This name is already taken");

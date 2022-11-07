@@ -30,7 +30,9 @@ namespace ExplorerOpenGL.View
             : base()
         {
             indexMapsStart = 0;
-            IsHUD = true; 
+            IsHUD = true;
+            if (!Directory.Exists("./maps"))
+                Directory.CreateDirectory("./maps"); 
             maps = Directory.GetFiles("./maps", "*.xml");
             for (int i = 0; i < maps.Length; i++)
                 maps[i] =  Path.GetFileNameWithoutExtension(maps[i]); 
