@@ -18,30 +18,29 @@ namespace ExplorerOpenGL.Model.Sprites
         public Color color { get; private set; }
 
         private Texture2D mouseOverTexture;
-        public Vector2 originMouseOver; 
-        public Vector2 OriginMouseOver { get { return originMouseOver * Scale;  } }
-        public bool isMouseOver; 
-        
+        public Vector2 originMouseOver;
+        public Vector2 OriginMouseOver { get { return originMouseOver * Scale; } }
+        public bool isMouseOver;
+
         public Button(Texture2D texture, Texture2D MouseOverTexture = null)
             : base(texture)
         {
             IsClickable = true;
-            MouseClicked += OnMouseClick; 
-            MouseOvered += OnMouseOver; 
+            MouseClicked += OnMouseClick;
+            MouseOvered += OnMouseOver;
             MouseLeft += OnMouseLeft;
 
             this.mouseOverTexture = MouseOverTexture ?? texture;
             SetAlignOption(AlignOptions.Center);
             Text = String.Empty;
             LayerDepth = 0.1f;
-            isDraggable = true;
-            Enable(); 
+            Enable();
         }
 
         public void Disable()
         {
             Opacity = .5f;
-            IsEnable = false; 
+            IsEnable = false;
         }
 
         public void Enable()
@@ -89,7 +88,7 @@ namespace ExplorerOpenGL.Model.Sprites
 
         public override void Update(Sprite[] sprites)
         {
-            if(IsEnable)
+            if (IsEnable)
                 base.Update(sprites);
         }
 
@@ -105,23 +104,23 @@ namespace ExplorerOpenGL.Model.Sprites
             gameManager.MousePointer.SetCursorIcon(MousePointerType.Default);
 
         }
-        private void OnMouseClick(object sender, MousePointer mousePointer,  Vector2 clickPosition)
+        private void OnMouseClick(object sender, MousePointer mousePointer, Vector2 clickPosition)
         {
 
         }
-        public override void Draw(SpriteBatch spriteBatch,  GameTime gameTime, float lerpAmount = 1, Vector2? position = null)
+        public override void Draw(SpriteBatch spriteBatch, GameTime gameTime, float lerpAmount = 1, params ShaderArgument[] shaderArgs)
         {
             if (!IsDisplayed)
                 return;
-            if (isMouseOver)
-            {
-                spriteBatch.Draw(mouseOverTexture, Position, null, Color.White * Opacity, Radian, OriginMouseOver * Scale, Scale, Effects, LayerDepth);
-                if (TextOnTop != null)
-                    spriteBatch.DrawString(TextOnTop.Font, TextOnTop.Text, position ?? Position, TextOnTop.Color, Radian, Origin - new Vector2(HitBox.Width / 2, HitBox.Height / 2) + TextOnTop.Origin, TextOnTop.Scale, TextOnTop.Effects, LayerDepth - .1f);
+            //if (isMouseOver)
+            //{
+            //    spriteBatch.Draw(mouseOverTexture, Position, null, Color.White * Opacity, Radian, OriginMouseOver * Scale, Scale, Effects, LayerDepth);
+            //    if (TextOnTop != null)
+            //        renderManager.DrawString(TextOnTop.Font, TextOnTop.Text, position ?? Position, TextOnTop.Color, Radian, Origin - new Vector2(HitBox.Width / 2, HitBox.Height / 2) + TextOnTop.Origin, TextOnTop.Scale, TextOnTop.Effects, LayerDepth - .1f);
 
-            }
-            else
-                base.Draw(spriteBatch, gameTime, lerpAmount, position);
+            //}
+            //else
+                base.Draw(spriteBatch, gameTime, lerpAmount);
         }
     }
 }

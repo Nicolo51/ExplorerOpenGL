@@ -21,7 +21,7 @@ namespace ExplorerOpenGL.Model.Sprites
         private MousePointerType defaultType;
 
         public Sprite OverSprite { get; private set; }
-        public Sprite LastOverSprite { get; private set;  }
+        public Sprite LastOverSprite { get; private set; }
         private Vector2 ClickPosition;
         private bool isDragging;
         private bool isClicking;
@@ -45,20 +45,24 @@ namespace ExplorerOpenGL.Model.Sprites
 
         public void SetDefaultIcon(MousePointerType type)
         {
-            defaultType = type; 
+            defaultType = type;
         }
         public void SetCursorIcon(MousePointerType type)
         {
             if (type == MousePointerType.Default)
-                type = defaultType; 
+                type = defaultType;
             SourceRectangle = MousePointerTypes[type];
             switch (type)
             {
-                case MousePointerType.Arrow: case MousePointerType.SmallCursor:
+                case MousePointerType.Arrow:
+                case MousePointerType.SmallCursor:
                     origin = Vector2.Zero;
                     break;
-                case MousePointerType.Crosshair:case MousePointerType.Aim:case MousePointerType.SmallCrosshair:case MousePointerType.Text:
-                    origin = new Vector2(SourceRectangle.Width /2, SourceRectangle.Height/2);
+                case MousePointerType.Crosshair:
+                case MousePointerType.Aim:
+                case MousePointerType.SmallCrosshair:
+                case MousePointerType.Text:
+                    origin = new Vector2(SourceRectangle.Width / 2, SourceRectangle.Height / 2);
                     break;
                 case MousePointerType.Pointer:
                     origin = new Vector2(SourceRectangle.Width / 2, 0);
@@ -93,8 +97,8 @@ namespace ExplorerOpenGL.Model.Sprites
                 {
                     if ((sprite.IsHUD && sprite.HitBox.Intersects(this.HitBox) && OverSprite == null) ||
                         (!sprite.IsHUD && sprite.HitBox.Intersects(new Rectangle((int)InGamePosition.X, (int)InGamePosition.Y, 1, 1)) && OverSprite == null) ||
-                        (sprite.IsHUD && sprite.HitBox.Intersects(this.HitBox) && OverSprite.LayerDepth > sprite.LayerDepth) ||
-                        (!sprite.IsHUD && sprite.HitBox.Intersects(new Rectangle((int)InGamePosition.X, (int)InGamePosition.Y, 1, 1)) && OverSprite.LayerDepth > sprite.LayerDepth))
+                        (sprite.IsHUD && sprite.HitBox.Intersects(this.HitBox) && OverSprite.LayerDepth >= sprite.LayerDepth) ||
+                        (!sprite.IsHUD && sprite.HitBox.Intersects(new Rectangle((int)InGamePosition.X, (int)InGamePosition.Y, 1, 1)) && OverSprite.LayerDepth >= sprite.LayerDepth))
                     {
                         OverSprite = sprite;
                     }
@@ -102,26 +106,33 @@ namespace ExplorerOpenGL.Model.Sprites
             }
             if (OverSprite != null || LastOverSprite != null)
                 ProcessMouseOver(sprites);
-
+            else
+            {
+                isClicking = false;
+                isDragging = false; 
+            }
         }
 
         private void ProcessMouseOver(Sprite[] sprites)
         {
+            if (OverSprite == null)
+            {
+                LastOverSprite.OnMouseLeave(sprites, this);
+                return;
+            }
             if (OverSprite != null && OverSprite != LastOverSprite)
             {
                 if (LastOverSprite != null)
                     LastOverSprite.OnMouseLeave(sprites, this);
                 OverSprite.OnMouseOver(sprites, this);
             }
-            if (OverSprite == null)
-                return; 
+
             if (isClicking || (this.currentMouseState.LeftButton == ButtonState.Pressed && this.prevMouseState.LeftButton == ButtonState.Released))
             {
                 if (!isClicking)
                     ClickPosition = OverSprite.IsHUD ? new Vector2(Position.X - OverSprite.Position.X + OverSprite.Origin.X, Position.Y - OverSprite.Position.Y + OverSprite.Origin.Y) :
                                                        new Vector2(InGamePosition.X - OverSprite.Position.X + OverSprite.Origin.X, InGamePosition.Y - OverSprite.Position.Y + OverSprite.Origin.Y);
                 isClicking = true;
-                debugManager.AddEvent(ClickPosition);
                 if (this.currentMouseState.LeftButton == ButtonState.Released && !isDragging)
                 {
                     OverSprite.OnMouseClick(sprites, ClickPosition, this);
@@ -143,6 +154,9 @@ namespace ExplorerOpenGL.Model.Sprites
                     float distance = Vector2.Distance(ClickPosition, currentClickPosition);
                     if (distance > 3)
                     {
+                        if(OverSprite != LastOverSprite)
+                            ClickPosition = OverSprite.IsHUD ? new Vector2(Position.X - OverSprite.Position.X + OverSprite.Origin.X, Position.Y - OverSprite.Position.Y + OverSprite.Origin.Y) :
+                                                       new Vector2(InGamePosition.X - OverSprite.Position.X + OverSprite.Origin.X, InGamePosition.Y - OverSprite.Position.Y + OverSprite.Origin.Y);
                         isDragging = true;
                     }
                 }
@@ -162,7 +176,7 @@ namespace ExplorerOpenGL.Model.Sprites
             }
         }
 
-        public override void Draw(SpriteBatch spriteBatch, GameTime gameTime, float lerpAmount, Vector2? position = null)
+        public override void Draw(SpriteBatch spriteBatch, GameTime gameTime, float lerpAmount, params ShaderArgument[] shaderArgs)
         {
             //spriteBatch.Draw(_texture, Position, SourceRectangle, Color.White * Opacity, Radian, origin, scale, Effects, layerDepth);
             base.Draw(spriteBatch, gameTime, lerpAmount);
@@ -170,7 +184,7 @@ namespace ExplorerOpenGL.Model.Sprites
 
         public override string ToString()
         {
-            return "Position as HUD : " + Position.X + " / "+ Position.Y + "\nPosition as NonHUD : " + InGamePosition.X + " / " + InGamePosition.Y;
+            return "Position as HUD : " + Position.X + " / " + Position.Y + "\nPosition as NonHUD : " + InGamePosition.X + " / " + InGamePosition.Y;
         }
         private void InitMouseTypes()
         {

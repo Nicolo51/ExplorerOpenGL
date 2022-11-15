@@ -48,10 +48,10 @@ namespace ExplorerOpenGL.Model.Sprites
             base.Update(sprites);
         }
 
-        public override void Draw(SpriteBatch spriteBatch, GameTime gameTime, float lerpAmount = 1, Vector2? position = null)
+        public override void Draw(SpriteBatch spriteBatch, GameTime gameTime, float lerpAmount = 1, params ShaderArgument[] shaderArgs)
         {
             if(IsDisplayed)
-                spriteBatch.DrawString(Font, Text, position ?? Position, Color, Radian, Origin, Scale, Effects, LayerDepth); 
+                RenderManager.Instance.DrawString(Font, Text, Position, Color, Radian, Origin, Scale, Effects, LayerDepth); 
         }
     }
     

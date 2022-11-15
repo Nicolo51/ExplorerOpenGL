@@ -157,7 +157,7 @@ namespace ExplorerOpenGL.Managers
                 debugMessage.Append("Total Time : " + gameTime.TotalGameTime.TotalSeconds.ToString("#.#") + "s\n");
                 debugMessage.Append("GameState : " + gameManager.GameState + " \n");
                 debugMessage.Append("IsConnected : " + networkManager.IsConnectedToAServer + "\n");
-                debugMessage.Append("Fps : " + (1000 / gameTime.ElapsedGameTime.TotalMilliseconds).ToString("#") + " \n");
+                debugMessage.Append("Fps : " + timeManager.AverageFps.ToString("#") + " \n");
                 debugMessage.Append("Elapse update = " + timeManager.ElapsedBetweenUpdates.TotalMilliseconds.ToString("#.##") + "\n");
                 debugMessage.Append("Sprite Count = " + sprites.Length.ToString() + "\n");
 
@@ -203,7 +203,7 @@ namespace ExplorerOpenGL.Managers
             {
                 spriteBatch.DrawString(fontManager.GetFont("Default"), logList[i].Text, new Vector2(graphics.PreferredBackBufferWidth,  i * scale * 20) , Color.White * logList[i].opacity, 0f, MaxLogVec, scale, SpriteEffects.None, 1f); 
             }
-            lock(debugMessage)
+            lock (debugMessage)
                 spriteBatch.DrawString(fontManager.GetFont("Default"), debugMessage, Vector2.Zero, Color.White, 0f, Vector2.Zero, scale, SpriteEffects.None, 1f);
         }
     }

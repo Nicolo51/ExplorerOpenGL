@@ -196,11 +196,10 @@ namespace ExplorerOpenGL.Managers
                 {
                     for (int i = 0; i < action.Count; i++)
                     {
-
                         action[i].Invoke(actionArg[i]);
-                        action.RemoveAt(i);
-                        actionArg.RemoveAt(i); 
                     }
+                    action.Clear(); 
+                    actionArg.Clear();
                 }
             }
             if (Player != null)

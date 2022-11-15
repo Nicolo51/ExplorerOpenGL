@@ -19,6 +19,7 @@ namespace ExplorerOpenGL.Managers
         private SpriteBatch spriteBatch;
 
         private KeyboardManager keyboardManager;
+        private ShaderManager shaderManager; 
         
         private static RenderManager instance;
         public static event EventHandler Initialized;
@@ -46,6 +47,8 @@ namespace ExplorerOpenGL.Managers
             this.spriteBatch = spriteBatch;
             this.graphics = graphics;
             keyboardManager = KeyboardManager.Instance;
+            shaderManager = ShaderManager.Instance; 
+
         }
 
         public Texture2D RenderSceneToTexture()
@@ -175,6 +178,13 @@ namespace ExplorerOpenGL.Managers
                     StringtoRender.Add(input[i]);
                 }
             }
+        }
+
+
+        public void DrawString(SpriteFont font, string text, Vector2 position, Color color, float radian, Vector2 origin, float scale, SpriteEffects spriteEffects, float layerDepth)
+        {
+            shaderManager.LoadShader("FontEffect").CurrentTechnique.Passes[0].Apply(); 
+            spriteBatch.DrawString(font, text, position, color, radian, origin, scale, spriteEffects, layerDepth); 
         }
 
         private string[] FitStringinAverage(string input, SpriteFont font, double Dim)

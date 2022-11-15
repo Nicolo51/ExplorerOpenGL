@@ -291,11 +291,15 @@ namespace ExplorerOpenGL.Managers
                 OutlineTextToDraw.Add(id, ra);
             return waitTexture(id);
         }
-        private Texture2D TextureTextThread(string text, string font, Color color)
+        private Texture2D TextureTextThread(string text, SpriteFont font, Color color)
         {
-            return renderManager.RenderTextToTexture(text, fontManager.GetFont(font), color, 0);
+            return renderManager.RenderTextToTexture(text, font, color, 0);
         }
         public Texture2D TextureText(string text, string font, Color color)
+        {
+            return TextureText(text, fontManager.GetFont(font), color); 
+        }
+            public Texture2D TextureText(string text, SpriteFont font, Color color)
         {
             if (mainThreadID == Thread.CurrentThread.ManagedThreadId)
                 return TextureTextThread(text, font, color);
@@ -441,7 +445,7 @@ namespace ExplorerOpenGL.Managers
     {
         public int ID { get; set; }
         public string Text { get; set; }
-        public string Font { get; set; }
+        public SpriteFont Font { get; set; }
         public Color Color { get; set; }
     }
 }

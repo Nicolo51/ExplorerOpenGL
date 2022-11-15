@@ -131,7 +131,7 @@ namespace ExplorerOpenGL.Model.Sprites
                 this.AddChildSprite(new TextZone(Title, fontManager.GetFont("Default"), Color.White, AlignOptions.TopLeft), new Vector2(2, 2));
         }
 
-        public override void Draw(SpriteBatch spriteBatch,  GameTime gameTime, float lerpAmount, Vector2? position = null)
+        public override void Draw(SpriteBatch spriteBatch,  GameTime gameTime, float lerpAmount, params ShaderArgument[] shaderArgs)
         {
             base.Draw(spriteBatch, gameTime, lerpAmount);
             if(borderTexture  != null && IsDisplayed)

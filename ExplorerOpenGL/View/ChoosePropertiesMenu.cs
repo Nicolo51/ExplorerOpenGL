@@ -34,7 +34,7 @@ namespace ExplorerOpenGL.View
             SetPosition(new Vector2(gameManager.Width / 2, gameManager.Height / 2));
             SpriteFont font = fontManager.GetFont("Default");
             Title = "Properties :";
-            var properties = sprite.GetType().GetProperties().Where(p => p.IsDefined(typeof(MapEditable), true)).ToArray() ;
+            var properties = sprite.GetType().GetProperties().Where(p => p.IsDefined(typeof(MapEditable), true)).ToArray();
 
             labels = new TextZone[properties.Length]; 
             textinputs = new TextinputBox[properties.Length];
@@ -107,7 +107,7 @@ namespace ExplorerOpenGL.View
                 return; 
             PropertyInfo property = textinputToProperty[textinput];
             Type type = property.GetValue(sprite).GetType();
-            object value = Convert.ChangeType(message, type);
+            object value = Convert.ChangeType(message.Replace(".", ","), type);
             property.SetValue(sprite, value); 
         }
 

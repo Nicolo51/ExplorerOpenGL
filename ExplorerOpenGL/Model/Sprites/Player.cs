@@ -55,7 +55,8 @@ namespace ExplorerOpenGL.Model.Sprites
             //isDraggable = true;
             IsGravityAffected = true;
             isCollidable = true;
-            Play("stand"); 
+            Play("stand");
+            Shader = shaderManager.LoadShader("Outline");
         }
 
         private void FireBullet(ButtonState buttonState)
@@ -145,12 +146,12 @@ namespace ExplorerOpenGL.Model.Sprites
             base.SetPosition(newPos, instant);
         }
 
-        public override void Draw(SpriteBatch spriteBatch, GameTime gameTime, float lerpAmount, Vector2? position = null)
+        public override void Draw(SpriteBatch spriteBatch, GameTime gameTime, float lerpAmount, params ShaderArgument[] shaderArgs)
         {
-            //playerFeet.Draw(spriteBatch, gameTime, lerpAmount);
+            base.Draw(spriteBatch, gameTime, lerpAmount, new ShaderArgument("thickness", new Vector2(5,5)), new ShaderArgument("outlineColor", Color.Blue));
             spriteBatch.Draw(TextureName, PositionName , null, Color.White, 0f, OriginName, .75f, SpriteEffects.None, LayerDepth);
+            //playerFeet.Draw(spriteBatch, gameTime, lerpAmount);
             //spriteBatch.DrawString(font, Health.ToString("#"), Position - new Vector2(0,50), Color.White, 0f, font.MeasureString(Health.ToString("#")) / 2, 1f, SpriteEffects.None, layerDepth);
-            base.Draw(spriteBatch, gameTime, lerpAmount);
         }
 
 

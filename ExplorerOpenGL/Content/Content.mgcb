@@ -73,6 +73,24 @@
 /processorParam:TextureFormat=Color
 /build:EditorTile.png
 
+#begin Effects/FontEffect.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:Effects/FontEffect.fx
+
+#begin Effects/Normal.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:Effects/Normal.fx
+
+#begin Effects/Outline.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:Effects/Outline.fx
+
 #begin Fonts/Default.spritefont
 /importer:FontDescriptionImporter
 /processor:FontDescriptionProcessor
@@ -98,12 +116,6 @@
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
 /build:jaune.png
-
-#begin OutlineShader.fx
-/importer:EffectImporter
-/processor:EffectProcessor
-/processorParam:DebugMode=Auto
-/build:OutlineShader.fx
 
 #begin player.png
 /importer:TextureImporter

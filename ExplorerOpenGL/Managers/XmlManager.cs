@@ -32,7 +32,8 @@ namespace ExplorerOpenGL.Managers
         }
         private GameManager gameManager;
         private TextureManager textureManager;
-        private RenderManager renderManager; 
+        private RenderManager renderManager;
+        private ShaderManager shaderManager; 
         private XmlManager()
         {
 
@@ -42,7 +43,8 @@ namespace ExplorerOpenGL.Managers
         {
             gameManager = GameManager.Instance;
             textureManager = TextureManager.Instance;
-            renderManager = RenderManager.Instance; 
+            renderManager = RenderManager.Instance;
+            shaderManager = ShaderManager.Instance; 
         }
 
         public XmlDocument ReadXml(string path)
@@ -127,9 +129,12 @@ namespace ExplorerOpenGL.Managers
             sprite.SetAlignOption(spriteAlignOption);
             sprite.Effects = spriteEffect;
             sprite.isDraggable = true;
-            sprite.Bounds = spriteBounds; 
+            sprite.Bounds = spriteBounds;
+            
             return sprite; 
         }
+
+        
 
         public Sprite GetInstance(Type type)
         {

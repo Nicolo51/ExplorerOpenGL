@@ -206,9 +206,9 @@ namespace ExplorerOpenGL.Model.Sprites
                 indexEndDrawing--;
         }
 
-        public override void Draw(SpriteBatch spriteBatch, GameTime gameTime, float lerpAmount, Vector2? position = null)
+        public override void Draw(SpriteBatch spriteBatch, GameTime gameTime, float lerpAmount, params ShaderArgument[] shaderArgs)
         {
-            base.Draw(spriteBatch, gameTime, lerpAmount, position);
+            base.Draw(spriteBatch, gameTime, lerpAmount);
             if (!IsDisplayed)
                 return; 
             spriteBatch.DrawString(spriteFont, "|", cursorPosition - Origin, Color.White, 0f, Vector2.Zero, cursorOpacity, SpriteEffects.None, LayerDepth - .01f);

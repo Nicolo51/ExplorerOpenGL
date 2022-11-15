@@ -37,6 +37,9 @@ namespace ExplorerOpenGL.View
             foreach(var s in map)
             {
                 s.MouseClicked += MapElementMouseClicked;
+                //s.MouseLeft += (object sender, MousePointer mousePointer) => { s.Shader = shaderManager.LoadShader("Normal"); };
+                //s.MouseOvered += (object sender, MousePointer mousePointer) => { s.Shader = shaderManager.LoadShader("Outline"); };
+                //s.MouseClicked += (object sender, MousePointer mousePointer, Vector2 clickPosition) => { s.Shader = shaderManager.LoadShader("Outline"); s.SetShaderArgs(new ShaderArgument[] { new ShaderArgument("thickness", new Vector2(3, 3)), new ShaderArgument("outlineColor", Color.White) }); };
             }
 
             isDraggable = false;
@@ -97,9 +100,18 @@ namespace ExplorerOpenGL.View
         private void MapElementMouseClicked(object sender, MousePointer mousePointer, Vector2 clickPosition)
         {
             if (selectedSprite != null)
+            {
                 selectedSprite.Opacity = 1f;
+                selectedSprite.Shader = shaderManager.GetDefaultShader(); 
+            }
             selectedSprite = (Sprite)sender;
-            selectedSprite.Opacity = .5f;
+            //selectedSprite.Opacity = .5f;
+            selectedSprite.Shader = shaderManager.LoadShader("Outline");
+            selectedSprite.SetShaderArgs(new ShaderArgument[] 
+            { 
+                new ShaderArgument("thickness", new Vector2(5, 5)), 
+                new ShaderArgument("outlineColor", Color.Red) 
+            });
             AddableElements[3].Enable();
             if (keyboardManager.IsKeyDown(Keys.LeftControl))
             {

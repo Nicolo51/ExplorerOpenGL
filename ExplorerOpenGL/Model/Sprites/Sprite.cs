@@ -15,22 +15,22 @@ using System.Threading.Tasks;
 
 namespace ExplorerOpenGL.Model.Sprites
 {
-    public class Sprite 
+    public class Sprite
     {
-        
+
         public bool IsRemove { get; set; }
         public int ID { get; set; }
         public Vector2 Position { get; set; }
         [MapEditable]
         public float PositionX { get { return Position.X; } set { Position = new Vector2(value, PositionY); } }
         [MapEditable]
-        public float PositionY{ get { return Position.Y; } set { Position = new Vector2(Position.X, value); } }
+        public float PositionY { get { return Position.Y; } set { Position = new Vector2(Position.X, value); } }
         public Vector2 LastPosition { get; set; }
 
         private Texture2D _texture;
-        public Texture2D Texture { get { return _texture; } }
+        public Texture2D Texture { get { return _texture ?? _animation.Texture; } }
         public Effect Shader { get; set; }
-
+        public ShaderArgument[] ShaderArgs { get; private set; }
 
         public AnimationManager Animation { get { return _animation; } }
         protected AnimationManager _animation;
@@ -45,10 +45,11 @@ namespace ExplorerOpenGL.Model.Sprites
                 if (_texture != null && SourceRectangle != null) return new Rectangle((int)Position.X - (int)(Origin.X * Scale), (int)Position.Y - (int)(Origin.Y * Scale), (int)(SourceRectangle.Width * Scale), (int)(SourceRectangle.Height * Scale));
                 else if (_animation != null && _animation.currentAnimation != null) return new Rectangle((int)Position.X - (int)(Origin.X * Scale), (int)Position.Y - (int)(Origin.Y * Scale), (int)(_animation.currentAnimation.Bounds.X * Scale), (int)(_animation.currentAnimation.Bounds.Y * Scale));
                 else return new Rectangle((int)Position.X, (int)Position.Y, 1, 1);
-            } }
-        public Vector2 Origin { get { return origin * Scale;  } }
+            }
+        }
+        public Vector2 Origin { get { return origin * Scale; } }
         protected Vector2 origin;
-        protected AlignOptions alignOption; 
+        protected AlignOptions alignOption;
         public AlignOptions AlignOption { get { if (_animation != null && _animation.Count > 0) return _animation.currentAnimation.AlignOption; else return alignOption; } set { alignOption = value; } }
         public Vector2 Bounds { get; set; }
         [MapEditable]
@@ -68,13 +69,15 @@ namespace ExplorerOpenGL.Model.Sprites
         public bool IsHUD { get; set; }
         public bool IsDisplayed { get; set; }
         public bool IsClickable { get; set; }
-        public bool isDraggable { get; set; }
+        public bool isDraggable { get { return test; }
+            set { test = value; } }
+        private bool test;
         public TextZone TextOnTop { get; set; }
 
         protected bool isGrounded;
         protected bool IsGravityAffected;
         protected bool isCollidable;
-        protected bool isMovingTowardPosition; 
+        protected bool isMovingTowardPosition;
 
         public delegate void MouseOverEventHandler(object sender, MousePointer mousePointer);
         public event MouseOverEventHandler MouseOvered;
@@ -88,9 +91,8 @@ namespace ExplorerOpenGL.Model.Sprites
         protected GameManager gameManager;
         protected TimeManager timeManager;
         protected DebugManager debugManager;
-        protected ShaderManager shaderManager; 
-
-        Vector2 ClickPosition;
+        protected ShaderManager shaderManager;
+        protected RenderManager renderManager;
 
         public Sprite()
         {
@@ -101,7 +103,7 @@ namespace ExplorerOpenGL.Model.Sprites
         {
             Init();
             if (animations.Length < 1)
-                return; 
+                return;
             foreach (var a in animations)
                 _animation.Add(a.Name, a);
             Play(animations[0]);
@@ -112,7 +114,7 @@ namespace ExplorerOpenGL.Model.Sprites
         {
             Init();
             SetTexture(texture);
-            Bounds = new Vector2(texture.Bounds.Width, texture.Bounds.Height); 
+            Bounds = new Vector2(texture.Bounds.Width, texture.Bounds.Height);
         }
 
         public virtual void NetworkUpdate(NetworkGameObject ngo)
@@ -165,8 +167,13 @@ namespace ExplorerOpenGL.Model.Sprites
         public virtual void SetTexture(Texture2D texture)
         {
             _texture = texture;
-            Bounds = new Vector2(texture.Bounds.Width, texture.Bounds.Height); 
+            Bounds = new Vector2(texture.Bounds.Width, texture.Bounds.Height);
             SourceRectangle = new Rectangle(0, 0, texture.Width, texture.Height);
+        }
+
+        public virtual void SetShaderArgs(ShaderArgument[] args)
+        {
+            ShaderArgs = args; 
         }
 
         public void AddAfterAnimation(Animation animation, Animation afterAnimation)
@@ -289,20 +296,22 @@ namespace ExplorerOpenGL.Model.Sprites
             MouseClicked?.Invoke(this, mousePointer, clickPosition);
         }
 
-        public virtual void Draw(SpriteBatch spriteBatch,  GameTime gameTime, float lerpAmount, Vector2? position = null)
+        public virtual void Draw(SpriteBatch spriteBatch,  GameTime gameTime, float lerpAmount, params ShaderArgument[] shaderArgs)
         {
-            Vector2 OSPos = Vector2.Lerp(LastPosition, position ?? Position, lerpAmount); 
+            Vector2 OSPos = Vector2.Lerp(LastPosition, Position, lerpAmount);
             if ((_texture != null || _animation.currentAnimation != null) && IsDisplayed)
             {
                 if (_animation.currentAnimation != null)
                     SourceRectangle = _animation.GetRectangle(gameTime);
-                if (this is MessageBox)
-                    spriteBatch.Draw(_texture, new Rectangle((int)OSPos.X, (int)OSPos.Y, (int)(Bounds.X * Scale), (int)(Bounds.Y * Scale)), SourceRectangle, Color.White * Opacity, Radian, Origin, Effects, LayerDepth);
-                else
-                    spriteBatch.Draw(_texture ?? _animation.Texture, new Rectangle((int)OSPos.X, (int)OSPos.Y, (int)(Bounds.X * Scale), (int)(Bounds.Y * Scale)), SourceRectangle, Color.White * Opacity, Radian, Origin, Effects, LayerDepth);
+                
+                shaderManager.Apply(this, Shader, ShaderArgs);
+                spriteBatch.Draw(Texture, new Rectangle((int)OSPos.X, (int)OSPos.Y, (int)(Bounds.X * Scale), (int)(Bounds.Y * Scale)), SourceRectangle, Color.White * Opacity, Radian, Origin, Effects, LayerDepth);
+                //shaderManager.GetDefaultShader().CurrentTechnique.Passes[0].Apply();
+                //spriteBatch.Draw(_texture ?? _animation.Texture, new Rectangle((int)OSPos.X, (int)OSPos.Y, (int)(Bounds.X * Scale), (int)(Bounds.Y * Scale)), SourceRectangle, Color.White * Opacity, Radian, Origin, Effects, LayerDepth);
             }
+
             if (TextOnTop != null)
-                spriteBatch.DrawString(TextOnTop.Font, TextOnTop.Text, OSPos, TextOnTop.Color, Radian, Origin - new Vector2(HitBox.Width / 2, HitBox.Height / 2) + TextOnTop.Origin, TextOnTop.Scale, TextOnTop.Effects, LayerDepth-.1f);
+                renderManager.DrawString(TextOnTop.Font, TextOnTop.Text, OSPos, TextOnTop.Color, Radian, Origin - new Vector2(HitBox.Width / 2, HitBox.Height / 2) + TextOnTop.Origin, TextOnTop.Scale, TextOnTop.Effects, LayerDepth - .1f);
             if (debugManager.IsDebuging)
                 spriteBatch.Draw(debugManager.debugTexture, HitBox, Color.White * .5f);
         }
@@ -356,9 +365,10 @@ namespace ExplorerOpenGL.Model.Sprites
             debugManager = DebugManager.Instance;
             gameManager = GameManager.Instance;
             timeManager = TimeManager.Instance;
-            shaderManager = ShaderManager.Instance; 
+            shaderManager = ShaderManager.Instance;
+            renderManager = RenderManager.Instance; 
             Gravity = 0.2f;
-            Shader = shaderManager.LoadShader("OutlineShader");
+            Shader = shaderManager.LoadShader("Normal");
         }
 
         public Sprite Clone()

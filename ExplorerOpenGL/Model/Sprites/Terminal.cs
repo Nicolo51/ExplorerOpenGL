@@ -216,7 +216,7 @@ namespace ExplorerOpenGL.Model.Sprites
             }
         }
 
-        public override void Draw(SpriteBatch spriteBatch, GameTime gameTime, float lerpAmount, Vector2? position = null)
+        public override void Draw(SpriteBatch spriteBatch, GameTime gameTime, float lerpAmount, params ShaderArgument[] shaderArgs)
         {
             for (int i = messages.Count - 1; i >= 0; i--)
             {

@@ -147,9 +147,8 @@ namespace ExplorerOpenGL
         /// <param name="gameTime">Provides a snapshot of timing values.</param>
         protected override void Update(GameTime gameTime)
         {
-            timeManager.LastDrawUpdateTime = DateTime.Now;
-                if(_sprites == null)
-                    return;
+            if(_sprites == null)
+                return;
             //gameManager.MousePointer.Update(_sprites);
             
             textureManager.Update(); 
@@ -157,7 +156,8 @@ namespace ExplorerOpenGL
             debugManager.Update(gameTime);
             keyboardManager.Update();
             networkManager.Update(gameTime);
-            mouseManager.Update(); 
+            mouseManager.Update();
+            timeManager.Update(gameTime); 
 
             base.Update(gameTime);
         }
@@ -199,6 +199,9 @@ namespace ExplorerOpenGL
                     break;
                 case ShaderManager sm:
                     sm.InitDependencies(graphics, Content, spriteBatch);
+                    break;
+                case TimeManager tm:
+                    tm.InitDependencies();
                     break; 
             }
         }
@@ -209,7 +212,6 @@ namespace ExplorerOpenGL
         /// <param name="gameTime">Provides a snapshot of timing values.</param>
         protected override void Draw(GameTime gameTime)
         {
-            timeManager.LastDrawTime = DateTime.Now;
             GraphicsDevice.Clear(Color.CornflowerBlue);
             float la = timeManager.LerpAmount;
             gameManager.Camera.Update(la);
@@ -228,7 +230,6 @@ namespace ExplorerOpenGL
                     {
                         if (!sprites[i].IsHUD)
                         {
-                            //sprites[i].Shader.CurrentTechnique.Passes[0].Apply();
                             sprites[i].Draw(spriteBatch, gameTime, la);
                         }
                     }
@@ -256,7 +257,6 @@ namespace ExplorerOpenGL
                     {
                         if (sprites[i].IsHUD)
                         {
-                            //sprites[i].Shader.CurrentTechnique.Passes[0].Apply(); 
                             sprites[i].Draw(spriteBatch, gameTime, la);
                         }
                     }

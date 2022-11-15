@@ -103,7 +103,7 @@ namespace ExplorerOpenGL.Managers.Networking
             return $"ID:{ID}, Position:{ServerPosition.ToString()}, LookAtRadian:{LookAtRadian}, FeetRadian:{FeetRadian}"; 
         }
 
-        public override void Draw(SpriteBatch spriteBatch,  GameTime gameTime, float lerpAmount = 1, Vector2? position = null)
+        public override void Draw(SpriteBatch spriteBatch,  GameTime gameTime, float lerpAmount = 1, params ShaderArgument[] shaderArgs)
         {
             if (TextureName != null)
             {

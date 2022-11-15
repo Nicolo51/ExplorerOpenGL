@@ -12,19 +12,18 @@ namespace ExplorerOpenGL.Managers
 {
     public class TimeManager
     {
-        public DateTime StartedTime { get; private set; }
-        public DateTime LastDrawUpdateTime { get; set; }
-        public DateTime LastUpdateTime { get; set; }
-        public DateTime LastDrawTime { get; set; }
-        public TimeSpan ElapsedUpdate { get { return DateTime.Now - LastUpdateTime; } }
-        public TimeSpan ElapsedDraw { get { return DateTime.Now - LastDrawTime; } }
-        public TimeSpan ElapsedDrawUpdate { get { return DateTime.Now - LastDrawUpdateTime; } }
+        public TimeSpan LastUpdateTime { get; set; }
+        public TimeSpan ElapsedUpdate { get { return gameTime.TotalGameTime - LastUpdateTime; } }
+        public TimeSpan ElapsedDraw { get { return gameTime.ElapsedGameTime; } }
         public TimeSpan ElapsedBetweenUpdates { get; private set; }
-        public TimeSpan TotalTime { get { return DateTime.Now - StartedTime;  } }
-        public float LerpAmount { get { float la = (float)((LastDrawTime - LastUpdateTime).TotalMilliseconds / TickRate); return(la < 0)?  0: la; } }
+        public TimeSpan TotalTime { get { return gameTime.TotalGameTime;  } }
+        public float LerpAmount { get { float la = (float)((gameTime.TotalGameTime - LastUpdateTime).TotalMilliseconds / TickRate); return(la < 0)?  0: la; } }
+        public int AverageFps { get; set; }
 
         Thread UpdateThread;
         public int TickRate { get; private set; } = 16; //Targeted update timer in ms 
+
+        private GameTime gameTime; 
 
         public static event EventHandler Initialized;
         private static TimeManager instance; 
@@ -45,39 +44,49 @@ namespace ExplorerOpenGL.Managers
         
         private TimeManager()
         {
-            StartedTime = DateTime.Now;
-            LastDrawUpdateTime = DateTime.Now;
-            LastUpdateTime = DateTime.Now;
-            LastDrawTime = DateTime.Now;
-
             gameManager = GameManager.Instance;
-            debugManager = DebugManager.Instance; 
+            debugManager = DebugManager.Instance;
+            gameTime = new GameTime(); 
             
         }
+
+        public void InitDependencies()
+        {
+             
+        }
+
         public void StartUpdateThread()
         {
-            UpdateThread = new Thread(new ThreadStart(Update));
+            UpdateThread = new Thread(new ThreadStart(UpdateSprite));
             UpdateThread.Start(); 
         }
 
-        public void Update()
+        public void Update(GameTime gameTime)
         {
-            byte count = 0; 
+            this.gameTime = gameTime;
+        }
+
+        public void UpdateSprite()
+        {
+            byte count = 0;
+            TimeSpan countLastDraw = TimeSpan.FromSeconds(0); 
             while (true)
             {
                 count++;
-                if (count % 5 == 0)
-                    gameManager.SortSprites(); 
+                if (count == 50)
+                {
+                    AverageFps = (int)(1000/(countLastDraw.TotalMilliseconds/ 50));
+                    gameManager.SortSprites();
+                    countLastDraw = TimeSpan.Zero; 
+                    count = 0; 
+                }
+                countLastDraw += gameTime.ElapsedGameTime; 
+
+
                 Sprite[] sprites;
                 sprites = gameManager.GetSprites();                
-                //Texture2D texture = TextureManager.Instance.OutlineText("coucou", "Default", Color.Black, Color.Black, 1);
-                //Texture2D texture = TextureManager.Instance.CreateBorderedTexture(100, 100, 10, 3, backgroundPaint => Color.BlueViolet, backgroundPaint => Color.Yellow);
-                //Texture2D texture = TextureManager.Instance.CreateTexture(100, 100, paint => Color.Red);
-                //Texture2D texture = TextureManager.Instance.TextureText("coucou", "Default", Color.Red);
-
-                //sprites.Add(new Wall(texture));
-                ElapsedBetweenUpdates = ElapsedUpdate; 
-                LastUpdateTime = DateTime.Now;
+                ElapsedBetweenUpdates = gameTime.TotalGameTime - LastUpdateTime; 
+                LastUpdateTime = gameTime.TotalGameTime;
                 //Parallel.For(0, sprites.Count, (int i) =>
                 //{
                 //    if (sprites[i] == null)
@@ -100,11 +109,11 @@ namespace ExplorerOpenGL.Managers
                         sprites[i].Update(sprites);
                     }
                 }
-                if ((DateTime.Now - LastUpdateTime).TotalMilliseconds > TickRate)
+                if ((gameTime.TotalGameTime - LastUpdateTime).TotalMilliseconds > TickRate)
                     continue; 
                 else
                 {
-                    int sleepTime = Convert.ToInt32(TickRate - (DateTime.Now - LastUpdateTime).TotalMilliseconds);
+                    int sleepTime = Convert.ToInt32(TickRate - (gameTime.TotalGameTime - LastUpdateTime).TotalMilliseconds);
                     if (sleepTime < 1)
                         continue;
                     Thread.Sleep(sleepTime);
