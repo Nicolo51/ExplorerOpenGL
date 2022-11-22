@@ -118,6 +118,11 @@ namespace ExplorerOpenGL.Managers
             ConnectionState = ConnectionState.NotConnected;
         }
 
+        public void UploadMap(string mapName, string ip)
+        {
+            //Connect(ip)
+        }
+
         public void SendMessageToServer(string message)
         {
             client.SendMessage(message, (int)ClientPackets.TcpChatMessage); 

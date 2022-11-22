@@ -36,11 +36,13 @@ namespace ExplorerOpenGL.Model.Sprites
         public delegate void UnfocusEventHandler(string message, TextinputBox textinput);
         public event UnfocusEventHandler Unfocused; 
 
-        public string Text { get { return inputText.ToString().Trim(); }}
+        public string Text { get { return inputText.ToString().Trim(); } set { Clear(); AddRange(value); } }
 
-        public TextinputBox(Texture2D texture, SpriteFont SpriteFont,  bool eraseWhenUnfocused = false, bool makeItTransparentUnfocused = false)
+        public TextinputBox(Texture2D texture, SpriteFont SpriteFont = null,  bool eraseWhenUnfocused = false, bool makeItTransparentUnfocused = false)
             : base(texture)
         {
+            if (SpriteFont == null)
+                SpriteFont = FontManager.Instance.GetFont();
             TriggerMouseOver = true; 
             DoEraseWhenUnfocused = eraseWhenUnfocused;
             MakeItTransparentWhenUnfocused = makeItTransparentUnfocused;

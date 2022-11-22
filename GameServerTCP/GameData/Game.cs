@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
+using System.Web.Http;
 
 namespace GameServerTCP.GameData
 {
@@ -15,7 +16,8 @@ namespace GameServerTCP.GameData
         public static DateTime startTime;
         public static DateTime LastUpdate;
         public static TimeSpan  TimeSpanSinceGameStarted { get { return DateTime.Now - startTime; } }
-        public const int tickRate = 30; 
+        public const int tickRate = 30;
+        private static HttpServer httpServer; 
         public static void Start()
         {
             nextGameObjectID = 0; 
@@ -24,6 +26,7 @@ namespace GameServerTCP.GameData
             timer = new Timer(new TimerCallback(gameTick));
             timer.Change(1000, tickRate);
             Players = new Dictionary<int, Player>();
+            httpServer = new HttpServer();
         }
 
         public static void AddPlayer(Player player)

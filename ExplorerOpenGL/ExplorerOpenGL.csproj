@@ -133,6 +133,7 @@
     <Compile Include="View\PickNameScreen.cs" />
     <Compile Include="View\SelectMapToEditMenu.cs" />
     <Compile Include="View\SinglePlayerMenu.cs" />
+    <Compile Include="View\UploadScreen.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="Microsoft.Bcl.AsyncInterfaces, Version=6.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">

@@ -93,14 +93,14 @@ namespace ExplorerOpenGL.Model.Sprites
             childSpritesPosition[childSprites.IndexOf(child)] = newPos;
         }
 
-        public void Hide()
+        public virtual void Hide()
         {
             IsDisplayed = false; 
             foreach (var s in childSprites)
                 s.IsDisplayed = false; 
         }
 
-        public void UnHide()
+        public virtual void UnHide()
         {
             IsDisplayed = true;
             foreach (var s in childSprites)
