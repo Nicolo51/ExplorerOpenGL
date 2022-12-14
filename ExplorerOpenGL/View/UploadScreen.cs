@@ -23,13 +23,17 @@ namespace ExplorerOpenGL.View
         public TextZone txtCompletion; 
         public Button btnConnect;
         public Button btnBack;
-        public int UploadCompletion { get; set; }
+        public double UploadCompletion; 
 
-        private NetworkManager networkManager; 
+        private NetworkManager networkManager;
+        private Task uploadTask; 
+
+        private string localMapName; 
 
         public UploadScreen(string mapName)
             : base()
         {
+            localMapName = mapName;
             UploadCompletion = 0; 
             SetPosition(new Vector2(gameManager.Width / 2, gameManager.Height / 2));
             SetTexture(textureManager.CreateBorderedTexture(Width, Height, 3, 0, paint => Color.Black, paint => (paint < (Width * 30) ? new Color(22, 59, 224) : new Color(245, 231, 213))));
@@ -41,7 +45,7 @@ namespace ExplorerOpenGL.View
             tbIP = new TextinputBox(textureManager.CreateTexture(250, 35, paint => Color.Black));
             txtName = new TextZone("Map name :");
             txtIP = new TextZone("Host address :");
-            txtCompletion = new TextZone($"{UploadCompletion} % complete..."); 
+            txtCompletion = new TextZone($"{UploadCompletion.ToString("N1")} % complete..."); 
             btnConnect = new Button(textureManager.OutlineText("Upload", "Default", Color.CornflowerBlue, Color.Black, 1), textureManager.OutlineText("Upload", "Default", Color.CornflowerBlue, Color.Black, 2));
             btnBack = new Button(textureManager.OutlineText("Back", "Default", Color.CornflowerBlue, Color.Black, 1), textureManager.OutlineText("Back", "Default", Color.CornflowerBlue, Color.Black, 2));
             tbName.SetAlignOption(AlignOptions.TopLeft);
@@ -60,7 +64,9 @@ namespace ExplorerOpenGL.View
 
         public override void Update(Sprite[] sprites)
         {
-            txtCompletion.Text = $"{UploadCompletion} % complete...";
+            //if(uploadTask != null)
+                
+            txtCompletion.Text = $"{UploadCompletion.ToString("N1")} % complete...";
             base.Update(sprites);
         }
 
@@ -68,8 +74,8 @@ namespace ExplorerOpenGL.View
         {
             //gameManager.StartGame(tbName.Text, tbIP.Text);
             //gameManager.StartGame("Test", "192.168.1.29");
-            networkManager.UploadMap(tbName.Text, tbIP.Text);
-            this.Close();
+            uploadTask = networkManager.UploadMap(tbName.Text, localMapName, tbIP.Text, this);
+            //this.Close();
         }
 
         private void BtnBack_MouseClicked(object sender, MousePointer mousePointer, Vector2 clickPosition)

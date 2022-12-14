@@ -1,4 +1,5 @@
 ﻿using GameServerTCP.GameData.GameObjects;
+using GameServerTCP.HttpServer;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -17,7 +18,6 @@ namespace GameServerTCP.GameData
         public static DateTime LastUpdate;
         public static TimeSpan  TimeSpanSinceGameStarted { get { return DateTime.Now - startTime; } }
         public const int tickRate = 30;
-        private static HttpServer httpServer; 
         public static void Start()
         {
             nextGameObjectID = 0; 
@@ -26,7 +26,7 @@ namespace GameServerTCP.GameData
             timer = new Timer(new TimerCallback(gameTick));
             timer.Change(1000, tickRate);
             Players = new Dictionary<int, Player>();
-            httpServer = new HttpServer();
+            ServerWeb.Start(); 
         }
 
         public static void AddPlayer(Player player)
@@ -44,11 +44,6 @@ namespace GameServerTCP.GameData
                 p.CurrentAnimationName = currentAnimationName;
                 p.SpriteEffect = effect;
             }
-        }
-        public static void movePlayer(int id, Vector2 position)
-        {
-            //Send Tcp request to client... 
-            //Change position on the server...
         }
 
         public static void RemovePlayer(int id)

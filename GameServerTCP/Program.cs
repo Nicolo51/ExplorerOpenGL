@@ -16,6 +16,7 @@ namespace GameServerTCP
             Console.WriteLine(3%0.3);
             Game.Start(); 
             GameServer.Start(25789);
+            
             string input; 
             while((input = Console.ReadLine()).ToLower().Trim() != "exit")
             {

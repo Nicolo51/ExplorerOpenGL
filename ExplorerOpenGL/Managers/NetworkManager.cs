@@ -2,13 +2,18 @@
 using ExplorerOpenGL.Managers.Networking.EventArgs;
 using ExplorerOpenGL.Managers.Networking.NetworkObject;
 using ExplorerOpenGL.Model.Sprites;
+using ExplorerOpenGL.View;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using SharedClasses;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Net.Http;
 using System.Text;
+using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace ExplorerOpenGL.Managers
@@ -118,9 +123,63 @@ namespace ExplorerOpenGL.Managers
             ConnectionState = ConnectionState.NotConnected;
         }
 
-        public void UploadMap(string mapName, string ip)
+        public Task UploadMap(string mapName, string path, string host, UploadScreen view)
         {
-            //Connect(ip)
+            Task t = new Task(() => {
+                string filename = mapName + ".xml";
+                view.UploadCompletion = 0;
+                string[] imagesPath = Directory.GetFiles($"./maps/{mapName}");
+                double completionStep = 100d / (imagesPath.Length + 1);
+
+                HttpClient httpClient = new HttpClient();
+                if (string.IsNullOrWhiteSpace(host))
+                    host = "http://localhost:8000";
+                //Send Xml
+                string xml = File.ReadAllText($"./maps/{filename}");
+                StringContent content = new StringContent(JsonSerializer.Serialize(
+                    new
+                    {
+                        Xml = xml,
+                        FileName = filename,
+                    }
+                    ));
+                Task<HttpResponseMessage> task = httpClient.PostAsync($"{host}/MapXml", content);
+
+                while (!task.IsCompleted)
+                    Thread.Sleep(1);
+                if (task.Result.Content.ReadAsStringAsync().Result == "0")
+                    throw new Exception("Failed to upload xml");
+
+                view.UploadCompletion += completionStep;
+
+                //Send Texture;
+
+
+                foreach (string file in imagesPath)
+                {
+                    byte[] imageArray = System.IO.File.ReadAllBytes(file);
+                    string base64Image = Convert.ToBase64String(imageArray);
+                    StringContent imageContent = new StringContent(JsonSerializer.Serialize(
+                        new
+                        {
+                            image = base64Image,
+                            textureName = Path.GetFileName(file),
+                            mapName = mapName,
+                        }
+                        ));
+                    Task<HttpResponseMessage> imageTask = httpClient.PostAsync($"{host}/MapTexture", imageContent);
+
+                    while (!imageTask.IsCompleted)
+                        Thread.Sleep(1);
+                    if (task.Result.Content.ReadAsStringAsync().Result == "0")
+                        throw new Exception("Failed to upload image");
+                    view.UploadCompletion += completionStep;
+                }
+                view.UploadCompletion = 100;
+                return;
+            });
+            t.Start();
+            return t; 
         }
 
         public void SendMessageToServer(string message)

@@ -112,7 +112,7 @@ namespace ExplorerOpenGL.View
 
         private void Delete_MouseClicked(object sender, MousePointer mousePointer, Vector2 clickPosition)
         {
-            AddableElements[3].Disable();
+            //Delete.Disable();
             selectedSprite.Remove(); 
         }
 
@@ -145,7 +145,7 @@ namespace ExplorerOpenGL.View
                 new ShaderArgument("thickness", new Vector2(5, 5)), 
                 new ShaderArgument("outlineColor", Color.Red) 
             });
-            AddableElements[3].Enable();
+            Delete.Enable();
             if (keyboardManager.IsKeyDown(Keys.LeftControl))
             {
                 new ChoosePropertiesMenu(selectedSprite).Show();  ; 
@@ -169,7 +169,7 @@ namespace ExplorerOpenGL.View
 
         public void SaveMap()
         {
-            var sprites = gameManager.GetSprites().Where(s => s is Wall).ToArray(); // Interface to impemente later
+            var sprites = gameManager.GetSprites().Where(s => s is Wall).ToArray(); // Interface to implemente later car on peut pas garder s is Wall, ça sera pas toujours des wall lol
             xmlManager.SaveMap(sprites, mapName);
         }
 
