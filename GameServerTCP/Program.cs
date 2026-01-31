@@ -1,70 +1,109 @@
 ﻿using GameServerTCP.GameData;
-using SharedClasses;
+using GameServerTCP.HttpServer;
+using LiteNetLib;
+using LiteNetLib.Utils;
+using Model.Network;
 using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Web.Http;
 
 namespace GameServerTCP
 {
     class Program
     {
+
+        static Task server;  
         static void Main(string[] args)
         {
+
+            server = Task.Factory.StartNew(() => {
+                Game.Start();
+                GameServer.Start(25789);
+            });
+            Console.CursorVisible = false;
+            string input = string.Empty;
+            ConsoleKeyInfo cki;
             
-            Console.WriteLine(3%0.3);
-            Game.Start(); 
-            GameServer.Start(25789);
-            
-            string input; 
-            while((input = Console.ReadLine()).ToLower().Trim() != "exit")
+            while(GameServer.currentInput.ToLower().Trim() != "exit")
             {
-                string[] query = input.Split(" ");
+                while ((cki = Console.ReadKey(true)).Key != ConsoleKey.Enter)
+                {
+                    if (cki.Key == ConsoleKey.Backspace && GameServer.currentInput.Length > 0)
+                    {
+                        GameServer.currentInput = GameServer.currentInput.Substring(0, GameServer.currentInput.Length - 1);
+                        continue; 
+                    }
+                    GameServer.currentInput += (cki.KeyChar.ToString());
+                }
+                string[] query = GameServer.currentInput.ToLower().Trim().Split(" ");
+                NetDataWriter packet = new NetDataWriter();
+                GameServer.currentInput = string.Empty;
                 string commande = query[0];
                 switch (commande.ToLower().Trim())
                 {
+                    case "mode":
+                        if (query.Length < 2)
+                        {           
+                            GameServer.Log("To little arguements");
+                            break;
+                        }
+                        string mode = query[1].Trim().ToLower();
+                        int ms = 0; 
+                        if( query.Length == 3)
+                            int.TryParse(query[2], out ms);
+
+                        int i = -1;
+                        if (int.TryParse(query[1], out i))
+                        {
+                            GameServer.ChangeLogMode((LogMode)i, ms);
+                            break; 
+                        }
+                        switch (mode)
+                        {
+                            case "classic": 
+                                GameServer.ChangeLogMode(LogMode.classic, 0);
+                                break;
+                            case "direct":
+                                GameServer.ChangeLogMode(LogMode.direct, ms);
+                                break;
+                            default:
+                                GameServer.Log("Unknown argument for 'mode' function"); 
+                                break;
+                        }
+                    break; 
                     case "tp":
                         int id = int.Parse(query[1]);
                         Vector2 pos = new Vector2(int.Parse(query[2]), int.Parse(query[3]));
                         ServerSend.RequestChangePlayerPosition(id, pos);
                     break;
-                    case "fire":
-                        ServerSend.UpdateGameObject();
-                        break;
                     case "udp":
-                        int udpid = Int32.Parse(query[1]);
-                        string udpmsg = query[2]; 
-                        using(Packet packet = new Packet((int)ServerPackets.UdpMessage))
-                        {
-                            packet.Write(udpmsg);
-                            ServerSend.UdpMessage(udpid, packet);
-                        }
+                        int toClient = Int32.Parse(query[1]);
+                        string udpmsg = query[2];
+                        packet.Put((int)ServerPackets.UdpMessage); 
+                        packet.Put(udpmsg);
+                        ServerSend.SendData(toClient, packet, DeliveryMethod.Sequenced);
                         break;
                     case "tcp":
                         int tcpid = Int32.Parse(query[1]);
                         string tcpmsg = query[2];
-                        using (Packet packet = new Packet((int)ServerPackets.TcpMessage))
-                        {
-                            packet.Write(tcpmsg);
-                            ServerSend.TcpMessage(tcpid, packet);
-                        }
+                        packet.Put((int)ServerPackets.TcpMessage);
+                        packet.Put(tcpmsg);
+                        ServerSend.SendData(tcpid, packet, DeliveryMethod.ReliableOrdered);
                         break;
                     case "udpall":
                         string udpallmsg = query[1];
-                        using (Packet packet = new Packet((int)ServerPackets.UdpMessage))
-                        {
-                            packet.Write(udpallmsg);
-                            ServerSend.SendUDPDataToAll(packet);
-                        }
+                        packet.Put((int)ServerPackets.UdpMessage); 
+                        packet.Put(udpallmsg);
+                        ServerSend.SendDataToAll(packet, DeliveryMethod.Sequenced);
                         break;
                     case "tcpall":
                         string tcpallmsg = query[1];
-                        using (Packet packet = new Packet((int)ServerPackets.TcpMessage))
-                        {
-                            packet.Write(tcpallmsg);
-                            ServerSend.SendTcpDataToAll(packet);
-                        }
+                        packet.Put((int)ServerPackets.TcpMessage); 
+                        packet.Put(tcpallmsg);
+                        ServerSend.SendDataToAll(packet, DeliveryMethod.ReliableOrdered);
                         break;
                     case "show":
                         var players = Game.GetPlayers();
@@ -72,11 +111,26 @@ namespace GameServerTCP
                         foreach (var p in players)
                         {
                             var player = Game.GetPlayer(p.ID); 
-                            Console.WriteLine($"{p.ID} : {p.Name}");
+                            GameServer.Log($"{p.ID} : {p.Name}");
                         }
-                        break; 
+                        break;
+                    case "changemap":
+                        if(query.Length == 2)
+                            ServerWeb.ChangeCurrentMap(query[1]); 
+                        break;
+                    default:
+                        GameServer.Log($"{query[0]} unknown query.");
+                        break;
                 }
             }
+
+            GameServer.StopServer();
+            Thread.Sleep(1000);
+        }
+
+        private static void Listener_NetworkReceiveEvent(NetPeer peer, NetPacketReader reader, byte channel, DeliveryMethod deliveryMethod)
+        {
+            Console.WriteLine(reader.ToString());
         }
     }
 }

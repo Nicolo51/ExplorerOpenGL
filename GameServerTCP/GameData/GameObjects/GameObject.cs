@@ -1,4 +1,5 @@
-﻿using SharedClasses;
+﻿using LiteNetLib.Utils;
+using Model.Network;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -27,13 +28,13 @@ namespace GameServerTCP.GameData.GameObjects
             IsRemove = true; 
         }
 
-        public virtual void WriteIntoPacket(Packet packet)
+        public virtual void WriteIntoPacket(NetDataWriter packet)
         {
-            packet.Write(this.GetType().Name);
-            packet.Write(ID);
-            packet.Write(IsRemove);
-            packet.Write(Position.X); 
-            packet.Write(Position.Y);
+            packet.Put(this.GetType().Name);
+            packet.Put(ID);
+            packet.Put(IsRemove);
+            packet.Put(Position.X); 
+            packet.Put(Position.Y);
         }
     }
 }

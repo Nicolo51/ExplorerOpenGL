@@ -6,30 +6,56 @@ using System.Threading.Tasks;
 using System.Net.Http;
 using System.Text.Json;
 using System.Threading;
+using LiteNetLib;
+using LiteNetLib.Utils;
 
 namespace Client
 {
     class Program
     {
+        static EventBasedNetListener listener;
+        static NetManager client; 
         public static void Main(string[] args)
         {
-            Console.ReadLine(); 
-            HttpClient client = new HttpClient();
-            byte[] imageArray = System.IO.File.ReadAllBytes("test.jpg");
-            string base64Image = Convert.ToBase64String(imageArray);
-            StringContent content = new StringContent(JsonSerializer.Serialize(
-                new
-                {
-                    image = base64Image,
-                    textureName = "test.png",
-                    mapName = "test",
-                }
-                )) ;
-            Task<HttpResponseMessage> task = client.PostAsync("http://localhost:8000/MapTexture", content);
+            startClient();
+        }
 
-            while (!task.IsCompleted)
-                Thread.Sleep(1);
-            Console.ReadLine(); 
+        private static void startClient()
+        {
+            listener = new EventBasedNetListener();
+            client = new NetManager(listener);
+            client.Start();
+            client.Connect("localhost" /* host ip or name */, 25789 /* port */, "SomeConnectionKey" /* text key or NetDataWriter */);
+            listener.NetworkReceiveEvent += Listener_NetworkReceiveEvent;
+
+            listener.PeerConnectedEvent += peer =>
+            {
+                Console.WriteLine("Un client s'est co");
+            };
+
+            while (!Console.KeyAvailable)
+            {
+                client.PollEvents();
+                Thread.Sleep(15);
+                SendData("coucou", client.FirstPeer);
+            }
+
+            client.Stop();
+        }
+
+        private static void Listener_NetworkReceiveEvent(NetPeer peer, NetPacketReader reader, byte channel, DeliveryMethod deliveryMethod)
+        {
+            Console.WriteLine("We got: {0}", reader.GetString(100 /* max length of string */));
+            reader.Recycle();
+            
+        }
+
+        public static void SendData(string data, NetPeer peer)
+        {
+            NetDataWriter writer = new NetDataWriter();
+            writer.Reset(); 
+            writer.Put(data);
+            peer.Send(writer, DeliveryMethod.ReliableSequenced); 
         }
     }
 }

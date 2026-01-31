@@ -1,4 +1,5 @@
-﻿using SharedClasses;
+﻿using LiteNetLib.Utils;
+using Model.Network;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -46,17 +47,16 @@ namespace GameServerTCP.GameData.GameObjects
                 {
                     this.Remove();
                     p.Health--;
-                    ServerSend.RequestModifyHealth(p.ID, p.Health); 
                 }
             }
         }
 
-        public override void WriteIntoPacket(Packet packet)
+        public override void WriteIntoPacket(NetDataWriter packet)
         {
             base.WriteIntoPacket(packet);
-            packet.Write(Direction); 
-            packet.Write(Velocity);
-            packet.Write(Owner.ID); 
+            packet.Put(Direction); 
+            packet.Put(Velocity);
+            packet.Put(Owner.ID); 
         }
     }
 }

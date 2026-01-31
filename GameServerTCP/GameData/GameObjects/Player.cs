@@ -40,7 +40,7 @@ namespace GameServerTCP.GameData.GameObjects
 
         public override string ToString()
         {
-            return $"ID: {ID}, Position: {Position.ToString()}, LookAtRadian: {LookAtRadian.ToString("#.##")}, FeetRadian:{FeetRadian.ToString("#.##")}"; 
+            return $"ID: {ID}, Name : {Name}, Position: {Position.ToString()}, AnimationPlaying : {CurrentAnimationName}";  
         }
     }
 }

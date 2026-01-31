@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Model;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net;
@@ -11,23 +12,8 @@ namespace GameServerTCP.HttpServer
     {
         public static HttpListener listener;
         public static string url { get { return "http://*:" + port + "/"; } }
-        public static int port = 8000; 
-        public static int pageViews = 0;
-        public static int requestCount = 0;
-        public static string pageData =
-            "<!DOCTYPE>" +
-            "<html>" +
-            "  <head>" +
-            "    <title>HttpListener Example</title>" +
-            "  </head>" +
-            "  <body>" +
-            "    <p>Page Views: {0}</p>" +
-            "    <form method=\"post\" action=\"shutdown\">" +
-            "      <input type=\"submit\" value=\"Shutdown\" {1}>" +
-            "    </form>" +
-            "  </body>" +
-            "</html>";
-
+        public static int port = 8000;
+        private static string currentMap = "default"; 
         static Task listenTask; 
 
         public static void Start(int p = 8000)
@@ -37,12 +23,36 @@ namespace GameServerTCP.HttpServer
             listener.Prefixes.Add(url);
             listener.Start();
             listener.BeginGetContext(HandleIncomingConnections, null);
-            Console.WriteLine("Http Server listening at {0}", url);
+            GameServer.Log($"Http Server listening at {url}");
 
             // Handle requests
             //listenTask = HandleIncomingConnections();
             
         }
+
+        public static bool ChangeCurrentMap(string map)
+        {
+            if (File.Exists("./maps/" + map + ".xml"))
+            {
+                currentMap = map;
+                GameServer.Log($"Map has been changed to {map} successfully !");
+                return true;
+            }
+            else
+            {
+                GameServer.Log($"Map does not exist.");
+                return false;
+            }
+        }
+
+        public static void SetOnlineMap(string map)
+        {
+            if (string.IsNullOrWhiteSpace(map))
+                return; 
+            if(!File.Exists($"./map/{map}.xml"))
+                return;
+            currentMap = map;
+        } 
 
         public static void Reset()
         {
@@ -50,7 +60,7 @@ namespace GameServerTCP.HttpServer
             listener.Prefixes.Add(url);
             listener.Start();
             listener.BeginGetContext(HandleIncomingConnections, null);
-            Console.WriteLine("Http server reseted.");
+            GameServer.Log("Http server reseted.");
         }
 
         public static void Close()
@@ -76,12 +86,10 @@ namespace GameServerTCP.HttpServer
             HttpListenerResponse resp = ctx.Response;
 
             // Print out some info about the request
-            Console.WriteLine("Request #: {0}", ++requestCount);
-            Console.WriteLine(req.Url.ToString());
-            Console.WriteLine(req.HttpMethod);
-            Console.WriteLine(req.UserHostName);
-            Console.WriteLine(req.UserAgent);
-            Console.WriteLine();
+            //GameServer.Log(req.Url.ToString());
+            //GameServer.Log(req.HttpMethod);
+            //GameServer.Log(req.UserHostName);
+            //GameServer.Log(req.UserAgent);
 
             // If `shutdown` url requested w/ POST, then shutdown the server after serving the page
             if (req.HttpMethod == "POST")
@@ -109,6 +117,10 @@ namespace GameServerTCP.HttpServer
                     var xmr = new XmlMapRequest(body);
                     xmr.SaveData(); 
                     break;
+                case "/changemap":
+                    var cmr = new ChangeMapRequest(body); 
+                    ChangeCurrentMap(cmr.MapName); 
+                    break;
             }
             if (req.HasEntityBody)
             {
@@ -125,12 +137,54 @@ namespace GameServerTCP.HttpServer
 
         public static void HandleGet(HttpListenerRequest req, HttpListenerResponse resp)
         {
-            if (req.Url.AbsolutePath != "/favicon.ico")
-                pageViews += 1;
+            byte[] data = null; 
+            if (req.Url.AbsolutePath == "/favicon.ico")
+            {
+                resp.Close();
+                return; 
+            }
 
+            string[] URL = req.Url.AbsolutePath.Split("/");
+            if(URL.Length < 2)
+            {
+                resp.Redirect("www.google.com"); 
+            }
+            switch (URL[1].ToLower())
+            {
+                case "currentmap":
+                    data = Encoding.UTF8.GetBytes(currentMap);
+                    break; 
+                case "map":
+                    if(!File.Exists($"./maps/{URL[2]}.xml"))
+                    {
+                        resp.StatusCode = 404;
+                        data = Encoding.UTF8.GetBytes("404 not found. This file does not exist.");
+                        break; 
+                    }
+                    data = Encoding.UTF8.GetBytes(File.ReadAllText($"./maps/{URL[2]}.xml")); 
+                    break;
+                case "texture": //URL 1 texture | URL 2 mapname | URL 3 nomtexture
+                    if(URL.Length != 4) 
+                    {
+                        resp.StatusCode = 400;
+                        data = Encoding.UTF8.GetBytes("400 bad resquest. Argument does not match expected data.");
+                        break;
+                    }
+                    if (!File.Exists($"./maps/{URL[2]}/{URL[3]}"))
+                    {
+                        resp.StatusCode = 404;
+                        data = Encoding.UTF8.GetBytes("404 not found. This file does not exist.");
+                        break;
+                    }
+                    data = File.ReadAllBytes($"./maps/{URL[2]}/{URL[3]}");
+                    break;
+                default:
+                    data = Encoding.UTF8.GetBytes("404 not found.");
+                    break;
+
+            }
             // Write the response info
-            byte[] data = Encoding.UTF8.GetBytes(String.Format(pageData, pageViews));
-            resp.ContentType = "text/html";
+            resp.ContentType = "text";
             resp.ContentEncoding = Encoding.UTF8;
             resp.ContentLength64 = data.LongLength;
 

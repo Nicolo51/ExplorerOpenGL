@@ -1,8 +1,11 @@
 ﻿using GameServerTCP.GameData;
 using GameServerTCP.GameData.GameObjects;
-using SharedClasses;
+using LiteNetLib;
+using LiteNetLib.Utils;
+using Model.Network;
 using System;
 using System.Collections.Generic;
+using System.Net.Sockets;
 using System.Text;
 
 namespace GameServerTCP
@@ -11,208 +14,145 @@ namespace GameServerTCP
     {
         public static void Welcome(int toClient)
         {
-            using (Packet packet = new Packet((int)ServerPackets.Welcome))
-            {
-                packet.Write($"Successfully connected to the server with the ID : {toClient}");
-                packet.Write(toClient);
-                packet.Write(Game.tickRate);
-                SendTcpData(toClient, packet);
-            }
+            NetDataWriter packet = new NetDataWriter();
+
+            packet.Put((int)ServerPackets.Welcome);
+            packet.Put($"Successfully connected to the server with the ID : {toClient}");
+            packet.Put(toClient);
+            packet.Put(Game.tickRate);
+            SendData(toClient, packet, DeliveryMethod.ReliableOrdered);
         }
 
         public static void RequestAcknowledgeme(int toClient, ClientPackets clientPacket, bool status)
         {
-            using (Packet packet = new Packet((int)ServerPackets.Sync))
-            {
-                packet.Write((int)clientPacket);
-                packet.Write(status);
-                SendTcpData(toClient, packet); 
-            }
+            NetDataWriter packet = new NetDataWriter();
+            packet.Put((int)ServerPackets.Sync); 
+            packet.Put((int)clientPacket);
+            packet.Put(status);
+            SendData(toClient, packet, DeliveryMethod.ReliableOrdered); 
         }
 
-        public static void TcpAddPlayer(int idClient)
+        public static void AddPlayer(int idClient)
         {
-            using(Packet packet = new Packet((int)ServerPackets.TcpAddPlayer))
-            {
-                packet.Write(idClient);
-                packet.Write(Game.GetPlayer(idClient).Name);
-                packet.WriteLength();
-                for (int i = 1; i <= GameServer.maxPlayer; i++)
-                {
-                    if (idClient == GameServer.GetClient(i).id)
-                        continue; 
-                    GameServer.GetClient(i).SendData(packet);
-                }
-            }
-        }
+            NetDataWriter packet = new NetDataWriter();
+            packet.Put((int)ServerPackets.TcpAddPlayer); 
+            packet.Put(idClient);
+            packet.Put(Game.GetPlayer(idClient).Name);
 
-        public static void RequestModifyHealth(int toClient, int health)
-        {
-            using(Packet packet = new Packet((int)ServerPackets.ChangeHealth))
+            ServerClient[] clients = GameServer.GetClients(); 
+            for (int i = 0; i < clients.Length; i++)
             {
-                packet.Write(health);
-                SendTcpData(toClient, packet);
+                if (idClient == clients[i].id)
+                    continue;
+                clients[i].clientPeer.Send(packet, DeliveryMethod.ReliableUnordered); 
             }
         }
 
         public static void RequestChangePlayerPosition(int toClient, Vector2 pos)
         {
-            using (Packet packet = new Packet((int)ServerPackets.Teleport))
-            {
-                packet.Write(pos.X);
-                packet.Write(pos.Y);
-                SendTcpData(toClient, packet);
-            }
+            NetDataWriter packet = new NetDataWriter();
+            packet.Put((int)ServerPackets.Teleport); 
+            packet.Put(pos.X);
+            packet.Put(pos.Y);
+            SendData(toClient, packet, DeliveryMethod.ReliableOrdered);
         }
 
         public static void UDPTest(int toClient)
         {
-            using (Packet packet = new Packet((int)ServerPackets.UdpTest))
-            {
-                packet.Write("A test packet for UDP.");
-
-                SendUDPData(toClient, packet);
-            }
+            NetDataWriter packet = new NetDataWriter();
+            packet.Put((int)ServerPackets.UdpTest);
+            SendData(toClient, packet, DeliveryMethod.Sequenced);
         }
 
-        public static void TcpPlayersSync(int toClient)
+        public static void PlayersSync(int toClient)
         {
-            using(Packet packet = new Packet((int)ServerPackets.TcpPlayersSync))
+            NetDataWriter packet = new NetDataWriter();
+            packet.Put((int)ServerPackets.TcpPlayersSync);
+            var players = Game.GetPlayers(); 
+            foreach (var player in players)
             {
-                var players = Game.GetPlayers(); 
-                foreach (var player in players)
-                {
-                    packet.Write(true);
-                    packet.Write(player.ID);
-                    packet.Write(player.Name);
-                }
-                packet.Write(false);
-                SendTcpData(toClient, packet); 
+                packet.Put(true);
+                packet.Put(player.ID);
+                packet.Put(player.Name);
             }
+            packet.Put(false);
+            SendData(toClient, packet, DeliveryMethod.ReliableOrdered); 
         }
         public static void DisconnectPlayer(int id, string playerName)
         {
-            using (Packet packet = new Packet((int)ServerPackets.DisconnectPlayer))
-            {
-                packet.Write(id);
-                packet.Write(playerName);
-                SendTcpDataToAll(packet); 
-            }
+            NetDataWriter packet = new NetDataWriter();
+            packet.Put((int)ServerPackets.DisconnectPlayer);
+            packet.Put(id);
+            packet.Put(playerName);
+            SendDataToAll(packet, DeliveryMethod.ReliableOrdered); 
         }
 
-        public static void UdpUpdatePlayers(int toClient)
+        public static void UpdatePlayers(int toClient, NetDataWriter packet)
         {
-            using (Packet packet = new Packet((int)ServerPackets.UdpUpdatePlayers))
-            {
-                Player[] players = Game.GetPlayers();
-                
-                foreach (var entry in players)
-                {
-                    packet.Write(true);
-                    packet.Write(entry.ID);
-                    packet.Write(entry.Position.X); 
-                    packet.Write(entry.Position.Y); 
-                    packet.Write(entry.Health);
-                    packet.Write(entry.CurrentAnimationName);
-                    packet.Write(entry.SpriteEffect);
-                }
-                packet.Write(false);
-                SendUDPData(toClient, packet);
-            }
+            SendData(toClient, packet, DeliveryMethod.Sequenced);
         }
 
-        public static void UpdateGameObject(int toClient)
+        public static void UpdateGameObject(int toClient, NetDataWriter packet)
         {
-            using(Packet packet = new Packet((int)ServerPackets.UpdateGameObject))
-            {
-                GameObject[] gameObjects = Game.GetGameObjects();
-                foreach (var entry in gameObjects)
-                {
-                    packet.Write(true);
-                    entry.WriteIntoPacket(packet); 
-                }
-                packet.Write(false);
-                SendUDPData(toClient, packet);
-            }
+           SendData(toClient, packet, DeliveryMethod.Sequenced);
         }
 
         public static void UdpUpdatePlayers()
         {
-            Player[] players = Game.GetPlayers(); 
-            foreach(var entry in players)
-            {
-                UdpUpdatePlayers(entry.ID);
-            }
-        }
-
-        public static void UpdateGameObject()
-        {
+            NetDataWriter packet = new NetDataWriter(); 
+            packet.Put((int)ServerPackets.UdpUpdatePlayers); 
             Player[] players = Game.GetPlayers();
-            foreach (var player in players)
+            foreach (var entry in players)
             {
-                UpdateGameObject(player.ID);
+                packet.Put(true);
+                packet.Put(entry.ID);
+                packet.Put(entry.Position.X);
+                packet.Put(entry.Position.Y);
+                packet.Put(entry.Health);
+                packet.Put(entry.CurrentAnimationName);
+                packet.Put(entry.SpriteEffect);
+            }
+            packet.Put(false);
+            foreach (var entry in players)
+            {
+                UpdatePlayers(entry.ID, packet);
             }
         }
-
         public static void TcpChangeNameResult(int toClient, int response, string name)
         {
-            using (Packet packet = new Packet((int)ServerPackets.ChangeNameResult))
-            {
-                packet.Write(response);
-                packet.Write(name);
-                packet.Write(toClient);
-                SendTcpDataToAll(packet);
-            }
+            NetDataWriter packet = new NetDataWriter();
+            packet.Put((int)ServerPackets.ChangeNameResult); 
+            packet.Put(response);
+            packet.Put(name);
+            packet.Put(toClient);
+            SendDataToAll(packet, DeliveryMethod.ReliableUnordered);
         }
 
         public static void TcpSpreadChatMessageToAll(Player player, string message)
         {
-            using (Packet packet = new Packet((int)ServerPackets.TcpChatMessage))
-            {
-                packet.Write(player.Name);
-                packet.Write(message);
-                SendTcpDataToAll(packet);
-            }
+            NetDataWriter packet = new NetDataWriter();
+            packet.Put((int)ServerPackets.TcpChatMessage);
+            packet.Put(player.Name);
+            packet.Put(message);
+            SendDataToAll(packet, DeliveryMethod.ReliableOrdered);
         }
 
-        public static void UdpMessage(int toClient, Packet paquet)
-        {
-            SendUDPData(toClient, paquet);
-        }
-
-        public static void TcpMessage(int toClient, Packet paquet)
-        {
-            SendTcpData(toClient, paquet);
-        }
         #region Low level function
-        public static void SendUDPDataToAll(Packet _packet)
+        public static void SendDataToAll(NetDataWriter packet, DeliveryMethod dm)
         {
-            _packet.WriteLength();
-            for (int i = 1; i <= GameServer.maxPlayer; i++)
+            for (int i = 0; i <= GameServer.maxPlayer; i++)
             {
-                GameServer.GetClient(i).udp.SendData(_packet);
+                var c = GameServer.GetClient(i);
+                if (c == null)
+                    continue;
+                c.clientPeer.Send(packet, dm);
             }
         }
 
-        private static void SendUDPData(int toClient, Packet _packet)
+        public static void SendData(int toClient, NetDataWriter packet, DeliveryMethod dm)
         {
-            _packet.WriteLength();
-            GameServer.GetClient(toClient).udp.SendData(_packet);
-        }
-
-        public static void SendTcpDataToAll(Packet packet)
-        {
-            packet.WriteLength();
-            for (int i = 1; i <= GameServer.maxPlayer; i++)
-            {
-                GameServer.GetClient(i).SendData(packet);
-            }
-        }
-
-        private static void SendTcpData(int toClient, Packet packet)
-        {
-            packet.WriteLength();
-            GameServer.GetClient(toClient).SendData(packet); 
+            var client = GameServer.GetClient(toClient); 
+            client.clientPeer.Send(packet, dm); 
         }
         #endregion
     }

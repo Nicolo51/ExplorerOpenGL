@@ -17,7 +17,8 @@ namespace GameServerTCP.HttpServer
             TextureMapRequest tmr = JsonSerializer.Deserialize<TextureMapRequest>(body);
             image = tmr.image;
             textureName = tmr.textureName;
-            mapName = tmr.mapName; 
+            mapName = tmr.mapName;
+            GameServer.Log("Received " + textureName + " texture."); 
         }
 
         public TextureMapRequest()

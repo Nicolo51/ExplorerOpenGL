@@ -1,49 +1,45 @@
 ﻿using GameServerTCP.GameData;
 using GameServerTCP.GameData.GameObjects;
-using SharedClasses;
+using LiteNetLib;
+using Model.Network;
 using System;
 using System.Collections.Generic;
+using System.Runtime.ConstrainedExecution;
 using System.Text;
+using System.Threading;
 
 namespace GameServerTCP
 {
     public class ServerHandle
     {
-        public static void WelcomeReceived(int fromClient, Packet packet) 
+        public static void WelcomeReceived(int fromClient, NetPacketReader packet, NetPeer peer) 
         {
-            int clientIdCheck = packet.ReadInt();
-            string name = packet.ReadString();
-            string msg = packet.ReadString();
-            //Console.WriteLine(msg);
-            Console.WriteLine(GameServer.GetClient(fromClient).tcp.socket.Client.RemoteEndPoint + " successfully connected and is now connected as " + name + " with id : " + fromClient);
+            int clientIdCheck = packet.GetInt();
+            string name = packet.GetString();
+            string msg = packet.GetString();
+            //GameServer.Log(msg);
+            GameServer.Log(peer.Address.ToString() + " successfully connected and is now connected as " + name + " with id : " + fromClient); 
             if (clientIdCheck != fromClient)
             {
-                Console.WriteLine("L'id is corrupted " + clientIdCheck);
+                    GameServer.Log("L'id is corrupted " + clientIdCheck);
                 return; 
             }
             Game.AddPlayer(clientIdCheck, new Player(clientIdCheck, name));
-            ServerSend.RequestAcknowledgeme(fromClient, ClientPackets.WelcomeReceived, true); 
+            ServerSend.AddPlayer(fromClient);
+            ServerSend.PlayersSync(fromClient);
         }
 
-        public static void UdpMessageReceived(int fromClient, Packet packet)
+        public static void UdpMessageReceived(int fromClient, NetPacketReader packet, NetPeer peer)
         {
-            int id = packet.ReadInt(); 
+            int id = packet.GetInt(); 
             if(id == fromClient)
-                Console.WriteLine(fromClient + "-" + Game.GetPlayer(fromClient).Name + " : " + packet.ReadString()); 
+                GameServer.Log(fromClient + "-" + Game.GetPlayer(fromClient).Name + " : " + packet.GetString()); 
         }
 
-        public static void UDPTestReceived(int fromClient, Packet packet)
+        public static void TcpCommandReceived(int idClient, NetPacketReader packet, NetPeer peer)
         {
-            string msg = packet.ReadString();
-            ServerSend.TcpPlayersSync(fromClient);
-            ServerSend.TcpAddPlayer(fromClient);
-            //Console.WriteLine($"Received packet via UDP. Contains message: {msg}");
-        }
-
-        public static void TcpCommandReceived(int idClient, Packet packet)
-        {
-            int clientIdCheck = packet.ReadInt();
-            string msg = packet.ReadString();
+            int clientIdCheck = packet.GetInt();
+            string msg = packet.GetString();
             string[] cmd; 
 
             if (string.IsNullOrWhiteSpace(msg = msg.Trim()))
@@ -57,13 +53,13 @@ namespace GameServerTCP
                     switch (cmd[0].ToLower())
                     {
                         case "/tp": 
-                            Console.WriteLine("Tp command issued");
+                            GameServer.Log("Tp command issued");
                             break;
                         case "/w":
-                            Console.WriteLine("Whisper command issued");
+                            GameServer.Log("Whisper command issued");
                             break;
                         default:
-                            Console.WriteLine("Unrecognized command");
+                            GameServer.Log("Unrecognized command");
                             break;
                     }
                 }
@@ -72,45 +68,45 @@ namespace GameServerTCP
 
             if (clientIdCheck != idClient)
             {
-                Console.WriteLine("L'id is corrupted " + clientIdCheck);
+                GameServer.Log("L'id is corrupted " + clientIdCheck);
                 return; 
             }
-            Console.WriteLine($"[{Game.GetPlayer(idClient).Name }, {idClient}]: { msg }");
+            GameServer.Log($"[{Game.GetPlayer(idClient).Name }, {idClient}]: { msg }");
             ServerSend.TcpSpreadChatMessageToAll(Game.GetPlayer(idClient), msg); 
         }
 
-        public static void UdpUpdatePlayer(int fromClient, Packet packet)
+        public static void UdpUpdatePlayer(int fromClient, NetPacketReader packet, NetPeer peer)
         {
-            Vector2 position = new Vector2(packet.ReadFloat(), packet.ReadFloat());
-            int health = packet.ReadInt();
-            string animationName = packet.ReadString();
-            int effect = packet.ReadInt();
+            Vector2 position = new Vector2(packet.GetFloat(), packet.GetFloat());
+            int health = packet.GetInt();
+            string animationName = packet.GetString();
+            int effect = packet.GetInt();
 
             string msg = $"Posistion = {position.ToString()}";
             Game.UpdatePlayer(fromClient, position, health, animationName, effect);
             //ServerSend.UdpUpdatePlayers(fromClient);
-            //Console.WriteLine($"Received packet via UDP from ID { fromClient }. Contains message: {msg}");
+            //GameServer.Log($"Received packet via UDP from ID { fromClient }. Contains message: {msg}");
             //Game.PrintDebug(); 
         }
 
-        public static void ChangeNameRequest(int fromClient, Packet packet)
+        public static void ChangeNameRequest(int fromClient, NetPacketReader packet, NetPeer peer)
         {
             if(!checkIdIntegrity(fromClient, packet))
                 ServerSend.TcpChangeNameResult(fromClient, 403, string.Empty);
 
-            string name = packet.ReadString();
+            string name = packet.GetString();
             Game.GetPlayer(fromClient).Name = name;
             ServerSend.TcpChangeNameResult(fromClient, 200, name);
         }
 
-        public static void CreateBullet(int fromClient, Packet packet)
+        public static void CreateBullet(int fromClient, NetPacketReader packet, NetPeer peer)
         {
             if (!checkIdIntegrity(fromClient, packet))
                 return;
-            var position = new Vector2(packet.ReadFloat(), packet.ReadFloat());
-            var direction = packet.ReadFloat();
-            var velocity = packet.ReadFloat();
-            var owner = Game.GetPlayer(packet.ReadInt());
+            var position = new Vector2(packet.GetFloat(), packet.GetFloat());
+            var direction = packet.GetFloat();
+            var velocity = packet.GetFloat();
+            var owner = Game.GetPlayer(packet.GetInt());
             Bullet bullet = new Bullet(position)
             {
                 Direction = direction,
@@ -118,21 +114,26 @@ namespace GameServerTCP
                 Owner = owner, 
             };
             Game.AddGameObject(bullet);
-            Console.WriteLine("Bullet created, id : " + bullet.ID);
+            GameServer.Log("Bullet created, id : " + bullet.ID);
         }
 
-        public static void Disconnect(int fromClient, Packet packet)
+        public static void Disconnect(int fromClient, NetPacketReader packet, NetPeer peer)
         {
+            Thread.Sleep(2000); 
             if (!checkIdIntegrity(fromClient, packet))
                 return;
-            GameServer.GetClient(fromClient).tcp.DisconnectClient(); 
-            Game.RemovePlayer(fromClient);
+            GameServer.CloseConnection(fromClient, peer);
         }
 
-        public static bool checkIdIntegrity(int fromClient, Packet packet)
+        public static bool checkIdIntegrity(int fromClient, NetPacketReader packet)
         {
-            int CheckID = packet.ReadInt();
+            int CheckID = packet.GetInt();
             return fromClient == CheckID; 
+        }
+
+        public static void UpdateGameState(int fromClient, NetPacketReader packet, NetPeer peer)
+        {
+
         }
     }
 }

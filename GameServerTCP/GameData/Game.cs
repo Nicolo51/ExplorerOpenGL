@@ -2,6 +2,7 @@
 using GameServerTCP.HttpServer;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Web.Http;
@@ -18,6 +19,7 @@ namespace GameServerTCP.GameData
         public static DateTime LastUpdate;
         public static TimeSpan  TimeSpanSinceGameStarted { get { return DateTime.Now - startTime; } }
         public const int tickRate = 30;
+        private static int ticktime; 
         public static void Start()
         {
             nextGameObjectID = 0; 
@@ -55,16 +57,16 @@ namespace GameServerTCP.GameData
                 string playerName = Players[id].Name;
                 Players.Remove(id);
                 ServerSend.DisconnectPlayer(id, playerName);
-                Console.WriteLine(playerName + " left the game");
+                GameServer.Log(playerName + " left the game");
             }
         }
 
         private static void gameTick(object state)
         {
+            ticktime++; 
             UpdateGameObjects(DateTime.Now - LastUpdate); 
             LastUpdate = DateTime.Now; 
             ServerSend.UdpUpdatePlayers();
-            ServerSend.UpdateGameObject(); 
         }
 
         public static void PrintDebug()
@@ -74,7 +76,7 @@ namespace GameServerTCP.GameData
             {
                 foreach (KeyValuePair<int, Player> entry in Players)
                 {
-                    Console.WriteLine($"\r{entry.Value.ToString()}    ");
+                    GameServer.Log($"\r{entry.Value.ToString()}    ");
                 }
             }
         }
@@ -98,6 +100,7 @@ namespace GameServerTCP.GameData
                             i--;
                     }
                 }
+                GameServer.DisplayLogDirect(Players.Values.ToArray()); 
             }
         }
 

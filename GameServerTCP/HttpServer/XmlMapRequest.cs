@@ -15,6 +15,7 @@ namespace GameServerTCP.HttpServer
             XmlMapRequest tmr = JsonSerializer.Deserialize<XmlMapRequest>(body);
             Xml = tmr.Xml;
             FileName = tmr.FileName;
+            GameServer.Log("Received " + FileName + " map.");
         }
 
         public XmlMapRequest()
