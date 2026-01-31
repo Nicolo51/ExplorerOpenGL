@@ -1,61 +1,77 @@
-﻿using ExplorerOpenGL.Managers.Networking;
-using ExplorerOpenGL.Managers.Networking.EventArgs;
-using ExplorerOpenGL.Managers.Networking.NetworkObject;
-using ExplorerOpenGL.Model.Sprites;
-using ExplorerOpenGL.View;
+﻿using ExplorerOpenGL2.Managers.Networking;
+using ExplorerOpenGL2.Managers.Networking.EventArgs;
+using ExplorerOpenGL2.Model;
+using ExplorerOpenGL2.Model.Sprites;
+using ExplorerOpenGL2.View;
+using GameServerTCP;
+using LiteNetLib.Utils;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using SharedClasses;
+using Microsoft.Xna.Framework.Input;
+using Model.Network;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.Design;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
+using System.Net.Mail;
+using System.Net.NetworkInformation;
+using System.Net.Sockets;
 using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 
-namespace ExplorerOpenGL.Managers
+namespace ExplorerOpenGL2.Managers
 {
-    public class NetworkManager 
+    public class NetworkManager
     {
-        public ConnectionState ConnectionState{ get; private set; }
+        public ConnectionState ConnectionState { get; private set; }
         public bool IsConnectedToAServer { get { return ConnectionState == ConnectionState.Connected; } }
         SocketAddress socketAddress;
-        int serverTickRate; 
+        int serverTickRate;
         double timer;
         double clock;
-        private Client client; 
+        private Client client;
         GameManager gameManager;
         DebugManager debugManager;
+        XmlManager xmlManager;
         private int port;
         private static NetworkManager instance;
         public static event EventHandler Initialized;
         private string playerNameOnConnection;
         private GameTime gameTime;
+        GameServer gameServer;
 
-        public int IDClient { get { return client.myId; } }
+        WelcomeEventArgs welcomeEventArgs;
+        int mapPacketCount = 0;
+        List<byte> mapData = new List<byte>();
+        public string  serverMap { get; private set; }
 
-        delegate void RequestHandler(Packet packet);
-        private Dictionary<RequestTypes, RequestHandler> requestHandler; 
+        public int IDClient { get { return client.ID; } }
+        public bool IsServer { get; set; }
 
+        public delegate void PacketReceivedHandler(NetworkEventArgs e); 
+        public event PacketReceivedHandler PacketReceived;
+        
         double elapsedTimeSinceLastUpdatePlayer;
-        double lastUpdate; 
+        double lastUpdate;
 
-
-
-        private bool DoOnce; 
+        public bool pingUdp { get; private set;  } = false; 
+        public bool pingTcp { get; private set; } = false;
 
         public static NetworkManager Instance { get
             {
-                if(instance == null)
+                if (instance == null)
                 {
                     instance = new NetworkManager();
                     Initialized?.Invoke(instance, EventArgs.Empty);
-                    return instance; 
+                    return instance;
                 }
-                return instance; 
+                return instance;
             }
         }
 
@@ -65,62 +81,97 @@ namespace ExplorerOpenGL.Managers
             timer = 30;
             clock = 0d;
             port = 25789;
-            DoOnce = false;
-            requestHandler = new Dictionary<RequestTypes, RequestHandler>() 
-            {
-                {RequestTypes.DeleteObject, DeleteObject },
-                {RequestTypes.MoveObject, MoveObject },
-                {RequestTypes.CreateObject, CreateObject },
-                {RequestTypes.MovePlayer, MovePlayer },
-                {RequestTypes.ModifyPlayerHealth, ModifyPlayerHealth },
-            }; 
+            InitDependencies(); 
         }
 
         public void InitDependencies()
         {
             gameManager = GameManager.Instance;
             debugManager = DebugManager.Instance;
+            xmlManager = XmlManager.Instance;
+            
         }
 
-        public bool Connect(string ip, string name) //port is 25789 by default
+        public bool Connect(string ip, string name, bool isServer = false) //port is 25789 by default
         {
+            if (isServer)
+            {
+                gameServer = new GameServer(port, this);
+                gameServer.InitDependencies();
+            }
+
             client = new Client(gameManager);
-            playerNameOnConnection = name; 
+            playerNameOnConnection = name;
 
             if (ip.IndexOf(':') != -1)
             {
-                if(!Int32.TryParse(ip.Split(':')[1], out port))
+                if (!Int32.TryParse(ip.Split(':')[1], out port))
                 {
-                    MessageBox.Show("Port unreadable.", "Error");
-                    return false; 
-                } 
+                    MessageBoxIG.Show("Port unreadable.", "Error");
+                    return false;
+                }
             }
             if (ConnectionState == ConnectionState.NotConnected)
             {
                 gameManager.Terminal.AddMessageToTerminal($"Connecting to {ip}...", "System", Color.White);
                 socketAddress = new SocketAddress(ip, port);
-                client.Start(new SocketAddress(ip, port));
 
-                ConnectionState = ConnectionState.WaitingForTcp;
-                client.OnPacketReceived += OnPacketReceived; 
+                ConnectionState = ConnectionState.WaitingForServer;
+                client.OnPacketReceived += OnPacketReceived;
                 client.OnPacketSent += OnPacketSent;
-                client.ConnectToServer();
+                client.ConnectToServer(socketAddress);
+                IsServer = isServer; 
                 return true;
             }
             else
             {
-                gameManager.Terminal.AddMessageToTerminal("You're already connected to a server." , "System", Color.Red);
-                return false; 
+                gameManager.Terminal.AddMessageToTerminal("You're already connected to a server.", "System", Color.Red);
+                return false;
             }
         }
+
+        public void SendGameState(NetGameState netGameState)
+        {
+            client.SendMessage(netGameState, ClientPackets.UpdateGameState); 
+        }
+
         public void Disconnect()
         {
-            client.SendMessage(null, (int)ClientPackets.Disconnect); 
+            mapPacketCount = 0;
+            client.OnPacketReceived -= OnPacketReceived;
+            client.OnPacketSent -= OnPacketSent;
             client.Disconnect();
             client.Dispose();
-            client = null; 
-            GC.Collect(); 
+            client = null;
+            if (IsServer)
+            {
+                gameServer.StopServer();
+            }
+            GC.Collect();
             ConnectionState = ConnectionState.NotConnected;
+        }
+
+        public Task ChangeMap(string mapName, string host)
+        {
+            Task t = new Task(() =>
+            {
+                HttpClient client = new HttpClient();
+                StringContent content = new StringContent(JsonSerializer.Serialize(
+                    new
+                    {
+                        MapName = mapName,
+                    }
+                    ));
+                if (string.IsNullOrWhiteSpace(host))
+                    host = "http://localhost:8000";
+                Task<HttpResponseMessage> task = client.PostAsync($"{host}/changemap", content);
+
+                while (!task.IsCompleted)
+                    Thread.Sleep(1);
+
+            }); 
+            t.Start();
+            return t;
         }
 
         public Task UploadMap(string mapName, string path, string host, UploadScreen view)
@@ -179,119 +230,181 @@ namespace ExplorerOpenGL.Managers
                 return;
             });
             t.Start();
-            return t; 
+            return t;
         }
 
         public void SendMessageToServer(string message)
         {
-            client.SendMessage(message, (int)ClientPackets.TcpChatMessage); 
+            client.SendMessage(message, (int)ClientPackets.TcpChatMessage);
         }
 
         public void RequestNameChange(string name)
         {
-            if(!string.IsNullOrWhiteSpace(name))
-                client.RequestNameChange(name); 
+            if (!string.IsNullOrWhiteSpace(name))
+                client.RequestNameChange(name);
         }
         public void CreateBullet(Player player)
         {
-            client.CreateBullet(player); 
+            client.CreateBullet(player);
         }
-
-        public void OnPlayerUpdate(PlayerUpdateEventArgs e)
-        {
-            elapsedTimeSinceLastUpdatePlayer = gameTime.TotalGameTime.TotalMilliseconds - lastUpdate;
-            lastUpdate = gameTime.TotalGameTime.TotalMilliseconds;
-            foreach (PlayerData pd in e.PlayerData)
-            {
-                if (pd.ID == IDClient)
-                    continue; 
-                PlayerData p = client.PlayersData[pd.ID];
-                p.SetPosition(pd.ServerPosition, false); 
-                p.Health = pd.Health;
-                p.Play(pd.CurrentAnimationName);
-                p.Effects = pd.Effects; 
-            }
-        }
-
-        public void OnGameObjectUpdate(GameObjectsUpdateEventArgs e)
-        {
-            foreach (var ngo in e.networkGameObjects)
-            {
-                bool contains = false;
-                lock (gameManager.NetworkObjects)
-                    contains = gameManager.NetworkObjects.Keys.Contains(ngo.ID);
-
-                if (contains)
-                {
-                    gameManager.UpdateNetworkObjects(ngo);
-                    continue;
-                }
-                var b = ngo as NetworkBullet;
-                Bullet bullet = new Bullet() { Direction = b.Direction, Velocity = b.Velocity, ID = b.ID, Position = b.Position, IdPlayer = b.IDPlayer };
-                gameManager.AddNetworkObject(bullet);
-            }
-        }
-
 
         public void OnMessage(ChatMessageEventArgs e)
         {
             gameManager.Terminal.AddMessageToTerminal(e.Text, e.Sender, e.TextColor);
-
         }
+
         public void PlayerSync(PlayerSyncEventArgs e)
         {
             foreach (PlayerData pd in e.PlayerData)
             {
-                PlayerData playerDataSync = new PlayerData(pd.ID, pd.Name);
-                client.PlayersData.Add(pd.ID, playerDataSync);
-                gameManager.AddSprite(playerDataSync, this);
+                var player = gameManager.CreateInstance(1) as Player;
+
+                player.ID = pd.ID; 
+
+                //Player playerDataSync = new Player(pd.ID, pd.Name);
+                client.PlayersData.Add(pd.ID, player);
+                gameManager.AddSprite(player, this);
             }
         }
+
         public void OnRequestResponse(RequestResponseEventArgs e)
         {
             gameManager.Terminal.AddMessageToTerminal(e.Message, "System", Color.White);
         }
         public void OnPlayerDisconnection(PlayerDisconnectionEventArgs e)
         {
+            if(e.ID == client.ID)
+            {
+                Disconnect(); 
+                gameManager.StopGame();
+                return; 
+            }
+
             gameManager.RemoveSprite(client.PlayersData[e.ID]);
             client.PlayersData.Remove(e.ID);
             gameManager.Terminal.AddMessageToTerminal(e.Message, "System", Color.White);
         }
         public void OnPlayerConnection(PlayerConnectEventArgs e)
         {
-            PlayerData playerDataCo = new PlayerData(e.ID, e.Name);
-            client.PlayersData.Add(e.ID, playerDataCo);
-            gameManager.Terminal.AddMessageToTerminal(e.Message, "System", Color.White);
-            gameManager.AddSprite(playerDataCo, this);
+            //PlayerData playerDataCo = new PlayerData(e.ID, e.Name);
+            //client.PlayersData.Add(e.ID, playerDataCo);
+            //gameManager.Terminal.AddMessageToTerminal(e.Message, "System", Color.White);
+            //gameManager.AddSprite(playerDataCo, this);
         }
 
         public void OnPlayerChangeName(PlayerChangeNameEventArgs e)
         {
             string exName = client.PlayersData[e.IDPlayer].Name;
-            if (e.IDPlayer == client.myId)
+            if (e.IDPlayer == client.ID)
             {
                 gameManager.AddActionToUIThread(gameManager.Player.ChangeName, e.Name);
                 return;
             }
-            client.PlayersData[e.IDPlayer].Name = e.Name;
+            client.PlayersData[e.IDPlayer].ChangeName(e.Name);
             gameManager.Terminal.AddMessageToTerminal(exName + " is now known as " + e.Name, "System", Color.Green);
         }
 
         public void OnWelcome(WelcomeEventArgs e)
         {
-            client.SendResponseWelcome(playerNameOnConnection);
-            //client.ConnectUdp();
+            welcomeEventArgs = e; 
+            client.SendResponseWelcome(playerNameOnConnection, e.ID);
             serverTickRate = e.TickRate;
-            ConnectionState = ConnectionState.WaitingForUdp;
+            ConnectionState = ConnectionState.Connected;
+            if (IsServer)
+                InitOnlineGame(); 
+            //MapXml[] map = xmlManager.LoadMapFromString(e.Map);
+            //Sprite[] sprites = xmlManager.GenerateSpritesFromXml(map);
+
+            //foreach(var s in sprites)
+            //    TextureManager.Instance.SaveTexture(s.Texture);
+
+            
+            //GetMapOfServer();
+
         }
 
+        public void InitOnlineGame()
+        {
+            Player player;
+            if (IsServer)
+                player = gameManager.GetSpriteById(welcomeEventArgs.ID) as Player;
+            else
+            {
+                player = gameManager.CreateInstance(1) as Player;
+                player.ID = welcomeEventArgs.ID;
+            }
+            player.ChangeName(playerNameOnConnection);
+            player.input = new Input()
+            {
+                Down = Keys.S,
+                Up = Keys.Z,
+                Left = Keys.Q,
+                Right = Keys.D,
+                Run = Keys.LeftShift,
+            };
+            player.Position = Vector2.Zero;
+            gameManager.AddSprite(player, this); 
+        }
+
+        private void GetMapOfServer()
+        {
+            serverMap = Encoding.UTF8.GetString(SendHttpRequest($"http://{socketAddress.IP}:8000/currentmap"));
+
+            string mapDir= $"./maps/{serverMap}";
+            string mapPath = $"./maps/{serverMap}.xml"; 
+
+            if (!Directory.Exists(mapDir))
+                Directory.CreateDirectory(mapDir);
+
+            if(File.Exists(mapPath))
+                File.Delete(mapPath);
+
+            string mapXml = Encoding.UTF8.GetString(SendHttpRequest($"http://{socketAddress.IP}:8000/map/{serverMap}"));
+            StreamWriter sw = File.CreateText(mapPath); 
+            sw.Write(mapXml);
+            sw.Close(); 
+
+            string[] mapTextures = xmlManager.GetMapTextureNames(mapXml);
+            DownloadMapTexture(serverMap, mapTextures);
+        }
+
+        private void DownloadMapTexture(string mapName, string[] textureNames)
+        {
+            foreach (var texture in textureNames) 
+            {
+                string texturePath = $"./maps/{mapName}/{texture}.png";
+                if (File.Exists(texturePath))
+                    File.Delete(texturePath); 
+
+                byte[] data = SendHttpRequest($"http://{socketAddress.IP}:8000/texture/{mapName}/{texture}.png");
+                MemoryStream stream = new MemoryStream(data);
+                var textureStream = File.Create(texturePath); 
+                SixLabors.ImageSharp.Image image = SixLabors.ImageSharp.Image.Load(stream);
+                image.Save(textureStream, new SixLabors.ImageSharp.Formats.Png.PngEncoder());
+                
+                stream.Close();
+                textureStream.Close();
+
+                image.Dispose();
+                stream.Dispose();
+                textureStream.Dispose(); 
+            }
+        }
+
+        private byte[] SendHttpRequest(string url)
+        {
+            HttpClient client = new HttpClient();
+            var response = client.GetByteArrayAsync(url);
+            response.Wait();
+            return response.Result; 
+        }
 
         public void OnPacketReceived(NetworkEventArgs e)
         {
             switch (e)
             {
-                case PlayerUpdateEventArgs puea:
-                    OnPlayerUpdate(puea);
+                case PongEventArgs pea:
+                    OnPong(pea); 
                     break;
                 case ChatMessageEventArgs cmea:
                     OnMessage(cmea);
@@ -314,12 +427,15 @@ namespace ExplorerOpenGL.Managers
                 case WelcomeEventArgs wea:
                     OnWelcome(wea);
                     break;
-                case GameObjectsUpdateEventArgs gouea:
-                    OnGameObjectUpdate(gouea);
-                    break;
                 case UpdateSelfEventArgs usea:
                     OnUpdateSelf(usea); 
-                    break; 
+                    break;
+                case GameStateEventArgs gsea:
+                    OnGameStateUpdate(gsea);
+                    break;
+                case MapEventArgs maea:
+                    OnMapDataReceived(maea);
+                    break;
                 default:
                     if (e.PacketType == ServerPackets.UdpTest)
                     {
@@ -330,6 +446,39 @@ namespace ExplorerOpenGL.Managers
                     gameManager.Terminal.AddMessageToTerminal(e.Message, "System", Color.White);
                     break;
             }
+            PacketReceived?.Invoke(e); 
+        }
+
+        private void OnMapDataReceived(MapEventArgs maea)
+        {
+            mapData.AddRange(maea.data); 
+            mapPacketCount++;
+            if (mapPacketCount > welcomeEventArgs.MapSize)
+            {
+                string text = Encoding.UTF8.GetString(mapData.ToArray());
+                MapXml[] mapxml = xmlManager.ReadXml(text);
+                foreach (var m in mapxml)
+                {
+                    gameManager.AddSprite(xmlManager.GenerateSpriteFromXml(m.node, m.mapName), this); 
+                }
+                InitOnlineGame(); 
+            }
+        }
+
+        public void OnGameStateUpdate(GameStateEventArgs gsea)
+        {
+            if (gameManager.Player == null || (gsea.ID == gameManager.Player.ID && !gsea.GsForced))
+                return; 
+
+            gameManager.UpdateSprite(gsea);
+        }
+
+        private void OnPong(PongEventArgs pea)
+        {
+            if (pea.Type == PongType.Udp)
+                pingUdp = true;
+            if(pea.Type == PongType.Tcp)
+                pingTcp = true;
         }
 
         private void OnUpdateSelf(UpdateSelfEventArgs e)
@@ -348,12 +497,6 @@ namespace ExplorerOpenGL.Managers
             }
         }
 
-        private void ModifyPlayerHealth(Packet packet)
-        {
-            int newHealth = packet.ReadInt(); 
-            gameManager.Player.Health = newHealth; 
-        }
-
         private void MoveObject(Packet packet)
         {
             int id = packet.ReadInt(); 
@@ -363,47 +506,40 @@ namespace ExplorerOpenGL.Managers
                 return;
             s.Position = position; 
         }
-        private void DeleteObject(Packet packet)
-        {
-            int id = packet.ReadInt();
-            gameManager.RemoveNetworkObjects(id); 
-        }
-        private void MovePlayer(Packet packet)
-        {
-            Vector2 pos = new Vector2(packet.ReadFloat(), packet.ReadFloat());
-            gameManager.Player.SetPosition(pos, false);
-        }
 
-        private void CreateObject(Packet packet)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void Update(GameTime gameTime)
+        public void Update(GameTime gameTime, NetGameState netGameState)
         {
             this.gameTime = gameTime;
-            DoOnce = true; 
-            if (gameManager.Player == null || gameManager.Terminal == null)
+            if (ConnectionState != ConnectionState.NotConnected)
             {
-                return;
-            }
-            if (IsConnectedToAServer)
-            {
-                if (clock > timer)
+                if(IsServer)
+                    gameServer.Update();
+
+                client.PollEvents();
+                if (ConnectionState == ConnectionState.Connected)
                 {
-                    
-                    client.SendMessage(gameManager.Player, (int)ClientPackets.UdpUpdatePlayer);
-                    clock = 0d;
-                    return;
+                    if (clock > timer)
+                    {
+                        //client.SendMessage(gameManager.Player, (int)ClientPackets.UdpUpdatePlayer);
+                        if (IsServer)
+                        {
+                            gameServer.SendGameStateToClients(netGameState);
+                        }
+                        if(!IsServer)
+                            netGameState.SendGameState(client);
+                        clock = 0d;
+                        return;
+                    }
                 }
                 clock += gameTime.ElapsedGameTime.TotalMilliseconds;
             }
+            netGameState.Clear();
         }
     }
     public enum ConnectionState {
         NotConnected, 
         Connected, 
-        WaitingForUdp, 
-        WaitingForTcp, 
+        WaitingForServer,
+        Disconnecting,
     }
 }

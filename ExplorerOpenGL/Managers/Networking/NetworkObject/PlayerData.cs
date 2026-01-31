@@ -1,4 +1,5 @@
-﻿using ExplorerOpenGL.Model.Sprites;
+﻿using ExplorerOpenGL2.Model;
+using ExplorerOpenGL2.Model.Sprites;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -7,7 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ExplorerOpenGL.Managers.Networking
+namespace ExplorerOpenGL2.Managers.Networking
 {
     public class PlayerData : Sprite
     {
@@ -54,8 +55,21 @@ namespace ExplorerOpenGL.Managers.Networking
             networkManager = NetworkManager.Instance;
             if (networkManager.IDClient != id)
             {
-                _animation.Add(textureManager.GetAnimation("walk"));
-                _animation.Add(textureManager.GetAnimation("stand"));
+                Animation walking = textureManager.GetAnimation("walk");
+                Animation standing = textureManager.GetAnimation("idle");
+                Animation running = textureManager.GetAnimation("run");
+                Animation jump = textureManager.GetAnimation("jump");
+                Animation falling = textureManager.GetAnimation("falling");
+
+                Animation[] animations = textureManager.NormalizeHeights(walking, standing, running, jump, falling);
+
+                _animation.Add(animations[0]); 
+                _animation.Add(animations[1]); 
+                _animation.Add(animations[2]); 
+                _animation.Add(animations[3]); 
+                _animation.Add(animations[4]);
+                Play(standing);
+                Bounds = _animation.GetBounds(); 
             }
             NameHasChange = false;
             Scale = 1f;
@@ -64,7 +78,7 @@ namespace ExplorerOpenGL.Managers.Networking
             LayerDepth = .9f;
         }
 
-        public override void Update(Sprite[] sprites)
+        public override void Update(List<Sprite> sprites, GameTime gametime, NetGameState netGameState)
         {
             if(!string.IsNullOrWhiteSpace(CurrentAnimationName))
                 Play(CurrentAnimationName);
@@ -73,7 +87,7 @@ namespace ExplorerOpenGL.Managers.Networking
             {
                 GenerateTexture(textureManager);
             }
-            base.Update(sprites);
+            base.Update(sprites, gametime, netGameState);
         }
 
        

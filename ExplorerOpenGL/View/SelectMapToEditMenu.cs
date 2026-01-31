@@ -1,5 +1,5 @@
-﻿using ExplorerOpenGL.Managers;
-using ExplorerOpenGL.Model.Sprites;
+﻿using ExplorerOpenGL2.Managers;
+using ExplorerOpenGL2.Model.Sprites;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -8,9 +8,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ExplorerOpenGL.View
+namespace ExplorerOpenGL2.View
 {
-    class SelectMapToEditMenu : MessageBox
+    class SelectMapToEditMenu : MessageBoxIG
     {
         public const int Height = 600;
         public const int Width = 500;
@@ -26,6 +26,10 @@ namespace ExplorerOpenGL.View
         public int NbrOfPages { get { return (maps.Length / nbrMapsPerPage) + 1;  } }
         public int CurrentPage;
         private const int nbrMapsPerPage = 8;
+
+        public delegate void MapSelectedEventHandler(object sender, string mapName);
+        public event MapSelectedEventHandler MapSelected;
+
         public SelectMapToEditMenu()
             : base()
         {
@@ -37,12 +41,12 @@ namespace ExplorerOpenGL.View
             for (int i = 0; i < maps.Length; i++)
                 maps[i] =  Path.GetFileNameWithoutExtension(maps[i]); 
             btnMaps = new Button[maps.Length];
-            Parallel.For(0, maps.Length, index =>
+            for (int i = 0; i < maps.Length; i++)
             {
-                btnMaps[index] = new Button(textureManager.TextureText(" - " + maps[index], "default", Color.Black), textureManager.TextureText(" - " + maps[index], "default", Color.White));
-                btnMaps[index].SetAlignOption(AlignOptions.Left);
-                btnMaps[index].MouseClicked += OnMapClicked;
-            });
+                btnMaps[i] = new Button(textureManager.TextureText(" - " + maps[i], "default", Color.Black), textureManager.TextureText(" - " + maps[i], "default", Color.White));
+                btnMaps[i].SetAlignOption(AlignOptions.Left);
+                btnMaps[i].MouseClicked += OnMapClicked;
+            }
             SetTexture(textureManager.CreateBorderedTexture(Width, Height, 3, 0, paint => Color.Black, paint => (paint < (Width * 30) ? new Color(22, 59, 224) : new Color(245, 231, 213))));
             
             SourceRectangle = new Rectangle(0, 0, Texture.Width, Texture.Height);
@@ -71,15 +75,8 @@ namespace ExplorerOpenGL.View
             if (index < 0)
                 return;
             debugManager.AddEvent($"map {maps[index]} will be loaded !");
-            try
-            {
-                new MapEditor(maps[index]).Show(); 
-                this.Close(); 
-            }
-            catch(Exception e)
-            {
-                gameManager.Terminal.AddMessageToTerminal($"Failed to load ./maps/{maps[index]}.xml :{e.Message}", "Error", Color.Red);
-            }
+            MapSelected?.Invoke(this, maps[index]);
+            this.Close(); 
         }
 
         private void BtnLast_MouseClicked(object sender, MousePointer mousePointer, Vector2 clickPosition)

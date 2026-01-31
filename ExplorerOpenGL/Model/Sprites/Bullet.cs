@@ -3,11 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using ExplorerOpenGL.Managers;
-using ExplorerOpenGL.Managers.Networking;
+using ExplorerOpenGL2.Managers;
+using ExplorerOpenGL2.Managers.Networking;
 using Microsoft.Xna.Framework;
 
-namespace ExplorerOpenGL.Model.Sprites
+namespace ExplorerOpenGL2.Model.Sprites
 {
     public class Bullet : Sprite 
     {

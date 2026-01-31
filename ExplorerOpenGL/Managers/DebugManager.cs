@@ -1,5 +1,5 @@
-﻿using ExplorerOpenGL.Model;
-using ExplorerOpenGL.Model.Sprites;
+﻿using ExplorerOpenGL2.Model;
+using ExplorerOpenGL2.Model.Sprites;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -10,7 +10,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace ExplorerOpenGL.Managers
+namespace ExplorerOpenGL2.Managers
 {
     public class DebugManager
     {
@@ -19,6 +19,10 @@ namespace ExplorerOpenGL.Managers
         public Vector2 MaxLogVec { get; set; } //???
         float scale = 1f;
         float timer = 0f; 
+
+        float fpsTimer = 0f;
+        int countfps = 0;
+        float fps = 0f;
         StringBuilder debugMessage;
         MousePointer debugMouse;
         GraphicsDeviceManager graphics;
@@ -28,7 +32,6 @@ namespace ExplorerOpenGL.Managers
         private NetworkManager networkManager; 
         private KeyboardManager keyboardManager;
         private FontManager fontManager;
-        private TimeManager timeManager;
         private GameManager gameManager;
         public Texture2D debugTexture; 
 
@@ -55,12 +58,11 @@ namespace ExplorerOpenGL.Managers
             TextColor = Color.White;
             EventLogList = new List<LogElement>();
         }
-
+        
         public void InitDependencies(GraphicsDeviceManager graphics)
         {
             keyboardManager = KeyboardManager.Instance;
             fontManager = FontManager.Instance;
-            timeManager = TimeManager.Instance;
             gameManager = GameManager.Instance;
             networkManager = NetworkManager.Instance;
             debugTexture = TextureManager.Instance.CreateTexture(11,11, paint => (paint % 2 == 0) ? Color.Red : Color.Transparent); 
@@ -76,6 +78,14 @@ namespace ExplorerOpenGL.Managers
             if (!IsDebuging)
                 return;
 
+            fpsTimer += (float)gameTime.ElapsedGameTime.TotalMilliseconds;
+            if (fpsTimer > 1000)
+            {
+                fps = countfps;
+                fpsTimer = 0;
+                countfps = 0;
+            }
+            countfps++; 
             sprites = gameManager.GetSprites(); 
             if (timer > 16)
             {
@@ -98,7 +108,7 @@ namespace ExplorerOpenGL.Managers
                         MaxLogVec = new Vector2(temp.X, 0);
                     }
                 }
-                BuildDebugMessage(sprites, gameTime);
+                BuildDebugMessage(sprites, gameTime); ;
                 timer = 0f;
             }
             else
@@ -117,6 +127,10 @@ namespace ExplorerOpenGL.Managers
             }
         }
 
+        public void AddEventToTerminal(object e)
+        {
+            gameManager.Terminal.AddMessageToTerminal(e.ToString());
+        }
         public void AddEvent(object e)
         {
             lock (EventLogList)
@@ -148,6 +162,7 @@ namespace ExplorerOpenGL.Managers
 
         private void BuildDebugMessage(Sprite[] sprites, GameTime gameTime)
         {
+             
             lock (debugMessage)
             {
                 debugMessage.Clear();
@@ -157,9 +172,11 @@ namespace ExplorerOpenGL.Managers
                 debugMessage.Append("Total Time : " + gameTime.TotalGameTime.TotalSeconds.ToString("#.#") + "s\n");
                 debugMessage.Append("GameState : " + gameManager.GameState + " \n");
                 debugMessage.Append("IsConnected : " + networkManager.IsConnectedToAServer + "\n");
-                debugMessage.Append("Fps : " + timeManager.AverageFps.ToString("#") + " \n");
-                debugMessage.Append("Elapse update = " + timeManager.ElapsedBetweenUpdates.TotalMilliseconds.ToString("#.##") + "\n");
+                debugMessage.Append("Fps : " + fps.ToString("#") + " \n");
+                debugMessage.Append("Elapse update = " + gameTime.ElapsedGameTime.TotalMilliseconds.ToString("#.##") + "\n");
                 debugMessage.Append("Sprite Count = " + sprites.Length.ToString() + "\n");
+                debugMessage.Append($"UDP : {networkManager.pingUdp} ms\n"); 
+                debugMessage.Append($"TCP : {networkManager.pingTcp} ms\n");
 
                 Dictionary<Type, int> debugTypeList = new Dictionary<Type, int>();
                 foreach (Sprite sprite in sprites)
@@ -201,10 +218,10 @@ namespace ExplorerOpenGL.Managers
                 logList = EventLogList.ToArray(); 
             for(int i = 0; i < logList.Length; i++)
             {
-                spriteBatch.DrawString(fontManager.GetFont("Default"), logList[i].Text, new Vector2(graphics.PreferredBackBufferWidth,  i * scale * 20) , Color.White * logList[i].opacity, 0f, MaxLogVec, scale, SpriteEffects.None, 1f); 
+                spriteBatch.DrawString(fontManager.GetFont("Default"), logList[i].Text, new Vector2(graphics.PreferredBackBufferWidth,  i * scale * 20) , Color.Black * logList[i].opacity, 0f, MaxLogVec, scale, SpriteEffects.None, 1f); 
             }
             lock (debugMessage)
-                spriteBatch.DrawString(fontManager.GetFont("Default"), debugMessage, Vector2.Zero, Color.White, 0f, Vector2.Zero, scale, SpriteEffects.None, 1f);
+                spriteBatch.DrawString(fontManager.GetFont("Default"), debugMessage, Vector2.Zero, Color.Black, 0f, Vector2.Zero, scale, SpriteEffects.None, 1f);
         }
     }
 }

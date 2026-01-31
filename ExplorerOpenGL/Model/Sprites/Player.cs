@@ -1,4 +1,5 @@
-﻿using ExplorerOpenGL.Managers;
+﻿using ExplorerOpenGL2.Managers;
+using LiteNetLib.Utils;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -6,24 +7,28 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices.Marshalling;
 using System.Runtime.Serialization;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ExplorerOpenGL.Model.Sprites
+namespace ExplorerOpenGL2.Model.Sprites
 {
     public class Player : Sprite
     {
+        private int height; 
+        private int width;
         private MousePointer mousePointer;
         public Input input;
-        private PlayerFeet playerFeet;
         private Texture2D TextureName;
         private Vector2 PositionName { get { return new Vector2(Position.X, Position.Y - 10); } }
-        private Vector2 OriginName; 
+        private Vector2 OriginName;
+
+        public bool IsNetContolled { get; private set; }
+
         public int Health { get; set;  }
         public string Name{ get; private set; }
-        public int ID { get; private set; }
-        public float PlayerFeetRadian { get { return playerFeet.Radian; } }
         public string CurrentAnimationName { get { if (_animation != null) return _animation.currentAnimation.Name; else return string.Empty; } }
 
         private TextureManager textureManager;
@@ -43,8 +48,6 @@ namespace ExplorerOpenGL.Model.Sprites
             mousePointer = gameManager.MousePointer; 
             ChangeName(name);
             direction = new Vector2(0, 0);
-            playerFeet = new PlayerFeet(textureManager.LoadTexture("playerfeet"));
-            playerFeet.LayerDepth = .9f;
             Velocity = 3;
             LayerDepth = .9f;
             Scale = 1f;
@@ -52,11 +55,16 @@ namespace ExplorerOpenGL.Model.Sprites
             font = FontManager.Instance.GetFont();
             mouseManager.LeftClicked += FireBullet;
             Radian = 0; 
-            //isDraggable = true;
-            IsGravityAffected = true;
+
+            isDraggable = true;
+            IsGravityAffected = true; 
             isCollidable = true;
-            Play("stand");
-            Shader = shaderManager.LoadShader("Outline");
+            IsPartOfGameState = true;
+
+            Play("idle");
+            //Shader = shaderManager.LoadShader("Outline");
+            //height = 100;
+            //width = 40;
         }
 
         private void FireBullet(ButtonState buttonState)
@@ -72,14 +80,15 @@ namespace ExplorerOpenGL.Model.Sprites
             mouseManager.LeftClicked -= FireBullet; 
         }
 
-        public override void Update(Sprite[] sprites)
+        public override void Update(List<Sprite> sprites, GameTime gametime, NetGameState netGameState)
         {
             //Position = mousePointer.Position;
-            playerFeet.Update(sprites);
+            float lerp = (float)(gametime.ElapsedGameTime.TotalMilliseconds / 16);
             //Radian = CalculateAngle(Position, mousePointer.InGamePosition);
-            Move(sprites);
-            base.Update(sprites);
-            SetPosition(Position + direction, false);
+
+            Move(sprites, lerp);
+            base.Update(sprites, gametime, netGameState);
+            SetPosition(Position + direction * lerp, false);
         }
 
         private float CalculateAngle(Vector2 A, Vector2 B)
@@ -100,61 +109,92 @@ namespace ExplorerOpenGL.Model.Sprites
             OriginName = new Vector2(TextureName.Width / 2, TextureName.Height / 2);
         }
 
-        protected virtual void Move(Sprite[] sprites)
+        protected virtual void Move(List<Sprite> sprites, float lerp)
         {
+            if (input == null)
+                return; 
             direction.X = 0;
-            //Direction = Vector2.Zero; 
 
-            //if (keyboardManager.IsKeyDown(input.Down))
-            //    Direction.Y = Velocity;
             if (keyboardManager.IsKeyDown(input.Up))
-                Jump(); 
+                Jump();
             if (keyboardManager.IsKeyDown(input.Right))
                 direction.X = Velocity;
             if (keyboardManager.IsKeyDown(input.Left))
                 direction.X = -Velocity;
 
+            if (keyboardManager.IsKeyDown(input.Run))
+                direction.X *= 2;
+
             if (direction != Vector2.Zero)
             {
-                //Direction = Vector2.Normalize(Direction); 
                 float direction = (float)Math.Atan((double)(base.direction.Y / base.direction.X));
                 if (base.direction.X < 0)
                 {
                     direction += (float)Math.PI;
                 }
-                playerFeet.SetDirection(direction);
                 if (base.direction.X < 0)
-                    Effects = SpriteEffects.FlipHorizontally;
+                    Effect = SpriteEffects.FlipHorizontally;
                 if (base.direction.X > 0)
-                    Effects = SpriteEffects.None;
+                    Effect = SpriteEffects.None;
                 
             }
-            if (direction.X != 0)
-                Play("walk");
+
+            if (direction.Y > 0)
+                Play("falling"); 
+
+            if (!isGrounded)
+                return;
+            if (direction.X != 0) {
+                if (Math.Abs(direction.X) > 4)
+                    Play("run");
+                else
+                    Play("walk");
+            }
             else
-                Play("stand");
+                Play("idle");
         }
         private void Jump()
         {
-            if (isGrounded)
-                direction.Y = -10; 
+            if (isGrounded && direction.Y == 0f)
+            {
+                debugManager.AddEvent(direction.Y);
+                Play("idle");
+                Play("jump");
+                isGrounded = false; 
+                direction.Y = -5;
+            }
         }
 
         public override void SetPosition(Vector2 newPos, bool instant = true)
         {
-            playerFeet.SetPosition(newPos, instant);
             base.SetPosition(newPos, instant);
         }
 
         public override void Draw(SpriteBatch spriteBatch, GameTime gameTime, float lerpAmount, params ShaderArgument[] shaderArgs)
         {
-            base.Draw(spriteBatch, gameTime, lerpAmount, new ShaderArgument("thickness", new Vector2(5,5)), new ShaderArgument("outlineColor", Color.Blue));
+            base.Draw(spriteBatch, gameTime, lerpAmount);
             spriteBatch.Draw(TextureName, PositionName , null, Color.White, 0f, OriginName, .75f, SpriteEffects.None, LayerDepth);
             //playerFeet.Draw(spriteBatch, gameTime, lerpAmount);
             //spriteBatch.DrawString(font, Health.ToString("#"), Position - new Vector2(0,50), Color.White, 0f, font.MeasureString(Health.ToString("#")) / 2, 1f, SpriteEffects.None, layerDepth);
         }
 
+        public override NetDataWriter WriteToNet(NetGameState netGameState, Type type)
+        {
+            NetDataWriter data = base.WriteToNet(netGameState, this.GetType());
+            data.Put(Animation.currentAnimation.Name);
+            data.Put(Name);
+            return data; 
+        }
 
+        public override void ReadGameState(NetDataReader r)
+        {
+            base.ReadGameState(r);
+            string animation = r.GetString();
+            string name = r.GetString();
+            Play(animation);
+            if(Name != name)
+                ChangeName(name);
+        }
 
         public string GetJSON()
         {

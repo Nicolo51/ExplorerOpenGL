@@ -1,5 +1,5 @@
-﻿using ExplorerOpenGL.Managers;
-using ExplorerOpenGL.View;
+﻿using ExplorerOpenGL2.Managers;
+using ExplorerOpenGL2.View;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -9,7 +9,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ExplorerOpenGL.Model.Sprites
+namespace ExplorerOpenGL2.Model.Sprites
 {
     public class MousePointer : Sprite
     {
@@ -70,9 +70,9 @@ namespace ExplorerOpenGL.Model.Sprites
             }
         }
 
-        public override void Update(Sprite[] sprites)
+        public override void Update(List<Sprite> sprites, GameTime gametime, NetGameState netGameState)
         {
-            base.Update(sprites);
+            base.Update(sprites, gametime, netGameState);
             if (currentMouseState != null)
             {
                 prevMouseState = currentMouseState;
@@ -86,22 +86,20 @@ namespace ExplorerOpenGL.Model.Sprites
             {
                 LastOverSprite = OverSprite;
                 OverSprite = null;
-            }
-
-            for (int i = 0; i < sprites.Length && !isDragging; i++)
-            {
-                Sprite sprite = sprites[i];
-                if ((!sprite.IsClickable && !sprite.isDraggable) || !sprite.IsDisplayed)
-                    continue;
-                lock (sprite)
+                Sprite[] hoverSprites;
+                lock (sprites)
+                {       hoverSprites = sprites.Where(sprite =>
+                           ((sprite.IsClickable || sprite.isDraggable) && sprite.IsDisplayed) &&
+                           ((sprite.IsHUD && sprite.HitBox.Intersects(this.HitBox)) ||
+                           (!sprite.IsHUD && sprite.HitBox.Intersects(new Rectangle((int)InGamePosition.X, (int)InGamePosition.Y, 1, 1))) ||
+                           (sprite.IsHUD && sprite.HitBox.Intersects(this.HitBox)) ||
+                           (!sprite.IsHUD && sprite.HitBox.Intersects(new Rectangle((int)InGamePosition.X, (int)InGamePosition.Y, 1, 1))))
+                        ).ToArray();
+                }
+                foreach (var s in hoverSprites)
                 {
-                    if ((sprite.IsHUD && sprite.HitBox.Intersects(this.HitBox) && OverSprite == null) ||
-                        (!sprite.IsHUD && sprite.HitBox.Intersects(new Rectangle((int)InGamePosition.X, (int)InGamePosition.Y, 1, 1)) && OverSprite == null) ||
-                        (sprite.IsHUD && sprite.HitBox.Intersects(this.HitBox) && OverSprite.LayerDepth >= sprite.LayerDepth) ||
-                        (!sprite.IsHUD && sprite.HitBox.Intersects(new Rectangle((int)InGamePosition.X, (int)InGamePosition.Y, 1, 1)) && OverSprite.LayerDepth >= sprite.LayerDepth))
-                    {
-                        OverSprite = sprite;
-                    }
+                    if (OverSprite == null || s.LayerDepth <= OverSprite.LayerDepth)
+                        OverSprite = s;
                 }
             }
             if (OverSprite != null || LastOverSprite != null)
@@ -113,7 +111,7 @@ namespace ExplorerOpenGL.Model.Sprites
             }
         }
 
-        private void ProcessMouseOver(Sprite[] sprites)
+        private void ProcessMouseOver(List<Sprite> sprites)
         {
             if (OverSprite == null)
             {
@@ -141,6 +139,7 @@ namespace ExplorerOpenGL.Model.Sprites
             }
             if (this.currentMouseState.LeftButton == ButtonState.Released)
             {
+                OverSprite.ReleaseForcedGameState();
                 isClicking = false;
                 isDragging = false;
             }
@@ -164,6 +163,7 @@ namespace ExplorerOpenGL.Model.Sprites
                 {
                     OverSprite.Position = OverSprite.IsHUD ? Position + OverSprite.Origin - ClickPosition :
                                                              InGamePosition + OverSprite.Origin - ClickPosition;
+                    OverSprite.ForcedGameState(); 
                 }
             }
             if (currentMouseState.LeftButton == ButtonState.Released && OverSprite == null && LastOverSprite != null)

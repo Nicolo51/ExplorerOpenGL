@@ -1,5 +1,6 @@
-﻿using ExplorerOpenGL.Managers;
-using ExplorerOpenGL.Model.Sprites;
+﻿using ExplorerOpenGL2.Managers;
+using ExplorerOpenGL2.Model;
+using ExplorerOpenGL2.Model.Sprites;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -8,9 +9,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ExplorerOpenGL.View
+namespace ExplorerOpenGL2.View
 {
-    public class UploadScreen : MessageBox
+    public class UploadScreen : MessageBoxIG
     {
        
         public const int Height = 280;
@@ -23,16 +24,22 @@ namespace ExplorerOpenGL.View
         public TextZone txtCompletion; 
         public Button btnConnect;
         public Button btnBack;
-        public double UploadCompletion; 
+        public double UploadCompletion;
 
+        private MapEditor mapEditor;
         private NetworkManager networkManager;
         private Task uploadTask; 
+        
+        private string localMapName;
 
-        private string localMapName; 
+        public delegate void UploadEndedEventHandler(object sender, bool success, string mapName);
+        public event UploadEndedEventHandler UploadEnded;
+        private bool hasUploadEnded;
 
         public UploadScreen(string mapName)
             : base()
         {
+            hasUploadEnded = false; 
             localMapName = mapName;
             UploadCompletion = 0; 
             SetPosition(new Vector2(gameManager.Width / 2, gameManager.Height / 2));
@@ -59,18 +66,24 @@ namespace ExplorerOpenGL.View
             btnBack.MouseClicked += BtnBack_MouseClicked;
             btnConnect.MouseClicked += BtnUpload_MouseClicked;
 
-            networkManager = NetworkManager.Instance; 
+            networkManager = NetworkManager.Instance;
         }
 
-        public override void Update(Sprite[] sprites)
+        public override void Update(List<Sprite> sprites, GameTime gametime, NetGameState netGameState)
         {
-            //if(uploadTask != null)
-                
             txtCompletion.Text = $"{UploadCompletion.ToString("N1")} % complete...";
-            base.Update(sprites);
+            if (uploadTask != null && uploadTask.Status != TaskStatus.Running) 
+            {
+                if (!hasUploadEnded)
+                {
+                    UploadEnded?.Invoke(this, uploadTask.Status == TaskStatus.RanToCompletion, tbName.Text);
+                    hasUploadEnded = true; 
+                }
+            }
+            base.Update(sprites, gametime, netGameState);
         }
 
-        private void BtnUpload_MouseClicked(object sender, MousePointer mousePointer, Vector2 clickPosition)
+        public void BtnUpload_MouseClicked(object sender, MousePointer mousePointer, Vector2 clickPosition)
         {
             //gameManager.StartGame(tbName.Text, tbIP.Text);
             //gameManager.StartGame("Test", "192.168.1.29");
@@ -80,7 +93,6 @@ namespace ExplorerOpenGL.View
 
         private void BtnBack_MouseClicked(object sender, MousePointer mousePointer, Vector2 clickPosition)
         {
-            new MainMenu().Show();
             this.Close();
         }
 

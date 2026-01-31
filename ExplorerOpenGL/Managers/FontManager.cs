@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ExplorerOpenGL.Managers
+namespace ExplorerOpenGL2.Managers
 {
     public class FontManager
     {

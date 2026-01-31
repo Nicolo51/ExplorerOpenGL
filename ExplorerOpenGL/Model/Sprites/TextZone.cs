@@ -1,4 +1,4 @@
-﻿using ExplorerOpenGL.Managers;
+﻿using ExplorerOpenGL2.Managers;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -7,7 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ExplorerOpenGL.Model.Sprites
+namespace ExplorerOpenGL2.Model.Sprites
 {
     public class TextZone : Sprite
     {
@@ -43,15 +43,15 @@ namespace ExplorerOpenGL.Model.Sprites
             SetAlignOption(ao);
         }
 
-        public override void Update(Sprite[] sprites)
+        public override void Update(List<Sprite> sprites, GameTime gametime, NetGameState netGameState)
         {
-            base.Update(sprites);
+            base.Update(sprites, gametime, netGameState);
         }
 
         public override void Draw(SpriteBatch spriteBatch, GameTime gameTime, float lerpAmount = 1, params ShaderArgument[] shaderArgs)
         {
             if(IsDisplayed)
-                RenderManager.Instance.DrawString(Font, Text, Position, Color, Radian, Origin, Scale, Effects, LayerDepth); 
+                RenderManager.Instance.DrawString(Font, Text, Position, Color, Radian, Origin, Scale, Effect, LayerDepth); 
         }
     }
     

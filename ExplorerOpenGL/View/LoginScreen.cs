@@ -1,4 +1,4 @@
-﻿using ExplorerOpenGL.Model.Sprites;
+﻿using ExplorerOpenGL2.Model.Sprites;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -8,9 +8,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ExplorerOpenGL.View
+namespace ExplorerOpenGL2.View
 {
-    public class LoginScreen : MessageBox
+    public class LoginScreen : MessageBoxIG
     {
         public const int Height = 250;
         public const int Width = 350;
@@ -21,6 +21,7 @@ namespace ExplorerOpenGL.View
         public TextZone txtIP;
         public Button btnConnect;
         public Button btnBack;
+        public TickBox tickbox;
 
         public LoginScreen()
             :base()
@@ -37,13 +38,16 @@ namespace ExplorerOpenGL.View
             txtIP = new TextZone("Host address :", font, Color.Black);
             btnConnect = new Button(textureManager.OutlineText("Connect", "Default", Color.CornflowerBlue, Color.Black, 1), textureManager.OutlineText("Connect", "Default", Color.CornflowerBlue, Color.Black, 2));
             btnBack = new Button(textureManager.OutlineText("Back", "Default", Color.CornflowerBlue, Color.Black, 1), textureManager.OutlineText("Back", "Default", Color.CornflowerBlue, Color.Black, 2));
-            
+            tickbox = new TickBox(textureManager.CreateBorderedTexture(50, 50, 2, 0, paint => Color.Black, paint => Color.Transparent), textureManager.CreateBorderedTexture(50, 50, 2, 0,paint => Color.Black, paint => Color.Red)); 
+
+
             tbName.SetAlignOption(AlignOptions.TopLeft);
             tbIP.SetAlignOption(AlignOptions.TopLeft);
             txtName.SetAlignOption(AlignOptions.TopLeft);
             txtIP.SetAlignOption(AlignOptions.TopLeft);
             btnConnect.SetAlignOption(AlignOptions.Left);
             btnBack.SetAlignOption(AlignOptions.Right);
+            tickbox.SetAlignOption(AlignOptions.Center);
             SetAlignOption(AlignOptions.Center);
 
             btnBack.MouseClicked += BtnBack_MouseClicked;
@@ -54,7 +58,7 @@ namespace ExplorerOpenGL.View
         {
             //gameManager.StartGame(tbName.Text, tbIP.Text);
             //gameManager.StartGame("Test", "192.168.1.29");
-            gameManager.StartGame("Test", "127.0.0.1");
+            gameManager.StartGame("Nicolas", "127.0.0.1");
             this.Close(); 
         }
 
@@ -72,6 +76,7 @@ namespace ExplorerOpenGL.View
             AddChildSprite(tbIP, new Vector2(50, 150));
             AddChildSprite(btnConnect, new Vector2(50, 205));
             AddChildSprite(btnBack, new Vector2(300, 205));
+            AddChildSprite(tickbox, new Vector2(300, 150));
             base.Show();
         }
     }

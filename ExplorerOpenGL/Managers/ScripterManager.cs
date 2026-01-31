@@ -1,5 +1,5 @@
-﻿using ExplorerOpenGL.Model.Sprites;
-using ExplorerOpenGL.View;
+﻿using ExplorerOpenGL2.Model.Sprites;
+using ExplorerOpenGL2.View;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -7,7 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ExplorerOpenGL.Managers
+namespace ExplorerOpenGL2.Managers
 {
     public class ScripterManager
     {

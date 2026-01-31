@@ -1,4 +1,4 @@
-﻿using ExplorerOpenGL.Model;
+﻿using ExplorerOpenGL2.Model;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -7,11 +7,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ExplorerOpenGL.Managers
+namespace ExplorerOpenGL2.Managers
 {
     public class AnimationManager
     {
-        public Texture2D Texture { get { return currentAnimation.Texture; } }
+        public Texture2D  Texture { get { return currentAnimation.Texture; } }
         private Dictionary<string, Animation> animations;
         private Dictionary<Animation, Animation> playAfter; 
         public Animation currentAnimation { get; private set; }
@@ -37,6 +37,10 @@ namespace ExplorerOpenGL.Managers
             playAfter.Add(animation, afterAnimation);
         }
 
+        public Vector2 GetBounds()
+        {
+            return new Vector2(currentAnimation.Bounds.X, currentAnimation.Bounds.Y);
+        }
         public void Play(string animationName, bool looping = true)
         {
             if (!animations.Keys.Contains(animationName))

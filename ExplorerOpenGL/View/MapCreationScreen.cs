@@ -1,12 +1,12 @@
-﻿using ExplorerOpenGL.Model.Sprites;
+﻿using ExplorerOpenGL2.Model.Sprites;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.IO;
 
-namespace ExplorerOpenGL.View
+namespace ExplorerOpenGL2.View
 {
-    public class MapCreationScreen : MessageBox
+    public class MapCreationScreen : MessageBoxIG
     {
         public const int Height = 150;
         public const int Width = 350;
@@ -44,7 +44,7 @@ namespace ExplorerOpenGL.View
         {
             if (string.IsNullOrWhiteSpace(tbName.Text))
             {
-                var mb = MessageBox.Show("Can't create a map with an empty name.", "Error", MessageBoxType.Ok);
+                var mb = MessageBoxIG.Show("Can't create a map with an empty name.", "Error", MessageBoxIGType.Ok);
                 mb.Result += Mb_Result;
                 Hide();
                 return; 
@@ -53,7 +53,7 @@ namespace ExplorerOpenGL.View
                 Directory.CreateDirectory("./maps");
             if (File.Exists($@".\maps\{tbName.Text}.xml"))
             {
-                var mb = MessageBox.Show("This name is already taken");
+                var mb = MessageBoxIG.Show("This name is already taken");
                 mb.Result += Mb_Result;
                 Hide();
                 tbName.UnFocus(); 
@@ -69,15 +69,15 @@ namespace ExplorerOpenGL.View
             catch (Exception e)
             {
                 Hide();
-                var mb = MessageBox.Show($"Could not create the map file : {e.Message}");
+                var mb = MessageBoxIG.Show($"Could not create the map file : {e.Message}");
                 mb.Result += Mb_Result; 
                 return; 
             }
-            MessageBox.Show(tbName.Text + " has been created !");
+            MessageBoxIG.Show(tbName.Text + " has been created !");
             new MapEditor(tbName.Text).Show(); 
             this.Close();
         }
-        private void Mb_Result(MessageBox sender, MessageBoxResultEventArgs e)
+        private void Mb_Result(MessageBoxIG sender, MessageBoxIGResultEventArgs e)
         {
             UnHide();         
         }

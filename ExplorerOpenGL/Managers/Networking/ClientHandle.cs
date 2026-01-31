@@ -1,9 +1,9 @@
-﻿using ExplorerOpenGL.Managers.Networking.EventArgs;
-using ExplorerOpenGL.Managers.Networking.NetworkObject;
-using ExplorerOpenGL.Model.Sprites;
+﻿using ExplorerOpenGL2.Managers.Networking.EventArgs;
+using ExplorerOpenGL2.Model.Sprites;
+using LiteNetLib;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using SharedClasses;
+using Model.Network;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -12,7 +12,7 @@ using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ExplorerOpenGL.Managers.Networking
+namespace ExplorerOpenGL2.Managers.Networking
 {
     public class ClientHandle
     {
@@ -27,23 +27,24 @@ namespace ExplorerOpenGL.Managers.Networking
             this.clientSend = clientSend;
         }
 
-        public void OnWelcomeReceive(Packet packet)
+        public void OnWelcomeReceive(NetPacketReader packet)
         {
-            string msg = packet.ReadString();
-            int id = packet.ReadInt();
-            int tickRate  = packet.ReadInt();
-            client.myId = id;
-            client.serverTickRate = tickRate;
-            PlayerData playerData = new PlayerData(id);
-            client.PlayersData.Add(id, playerData); 
+            string msg = packet.GetString();
+            string map = packet.GetString();
+            float mapSize = packet.GetFloat();
+            int id = packet.GetInt();
+            client.ID = id;
 
-            NetworkEventArgs e = new WelcomeEventArgs() { Message = msg + $".", PacketType = ServerPackets.Welcome,   ID = id, PlayerData = playerData, TickRate = tickRate};
+            //PlayerData playerData = new PlayerData(id);
+            //client.PlayersData.Add(id, playerData); 
+
+            NetworkEventArgs e = new WelcomeEventArgs() { Message = msg + $".", PacketType = ServerPackets.Welcome,   ID = id, PlayerData = null, MapName = map, MapSize = mapSize};
             client.PacketReceived(e); 
         }
 
-        public void OnUdpTestReceive(Packet packet)
+        public void OnUdpTestReceive(NetPacketReader packet)
         {
-            string msg = packet.ReadString();
+            string msg = packet.GetString();
 
             clientSend.SendUDPTest();
 
@@ -51,28 +52,28 @@ namespace ExplorerOpenGL.Managers.Networking
             client.PacketReceived(e);
         }
 
-        public void OnTcpMessage(Packet packet)
+        public void OnTcpMessage(NetPacketReader packet)
         {
-            string msg = packet.ReadString();
+            string msg = packet.GetString();
 
             NetworkEventArgs e = new NetworkEventArgs() { Message = msg + $".", PacketType = ServerPackets.TcpMessage, Packet = packet };
             client.PacketReceived(e);
         } 
-        public void OnUdpMessage(Packet _packet)
+        public void OnUdpMessage(NetPacketReader _packet)
         {
-            string msg = _packet.ReadString();
+            string msg = _packet.GetString();
 
-            debugManager.AddEvent($"Received packet via UDP.Contains message: {msg}");
+            debugManager.AddEventToTerminal($"Received packet via UDP.Contains message: {msg}");
         }
 
-        public void OnTcpPlayersSync(Packet packet)
+        public void OnTcpPlayersSync(NetPacketReader packet)
         {
             List<PlayerData> playerData = new List<PlayerData>(); 
-            while (packet.ReadBool())
+            while (packet.GetBool())
             {
-                int idPlayer = packet.ReadInt();
-                string name = packet.ReadString();
-                if (idPlayer != client.myId)
+                int idPlayer = packet.GetInt();
+                string name = packet.GetString();
+                if (idPlayer != client.ID)
                 {
                     playerData.Add(new PlayerData(idPlayer, name));
                 }
@@ -89,10 +90,10 @@ namespace ExplorerOpenGL.Managers.Networking
             client.PacketReceived(e); 
         }
 
-        public void OnDisconnectPlayer(Packet packet)
+        public void OnDisconnectPlayer(NetPacketReader packet)
         {
-            int idPlayer = packet.ReadInt();
-            string playerName = packet.ReadString();
+            int idPlayer = packet.GetInt();
+            string playerName = packet.GetString();
             PlayerDisconnectionEventArgs e = new PlayerDisconnectionEventArgs() {
                 Message = $"{playerName} left the game.",
                 PacketType = ServerPackets.DisconnectPlayer,
@@ -103,10 +104,10 @@ namespace ExplorerOpenGL.Managers.Networking
             client.PacketReceived(e); 
         }
 
-        public void OnChatMessage(Packet packet)
+        public void OnChatMessage(NetPacketReader packet)
         {
-            string sender = packet.ReadString();
-            string msg = packet.ReadString();
+            string sender = packet.GetString();
+            string msg = packet.GetString();
             ChatMessageEventArgs e = new ChatMessageEventArgs()
             {
                 Sender = sender,
@@ -122,11 +123,11 @@ namespace ExplorerOpenGL.Managers.Networking
             client.PacketReceived(e); 
         }
 
-        public void OnChangeNameResult(Packet packet)
+        public void OnChangeNameResult(NetPacketReader packet)
         {
-            int result = packet.ReadInt();
-            string name = packet.ReadString();
-            int IDClient = packet.ReadInt(); 
+            int result = packet.GetInt();
+            string name = packet.GetString();
+            int IDClient = packet.GetInt(); 
             if (result == 200 && !string.IsNullOrWhiteSpace(name))
             {
                 PlayerChangeNameEventArgs e = new PlayerChangeNameEventArgs()
@@ -155,22 +156,18 @@ namespace ExplorerOpenGL.Managers.Networking
             }
         }
 
-        public void OnResponse(Packet packet)
+        public void OnResponse(NetPacketReader packet)
         {
-            ServerPackets packetType = (ServerPackets)packet.ReadInt();
-            //pourquoi pas faire un switch pour handle les différent type de reponses
-            bool success = packet.ReadBool();
-            if (success)
-                client.ConnectUdp(); 
-
-            //a revoir; 
+            //Aknoledge bool true or false if server say yes to a request
+            ServerPackets packetType = (ServerPackets)packet.GetInt();
+            bool success = packet.GetBool();
         }
 
-        public void OnTcpAddPlayer(Packet packet)
+        public void OnTcpAddPlayer(NetPacketReader packet)
         {
-            int idPlayer = packet.ReadInt();
-            string name = packet.ReadString();
-            if (!client.PlayersData.ContainsKey(idPlayer) && idPlayer != client.myId)
+            int idPlayer = packet.GetInt();
+            string name = packet.GetString();
+            if (!client.PlayersData.ContainsKey(idPlayer) && idPlayer != client.ID)
             {
                 PlayerConnectEventArgs e = new PlayerConnectEventArgs()
                 {
@@ -184,20 +181,20 @@ namespace ExplorerOpenGL.Managers.Networking
             }
         }
 
-        public void OnUdpUpdatePlayers(Packet packet)
+        public void OnUdpUpdatePlayers(NetPacketReader packet)
         {
             List<PlayerData> playerData = new List<PlayerData>(); 
-            while (packet.ReadBool())
+            while (packet.GetBool())
             {
-                int idPlayer = packet.ReadInt();
+                int idPlayer = packet.GetInt();
                 if (client.PlayersData.ContainsKey(idPlayer))
                 {
                     playerData.Add(new PlayerData(idPlayer)
                     {
-                        ServerPosition = new Vector2(packet.ReadFloat(), packet.ReadFloat()),
-                        Health = packet.ReadInt(),
-                        CurrentAnimationName = packet.ReadString(),
-                        Effects = (SpriteEffects)packet.ReadInt(),
+                        ServerPosition = new Vector2(packet.GetFloat(), packet.GetFloat()),
+                        Health = packet.GetInt(),
+                        CurrentAnimationName = packet.GetString(),
+                        Effect = (SpriteEffects)packet.GetInt(),
                 });
                 }
                 else
@@ -214,34 +211,9 @@ namespace ExplorerOpenGL.Managers.Networking
             client.PacketReceived(e); 
         }
 
-        public void OnUpdateGameObject(Packet packet)
+        public void OnChangeHealth(NetPacketReader packet)
         {
-            List<NetworkGameObject> gameObjectData = new List<NetworkGameObject>();
-            while (packet.ReadBool())
-            {
-                //string typeGameObject = packet.ReadString();
-                //int id = packet.ReadInt();
-                //bool isRemove = packet.ReadBool(); 
-                //Vector2 position = new Vector2(packet.ReadFloat(), packet.ReadFloat()); 
-                //Vector2 direction = new Vector2(packet.ReadFloat(), packet.ReadFloat());
-                //float velocity = packet.ReadFloat();
-                //int idPlayer = packet.ReadInt();
-                NetworkGameObject bullet = new NetworkBullet();
-                bullet.ReadPacket(packet); 
-                gameObjectData.Add(bullet); 
-            }
-            GameObjectsUpdateEventArgs e = new GameObjectsUpdateEventArgs()
-            {
-                PacketType = ServerPackets.UpdateGameObject,
-                Packet = packet,
-                networkGameObjects = gameObjectData.ToArray(), 
-            };
-            client.PacketReceived(e); 
-        }
-
-        public void OnChangeHealth(Packet packet)
-        {
-            int newHealth = packet.ReadInt();
+            int newHealth = packet.GetInt();
             NetworkEventArgs e = new UpdateSelfEventArgs()
             {
                 Packet = packet,
@@ -251,9 +223,9 @@ namespace ExplorerOpenGL.Managers.Networking
             client.PacketReceived(e);
         }
 
-        public void OnTeleport(Packet packet)
+        public void OnTeleport(NetPacketReader packet)
         {
-            Vector2 pos = new Vector2(packet.ReadFloat(), packet.ReadFloat());
+            Vector2 pos = new Vector2(packet.GetFloat(), packet.GetFloat());
             NetworkEventArgs e = new UpdateSelfEventArgs()
             {
                 Packet = packet,
@@ -263,20 +235,20 @@ namespace ExplorerOpenGL.Managers.Networking
             client.PacketReceived(e); 
         }
 
-        public void OnMoveObject(Packet packet)
+        public void OnMoveObject(NetPacketReader packet)
         {
-            int id = packet.ReadInt();
-            Vector2 position = new Vector2(packet.ReadFloat(), packet.ReadFloat());
+            int id = packet.GetInt();
+            Vector2 position = new Vector2(packet.GetFloat(), packet.GetFloat());
         }
 
-        public void OnCreateObject(Packet packet)
+        public void OnCreateObject(NetPacketReader packet)
         {
 
         }
 
-        public void OnRemoveObject(Packet packet)
+        public void OnRemoveObject(NetPacketReader packet)
         {
-            int id = packet.ReadInt();
+            int id = packet.GetInt();
         }
 
         protected virtual void Dispose(bool disposing)
@@ -298,5 +270,30 @@ namespace ExplorerOpenGL.Managers.Networking
             GC.SuppressFinalize(this);
         }
 
+        public void OnUpdateGameState(NetPacketReader packet)
+        {
+            NetworkEventArgs e = new GameStateEventArgs()
+            {
+                Packet = packet,
+                PacketType = ServerPackets.UpdateGameState,
+                Type = packet.GetInt(),
+                ID = packet.GetInt(),
+                GsForced = packet.GetBool(),
+            };
+            client.PacketReceived(e);
+        }
+
+        public void GetMaps(NetPacketReader packet)
+        {
+            NetworkEventArgs e = new MapEventArgs()
+            {
+                Packet = packet,
+                PacketType = ServerPackets.Map,
+                data = new byte[1000]
+            }; 
+            packet.GetBytes((e as MapEventArgs).data, 1000); 
+
+            client.PacketReceived(e);
+        }
     }
 }

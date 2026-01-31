@@ -1,4 +1,4 @@
-﻿using ExplorerOpenGL.Managers;
+﻿using ExplorerOpenGL2.Managers;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -6,9 +6,10 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 
-namespace ExplorerOpenGL.Model.Sprites
+namespace ExplorerOpenGL2.Model.Sprites
 {
     public class TextinputBox : Sprite
     {
@@ -96,11 +97,15 @@ namespace ExplorerOpenGL.Model.Sprites
                 AddChar(c); 
         }
 
-
-        public void AddChar(char c)
+        private void ResetCursor()
         {
             cursorOpacity = 1;
             cursorTimer = 0f;
+        }
+
+        public void AddChar(char c)
+        {
+            ResetCursor(); 
             inputText.Insert(cursorIndex, c);
             cursorIndex++;
             if (cursorIndex != inputText.Length)
@@ -154,12 +159,12 @@ namespace ExplorerOpenGL.Model.Sprites
             return Vector2.Zero;
         }
 
-        public override void Update(Sprite[] sprites)
+        public override void Update(List<Sprite> sprites, GameTime gametime, NetGameState netGameState)
         {
-            base.Update(sprites);
+            base.Update(sprites, gametime, netGameState);
             if (IsFocused)
             {
-                cursorTimer += (float)timeManager.ElapsedBetweenUpdates.TotalSeconds;
+                cursorTimer += (float)gametime.ElapsedGameTime.TotalSeconds;
                 if (cursorTimer > .9f)
                 {
                     cursorOpacity = (cursorOpacity == 1) ? 0 : 1;
@@ -212,12 +217,13 @@ namespace ExplorerOpenGL.Model.Sprites
         {
             base.Draw(spriteBatch, gameTime, lerpAmount);
             if (!IsDisplayed)
-                return; 
-            spriteBatch.DrawString(spriteFont, "|", cursorPosition - Origin, Color.White, 0f, Vector2.Zero, cursorOpacity, SpriteEffects.None, LayerDepth - .01f);
+                return;
+            if (this.IsFocused)
+                spriteBatch.DrawString(spriteFont, "|", cursorPosition - Origin + (string.IsNullOrEmpty(Text) ? new Vector2(5,0) : Vector2.Zero), Color.White, 0f, Vector2.Zero, cursorOpacity, SpriteEffects.None, LayerDepth - .01f);
             spriteBatch.DrawString(spriteFont, inputText.ToString().Substring(indexStartDrawing, indexEndDrawing), Position - Origin, Color.White, 0f, Vector2.Zero, 1f, SpriteEffects.None, LayerDepth - .01f);
         }
 
-        public override void OnMouseClick(Sprite[] sprites, Vector2 clickPosition, MousePointer mousePointer)
+        public override void OnMouseClick(List<Sprite> sprites, Vector2 clickPosition, MousePointer mousePointer)
         {
             if (gameManager.GameState == GameState.Pause)
                 return;
@@ -230,7 +236,7 @@ namespace ExplorerOpenGL.Model.Sprites
             base.OnMouseClick(sprites, clickPosition, mousePointer);
         }
 
-        public override void OnMouseOver(Sprite[] sprites, MousePointer mousePointer)
+        public override void OnMouseOver(List<Sprite> sprites, MousePointer mousePointer)
         {
             if (!TriggerMouseOver)
                 return; 
@@ -238,7 +244,7 @@ namespace ExplorerOpenGL.Model.Sprites
             base.OnMouseOver(sprites, mousePointer); 
         }
         
-        public override void OnMouseLeave(Sprite[] sprites, MousePointer mousePointer)
+        public override void OnMouseLeave(List<Sprite> sprites, MousePointer mousePointer)
         {
             mousePointer.SetCursorIcon(MousePointerType.Default);
             base.OnMouseLeave(sprites, mousePointer);
@@ -305,6 +311,7 @@ namespace ExplorerOpenGL.Model.Sprites
 
         public void RemoveChar(bool nextChar = false)
         {
+            ResetCursor();
             if (inputText.Length > 0 && ((!nextChar && cursorIndex > 0) || (nextChar && cursorIndex < inputText.Length)))
             {
                 if (nextChar)

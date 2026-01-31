@@ -1,4 +1,4 @@
-﻿using ExplorerOpenGL.Managers;
+﻿using ExplorerOpenGL2.Managers;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -9,7 +9,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 
-namespace ExplorerOpenGL.Model.Sprites
+namespace ExplorerOpenGL2.Model.Sprites
 {
     public class Terminal : Sprite 
     {
@@ -184,7 +184,7 @@ namespace ExplorerOpenGL.Model.Sprites
             terminalTexintput.EnableMouseOver();
         }
 
-        public override void Update(Sprite[] sprites)
+        public override void Update(List<Sprite> sprites, GameTime gametime, NetGameState netGameState)
         {
             for(int i = 0; i < messages.Count; i++)
             {
@@ -194,7 +194,7 @@ namespace ExplorerOpenGL.Model.Sprites
                 if (message.Timer < 0)
                     message.Opacity -= .02f;
                 else
-                    message.Timer -= timeManager.ElapsedBetweenUpdates.TotalMilliseconds;
+                    message.Timer -= gametime.ElapsedGameTime.TotalMilliseconds;
             }
 
             if (keyboardManager.IsKeyDown(Keys.H) && !keyboardManager.IsTextInputBoxFocused)
@@ -202,8 +202,8 @@ namespace ExplorerOpenGL.Model.Sprites
             if (terminalTexintput.IsFocused)
                 displayChatElements(); 
 
-            terminalTexintput.Update( sprites); 
-            base.Update(sprites);
+            terminalTexintput.Update(sprites, gametime, netGameState); 
+            base.Update(sprites, gametime, netGameState);
         }
 
         private void displayChatElements()
@@ -265,13 +265,6 @@ namespace ExplorerOpenGL.Model.Sprites
                     case "/help":
                         AddMessageToTerminal("/tp <X> <Y> or <Username> - Teleporte someone at specific coordinate or to someone \n/changeName <newName> - Change your name\n/w <Username> Send a private message to someone", "Info", Color.White); 
                         break;
-                    case "/checkbulletid":
-                        List<int> bullets = new List<int>(); 
-                        foreach(Sprite s in gameManager.GetSprites().Where(s => s is Bullet))
-                        {
-                            AddMessageToTerminal(s.ID); 
-                        } 
-                        break; 
                     default:
                         AddMessageToTerminal("Unknown query '" + commande[0] + "', type /help for more information.", "Error", new Color(181, 22, 11));
                         break; 

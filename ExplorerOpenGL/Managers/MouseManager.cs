@@ -1,14 +1,17 @@
-﻿using Microsoft.Xna.Framework.Input;
+﻿using ExplorerOpenGL2.Model.Sprites;
+using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ExplorerOpenGL.Managers
+namespace ExplorerOpenGL2.Managers
 {
     public class MouseManager
     {
+        MousePointer mousePointer; 
+
         private MouseState currentMouseState; 
         private MouseState previousMouseState;
 
@@ -42,12 +45,14 @@ namespace ExplorerOpenGL.Managers
         {
 
         }
-        public void InitDependencies()
+        public void InitDependencies(MousePointer mouse)
         {
-            
+            mousePointer = mouse; 
         }
-        public void Update()
+
+        public void Update(Sprite[] sprites)
         {
+            //mousePointer.Update(sprites);
             previousMouseState = currentMouseState;
             currentMouseState = Mouse.GetState();
 

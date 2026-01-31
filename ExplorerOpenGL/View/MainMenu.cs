@@ -1,5 +1,5 @@
-﻿using ExplorerOpenGL.Managers;
-using ExplorerOpenGL.Model.Sprites;
+﻿using ExplorerOpenGL2.Managers;
+using ExplorerOpenGL2.Model.Sprites;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -8,9 +8,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ExplorerOpenGL.View
+namespace ExplorerOpenGL2.View
 {
-    public class MainMenu : MessageBox
+    public class MainMenu : MessageBoxIG
     {
         public Button btnSinglePlayer;
         public Button btnMultiPlayer;

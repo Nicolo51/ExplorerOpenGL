@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ExplorerOpenGL.Model
+namespace ExplorerOpenGL2.Model
 {
     public class Input
     {
@@ -13,5 +13,6 @@ namespace ExplorerOpenGL.Model
         public Keys Down { get; set; }
         public Keys Right { get; set; }
         public Keys Left { get; set; }
+        public Keys Run { get; set; }
     }
 }

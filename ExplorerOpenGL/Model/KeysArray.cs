@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ExplorerOpenGL.Model
+namespace ExplorerOpenGL2.Model
 {
     public class KeysArray
     {

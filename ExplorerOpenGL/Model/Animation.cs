@@ -1,19 +1,19 @@
-﻿using ExplorerOpenGL.Model.Sprites;
+﻿using ExplorerOpenGL2.Model.Sprites;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 
-namespace ExplorerOpenGL.Model
+namespace ExplorerOpenGL2.Model
 {
-    public class Animation
+    public class Animation : ICloneable
     {
         public Texture2D Texture { get; private set; }
         public string Name { get; private set; }
         public bool IsLooping;  
-        private int nbrFrames;
-        private float loopTime;
-        public Vector2 Bounds{ get { return new Vector2(Texture.Width / nbrFrames, Texture.Height); } }
-        private int width { get { return Texture.Width / nbrFrames;  } }
+        public int FrameCount { get; private set; }
+        public float LoopTime { get; private set; }
+        public Vector2 Bounds{ get { return new Vector2(Texture.Width / FrameCount, Texture.Height); } }
+        private int width { get { return Texture.Width / FrameCount;  } }
         private int height { get { return Texture.Height;  } }
         private int idFrame;
         private float TimeBetweenFrames; 
@@ -27,13 +27,14 @@ namespace ExplorerOpenGL.Model
             if (loopTime < 0)
                 throw new Exception("loopTime must be greater than 0 sec");
 
+
             AlignOption = alignOption; 
             this.Name = name;
             IsFinished = false;  
             this.IsLooping = isLooping; 
             this.Texture = texture;
-            this.nbrFrames = nbrFrames;
-            this.loopTime = loopTime;
+            this.FrameCount = nbrFrames;
+            this.LoopTime = loopTime;
 
             idFrame = 0;
             TimeBetweenFrames = loopTime / nbrFrames;
@@ -42,8 +43,8 @@ namespace ExplorerOpenGL.Model
         public Rectangle GetRectangle(GameTime gameTime, float timer)
         {
             
-            float aTimer = timer % loopTime;
-            if (timer < loopTime || IsLooping)
+            float aTimer = timer % LoopTime;
+            if (timer < LoopTime || IsLooping)
                 idFrame = (int)(aTimer / TimeBetweenFrames);
             else
                 IsFinished = true; 
@@ -62,6 +63,11 @@ namespace ExplorerOpenGL.Model
             IsPlaying = false;
             IsFinished = true;
             idFrame = 0;
+        }
+
+        public object Clone()
+        {
+            return this.MemberwiseClone(); 
         }
     }
 }

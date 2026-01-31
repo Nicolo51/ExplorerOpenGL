@@ -1,4 +1,4 @@
-﻿using ExplorerOpenGL.Model.Sprites;
+﻿using ExplorerOpenGL2.Model.Sprites;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -10,11 +10,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ExplorerOpenGL.Managers
+namespace ExplorerOpenGL2.Managers
 {
     public class RenderManager
     {
-        private List<Sprite> _sprites;
         private GraphicsDeviceManager graphics;
         private SpriteBatch spriteBatch;
 
@@ -41,9 +40,8 @@ namespace ExplorerOpenGL.Managers
 
         }
 
-        public void InitDependencies(GraphicsDeviceManager graphics, List<Sprite> sprites, SpriteBatch spriteBatch)
+        public void InitDependencies(GraphicsDeviceManager graphics, SpriteBatch spriteBatch)
         {
-            _sprites = sprites;
             this.spriteBatch = spriteBatch;
             this.graphics = graphics;
             keyboardManager = KeyboardManager.Instance;
@@ -73,10 +71,10 @@ namespace ExplorerOpenGL.Managers
                               SamplerState.PointClamp,
                               null, null, null, null);
 
-            for(int i = 0; i < _sprites.Count; i++)
-            {
-                _sprites[i].Draw(spriteBatch, new GameTime(), 1); 
-            }
+            //for(int i = 0; i < _sprites.Count; i++)
+            //{
+            //    _sprites[i].Draw(spriteBatch, new GameTime(), 1); 
+            //}
 
             spriteBatch.End();
             target.GetData(data);

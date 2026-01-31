@@ -1,7 +1,9 @@
-﻿using ExplorerOpenGL.Managers.Networking.EventArgs;
-using ExplorerOpenGL.Model.Sprites;
+﻿using ExplorerOpenGL2.Managers.Networking.EventArgs;
+using ExplorerOpenGL2.Model.Sprites;
+using LiteNetLib;
+using LiteNetLib.Utils;
 using Microsoft.Xna.Framework;
-using SharedClasses;
+using Model.Network;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -9,79 +11,65 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ExplorerOpenGL.Managers.Networking
+namespace ExplorerOpenGL2.Managers.Networking
 {
     public class ClientSend : IDisposable
     {
-        private Client client; 
+        private NetPeer peer; 
         public delegate void SendProtocol(object obj);
         public Dictionary<int, SendProtocol> protocolHandlers;
+        private int clientId; 
 
-        public ClientSend(Client client)
+        public ClientSend(NetPeer peer)
         {
-            this.client = client;
+            this.peer = peer;
             InitSendData(); 
         }
 
-        private void SendTcpData(Packet packet)
+        public void SendResponseWelcome(string name, int myId)
         {
-            packet.WriteLength();
-            client.tcp.SendData(packet);
-        }
-
-        private void SendUdpData(Packet packet)
-        {
-            packet.WriteLength();
-            client.udp.SendData(packet);
-        }
-
-        public void SendResponseWelcome(string name)
-        {
-            using (Packet packet = new Packet((int)ClientPackets.WelcomeReceived))
-            {
-                packet.Write(client.myId);
-                packet.Write(name);
-                packet.Write("Hello client here");
-                SendTcpData(packet);
-            }
+            clientId = myId;
+            NetDataWriter packet = new NetDataWriter();
+            packet.Put((int)ClientPackets.WelcomeReceived);
+            packet.Put(myId);
+            packet.Put(name);
+            packet.Put($"Hello client here{myId}");
+            peer.Send(packet, DeliveryMethod.ReliableSequenced);
+            
         }
 
         public void SendUDPTest()
         {
-            using (Packet _packet = new Packet((int)ClientPackets.UdpTestRecieved))
-            {
-                _packet.Write("Received a UDP packet.");
-
-                SendUdpData(_packet);
-            }
+            NetDataWriter packet = new NetDataWriter();
+            packet.Put((int)ClientPackets.UdpTestRecieved);
+            packet.Put("Received a UDP packet.");
+            peer.Send(packet, DeliveryMethod.Sequenced);
         }
 
         public void UdpUpdatePlayer(object obj)
         {
             if (obj is Player) 
             {
-                Player player = (obj as Player); 
-                using (Packet packet = new Packet((int)ClientPackets.UdpUpdatePlayer))
-                {
-                    packet.Write(player.Position.X);
-                    packet.Write(player.Position.Y);
-                    packet.Write(player.Health);
-                    packet.Write(player.CurrentAnimationName); 
-                    packet.Write((int)player.Effects);
-                    SendUdpData(packet);
-                }
+                Player player = (obj as Player);
+                NetDataWriter packet = new NetDataWriter();
+                packet.Put((int)ClientPackets.UdpUpdatePlayer); 
+                packet.Put(player.Position.X);
+                packet.Put(player.Position.Y);
+                packet.Put(player.Health);
+                packet.Put(player.CurrentAnimationName); 
+                packet.Put((int)player.Effect);
+                peer.Send(packet, DeliveryMethod.Sequenced);
             }
         }
         public void SendTcpChatMessage(object obj)
         {
             if(obj is string)
             {
-                using (Packet packet = new Packet((int)ClientPackets.TcpChatMessage))
-                {
-                    packet.Write(client.myId);
-                    packet.Write(obj as string);
-                    SendTcpData(packet);
-                }
+                NetDataWriter packet = new NetDataWriter();
+                packet.Put((int)ClientPackets.TcpChatMessage); 
+                packet.Put(clientId);
+                packet.Put(obj as string);
+                peer.Send(packet, DeliveryMethod.ReliableOrdered);
             }
             else
             {
@@ -93,12 +81,11 @@ namespace ExplorerOpenGL.Managers.Networking
         {
             if (obj is string)
             {
-                using (Packet packet = new Packet((int)ClientPackets.ChangeNameRequest))
-                {
-                    packet.Write(client.myId);
-                    packet.Write(obj as string);
-                    SendTcpData(packet);
-                }
+                NetDataWriter packet = new NetDataWriter();
+                packet.Put((int)ClientPackets.ChangeNameRequest);
+                packet.Put(clientId);
+                packet.Put(obj as string);
+                peer.Send(packet, DeliveryMethod.ReliableOrdered);
             }
             else
             {
@@ -109,21 +96,34 @@ namespace ExplorerOpenGL.Managers.Networking
         public void CreateBullet(object arg)
         {
             Player player = arg as Player;
-            using (Packet packet = new Packet((int)ClientPackets.CreateBullet))
-            {
-                packet.Write(client.myId);
-                packet.Write(player.Position.X); 
-                packet.Write(player.Position.Y); 
-                packet.Write(player.Radian); 
-                packet.Write(2f);
-                packet.Write(client.myId);
-                SendUdpData(packet); 
-            }
+            NetDataWriter packet = new NetDataWriter();
+            packet.Put((int)ClientPackets.CreateBullet);
+            packet.Put(clientId);
+            packet.Put(player.Position.X); 
+            packet.Put(player.Position.Y); 
+            packet.Put(player.Radian); 
+            packet.Put(2f);
+            packet.Put(clientId);
+            peer.Send(packet, DeliveryMethod.Sequenced); 
         }
 
         public void SendMessage(object obj, int idHandler)
         {
             protocolHandlers[idHandler](obj);
+        }
+
+        public void Disconnect(object obj)
+        {
+            NetDataWriter packet = new NetDataWriter();
+            packet.Put((int)ClientPackets.Disconnect);
+            packet.Put(clientId);
+            peer.Send(packet, DeliveryMethod.ReliableOrdered);
+        }
+        private void UpdateGameState(object obj)
+        {
+            NetDataWriter packet = obj as NetDataWriter;
+            peer.Send(packet, DeliveryMethod.Sequenced);
+
         }
 
         private void InitSendData()
@@ -135,24 +135,17 @@ namespace ExplorerOpenGL.Managers.Networking
                 {(int)ClientPackets.ChangeNameRequest, RequestChangeName },
                 {(int)ClientPackets.CreateBullet, CreateBullet },
                 {(int)ClientPackets.Disconnect, Disconnect},
+                {(int)ClientPackets.UpdateGameState, UpdateGameState},
             };
         }
 
-        public void Disconnect(object obj)
-        {
-            using (Packet packet = new Packet((int)ClientPackets.Disconnect))
-            {
-                packet.Write(client.myId);
-                SendTcpData(packet); 
-            }
-        }
+       
 
         protected virtual void Dispose(bool disposing)
         {
             if (disposing)
             {
                 //get rid of managed resources
-                client = null;
                 protocolHandlers.Clear();
                 protocolHandlers = null;
             }

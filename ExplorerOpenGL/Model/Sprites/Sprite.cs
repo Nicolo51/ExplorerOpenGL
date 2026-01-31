@@ -1,8 +1,8 @@
-﻿using ExplorerOpenGL.Managers;
-using ExplorerOpenGL.Managers.Networking;
-using ExplorerOpenGL.Managers.Networking.NetworkObject;
-using ExplorerOpenGL.Model;
-using ExplorerOpenGL.Model.Attributes;
+﻿using ExplorerOpenGL2.Managers;
+using ExplorerOpenGL2.Managers.Networking;
+using ExplorerOpenGL2.Model;
+using ExplorerOpenGL2.Model.Attributes;
+using LiteNetLib.Utils;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -12,17 +12,19 @@ using System.Linq;
 using System.Runtime.Serialization;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
 
-namespace ExplorerOpenGL.Model.Sprites
+namespace ExplorerOpenGL2.Model.Sprites
 {
     public class Sprite
     {
-
+        public int MyProperty { get; set; }
+        private Vector2 LastDrawnPos; 
         public bool IsRemove { get; set; }
-        public int ID { get; set; }
+        public int ID { get; set; } 
         public Vector2 Position { get; set; }
         [MapEditable]
-        public float PositionX { get { return Position.X; } set { Position = new Vector2(value, PositionY); } }
+        public float PositionX { get { return Position.X; } set { Position = new Vector2(value, Position.X); } }
         [MapEditable]
         public float PositionY { get { return Position.Y; } set { Position = new Vector2(Position.X, value); } }
         public Vector2 LastPosition { get; set; }
@@ -42,12 +44,26 @@ namespace ExplorerOpenGL.Model.Sprites
 
         public Rectangle SourceRectangle { get; set; }
         public virtual Rectangle HitBox { get {
-                if (_texture != null && SourceRectangle != null) return new Rectangle((int)Position.X - (int)(Origin.X * Scale), (int)Position.Y - (int)(Origin.Y * Scale), (int)(SourceRectangle.Width * Scale), (int)(SourceRectangle.Height * Scale));
-                else if (_animation != null && _animation.currentAnimation != null) return new Rectangle((int)Position.X - (int)(Origin.X * Scale), (int)Position.Y - (int)(Origin.Y * Scale), (int)(_animation.currentAnimation.Bounds.X * Scale), (int)(_animation.currentAnimation.Bounds.Y * Scale));
-                else return new Rectangle((int)Position.X, (int)Position.Y, 1, 1);
+                if (_texture != null && SourceRectangle != null) 
+                    return new Rectangle(
+                        (int)Position.X - (int)(Origin.X * Scale), 
+                        (int)Position.Y - (int)(Origin.Y * Scale), 
+                        (int)(Bounds.X * Scale), 
+                        (int)(Bounds.Y * Scale));
+
+                else if (_animation != null && _animation.currentAnimation != null) 
+                    return new Rectangle(
+                        (int)Position.X - (int)(Origin.X * Scale), 
+                        (int)Position.Y - (int)(Origin.Y * Scale), 
+                        (int)(_animation.currentAnimation.Bounds.X * Scale), 
+                        (int)(_animation.currentAnimation.Bounds.Y * Scale)
+                        );
+
+                else 
+                    return new Rectangle((int)Position.X, (int)Position.Y, 1, 1);
             }
         }
-        public Vector2 Origin { get { return origin * Scale; } }
+        public virtual Vector2 Origin { get { return origin * Scale; } }
         protected Vector2 origin;
         protected AlignOptions alignOption;
         public AlignOptions AlignOption { get { if (_animation != null && _animation.Count > 0) return _animation.currentAnimation.AlignOption; else return alignOption; } set { alignOption = value; } }
@@ -57,7 +73,7 @@ namespace ExplorerOpenGL.Model.Sprites
         [MapEditable]
         public float BoundsY { get { return Bounds.Y; } set { Bounds = new Vector2(Bounds.X, value); } }
         public Rectangle DestinationRectangle { get { return new Rectangle((int)Position.X, (int)Position.Y, (int)Bounds.X, (int)Bounds.Y); } }
-        public SpriteEffects Effects { get; set; }
+        public SpriteEffects Effect { get; set; }
         [MapEditable]
         public float LayerDepth { get; set; }
         [MapEditable]
@@ -68,16 +84,17 @@ namespace ExplorerOpenGL.Model.Sprites
         public float Gravity { get; set; }
         public bool IsHUD { get; set; }
         public bool IsDisplayed { get; set; }
+        public bool IsEnable { get; set; }
         public bool IsClickable { get; set; }
-        public bool isDraggable { get { return test; }
-            set { test = value; } }
-        private bool test;
+        public bool IsPartOfGameState { get; set; }
+        public bool isDraggable { get; set; }
         public TextZone TextOnTop { get; set; }
 
         protected bool isGrounded;
         protected bool IsGravityAffected;
         protected bool isCollidable;
         protected bool isMovingTowardPosition;
+        protected bool gameStateForced; 
 
         public delegate void MouseOverEventHandler(object sender, MousePointer mousePointer);
         public event MouseOverEventHandler MouseOvered;
@@ -89,11 +106,9 @@ namespace ExplorerOpenGL.Model.Sprites
         public event MouseClickEventHandler MouseClicked;
 
         protected GameManager gameManager;
-        protected TimeManager timeManager;
         protected DebugManager debugManager;
         protected ShaderManager shaderManager;
         protected RenderManager renderManager;
-
         public Sprite()
         {
             Init();
@@ -101,13 +116,14 @@ namespace ExplorerOpenGL.Model.Sprites
 
         public Sprite(params Animation[] animations)
         {
+            
             Init();
             if (animations.Length < 1)
                 return;
             foreach (var a in animations)
                 _animation.Add(a.Name, a);
             Play(animations[0]);
-            Bounds = new Vector2(_animation.currentAnimation.Bounds.X, _animation.currentAnimation.Bounds.Y);
+            Bounds = _animation.GetBounds(); 
         }
 
         public Sprite(Texture2D texture)
@@ -117,49 +133,70 @@ namespace ExplorerOpenGL.Model.Sprites
             Bounds = new Vector2(texture.Bounds.Width, texture.Bounds.Height);
         }
 
-        public virtual void NetworkUpdate(NetworkGameObject ngo)
+        public Sprite(params Texture2D[] texture)
         {
-            if (ID != ngo.ID)
-                return;
-            SetPosition(ngo.Position, false);
-            if (ngo.IsRemove)
-                Remove();
-            Radian = ngo.Direction;
+            Init();
         }
-
-        public virtual void Update(Sprite[] sprites)
+        
+        public virtual void Update(List<Sprite> sprites, GameTime gametime, NetGameState netGameState)
         {
+            double lerp = gametime.ElapsedGameTime.TotalMilliseconds / 16; 
             if (!IsDisplayed)
                 return;
             LastPosition = Position;
+            
             if (IsGravityAffected)
-                ComputeGravity(sprites);
-            if (isCollidable)
+                ComputeGravity(sprites, lerp);
+
+            if (isCollidable && Direction != Vector2.Zero)
                 CheckCollision(sprites);
+
+            if(IsPartOfGameState)
+                WriteToNet(netGameState, this.GetType()); 
         }
 
-        public virtual void ComputeGravity(Sprite[] sprites)
+        public virtual void ComputeGravity(List<Sprite> sprites, double lerp)
         {
-            direction.Y += Gravity;
+            direction.Y += (float)(Gravity * lerp);
         }
 
-        public virtual void CheckCollision(Sprite[] sprites)
+        public virtual void CheckCollision(List<Sprite> sprites)
         {
             isGrounded = false;
-            for (int i = 0; i < sprites.Length; i++)
+            
+            for (int i = 0; i < sprites.Count; i++)
             {
                 var sprite = sprites[i];
                 if (sprite == this)
                     continue;
                 if (sprites[i].isCollidable)
                 {
-                    if ((direction.X > 0 && this.IsTouchingLeft(sprite)) ||
+                    
+                    if (direction.Y != 0)
+                    {
+                        if (this.IsTouchingTop(sprite) && direction.Y > 0)
+                        {
+                            direction.Y = sprite.HitBox.Top - this.HitBox.Bottom; 
+                            if(direction.Y < -5)
+                                debugManager.AddEventToTerminal("chelou");
+                        }
+                        if (direction.Y < 0 & this.IsTouchingBottom(sprite))
+                        {
+                            direction.Y = sprite.HitBox.Bottom - this.HitBox.Top;
+                        }
+                    }
+                    if (direction.X != 0)
+                    {
+                        if ((direction.X > 0 && this.IsTouchingLeft(sprite)) ||
                         (direction.X < 0 & this.IsTouchingRight(sprite)))
-                        direction.X = 0;
-
-                    if ((this.IsTouchingTop(sprite) && direction.Y > 0) ||
-                        (direction.Y < 0 & this.IsTouchingBottom(sprite)))
-                        direction.Y = 0;
+                        {
+                            int heightDiff = this.HitBox.Bottom - sprite.HitBox.Top;
+                            if (heightDiff < 10)
+                                PositionY += -heightDiff;
+                            else
+                                direction.X = 0;
+                        }
+                    }
                 }
             }
         }
@@ -209,7 +246,7 @@ namespace ExplorerOpenGL.Model.Sprites
         public virtual void SetPosition(Vector2 newPos, bool instant = true)
         {
             if (instant)
-                LastPosition = newPos;
+                LastPosition = LastDrawnPos;
             Position = newPos;
         }
 
@@ -223,10 +260,20 @@ namespace ExplorerOpenGL.Model.Sprites
 
         }
 
+        public void ForcedGameState()
+        {
+            gameStateForced = true;
+        }
+
+        public void ReleaseForcedGameState()
+        {
+            gameStateForced = false;
+        }
+
         public virtual void SetAlignOption(AlignOptions ao)
         {
-            if (ao == alignOption)
-                return;
+            //if (ao == alignOption)
+            //    return;
             Vector2 bounds = new Vector2(HitBox.Width , HitBox.Height);
             switch (ao)
             {
@@ -265,7 +312,9 @@ namespace ExplorerOpenGL.Model.Sprites
             if (_animation == null || string.IsNullOrWhiteSpace(animationName))
                 return;
             _animation.Play(animationName);
-            SetAlignOption(_animation.currentAnimation.AlignOption); 
+            Bounds = _animation.currentAnimation.Bounds; 
+            if(animationName != _animation.currentAnimation.Name)
+                SetAlignOption(_animation.currentAnimation.AlignOption); 
         }
 
         public void Play(Animation animation)
@@ -279,39 +328,42 @@ namespace ExplorerOpenGL.Model.Sprites
             origin += pad;
         }
 
-        public virtual void OnMouseOver(Sprite[] sprites, MousePointer mousePointer)
+        public virtual void OnMouseOver(List<Sprite> sprites, MousePointer mousePointer)
         {
             MouseOvered?.Invoke(this, mousePointer);
             debugManager.AddEvent("Enter");
         }
 
-        public virtual void OnMouseLeave(Sprite[] sprites, MousePointer mousePointer)
+        public virtual void OnMouseLeave(List<Sprite> sprites, MousePointer mousePointer)
         {
             MouseLeft?.Invoke(this, mousePointer);
             debugManager.AddEvent("Left");
         }
 
-        public virtual void OnMouseClick(Sprite[] sprites, Vector2 clickPosition, MousePointer mousePointer)
+        public virtual void OnMouseClick(List<Sprite> sprites, Vector2 clickPosition, MousePointer mousePointer)
         {
             MouseClicked?.Invoke(this, mousePointer, clickPosition);
         }
 
         public virtual void Draw(SpriteBatch spriteBatch,  GameTime gameTime, float lerpAmount, params ShaderArgument[] shaderArgs)
         {
-            Vector2 OSPos = Vector2.Lerp(LastPosition, Position, lerpAmount);
+            //Vector2 OSPos = Vector2.Lerp(LastPosition, Position, lerpAmount > 1 ? 1: lerpAmount);
+            LastDrawnPos = Position; 
             if ((_texture != null || _animation.currentAnimation != null) && IsDisplayed)
             {
                 if (_animation.currentAnimation != null)
                     SourceRectangle = _animation.GetRectangle(gameTime);
                 
-                shaderManager.Apply(this, Shader, ShaderArgs);
-                spriteBatch.Draw(Texture, new Rectangle((int)OSPos.X, (int)OSPos.Y, (int)(Bounds.X * Scale), (int)(Bounds.Y * Scale)), SourceRectangle, Color.White * Opacity, Radian, Origin, Effects, LayerDepth);
+                //shaderManager.Apply(this, Shader, ShaderArgs);
                 //shaderManager.GetDefaultShader().CurrentTechnique.Passes[0].Apply();
-                //spriteBatch.Draw(_texture ?? _animation.Texture, new Rectangle((int)OSPos.X, (int)OSPos.Y, (int)(Bounds.X * Scale), (int)(Bounds.Y * Scale)), SourceRectangle, Color.White * Opacity, Radian, Origin, Effects, LayerDepth);
+                if(_texture != null)
+                    spriteBatch.Draw(_texture, new Rectangle((int)Position.X, (int)Position.Y, (int)(Bounds.X * Scale), (int)(Bounds.Y * Scale)), SourceRectangle, Color.White * Opacity, Radian, Origin, Effect, LayerDepth);
+                if(_animation.currentAnimation != null)
+                    spriteBatch.Draw(_animation.Texture, new Rectangle((int)Position.X, (int)Position.Y, SourceRectangle.Width, SourceRectangle.Height), SourceRectangle, Color.White * Opacity, Radian, Origin, Effect, LayerDepth);
             }
 
             if (TextOnTop != null)
-                renderManager.DrawString(TextOnTop.Font, TextOnTop.Text, OSPos, TextOnTop.Color, Radian, Origin - new Vector2(HitBox.Width / 2, HitBox.Height / 2) + TextOnTop.Origin, TextOnTop.Scale, TextOnTop.Effects, LayerDepth - .1f);
+                renderManager.DrawString(TextOnTop.Font, TextOnTop.Text, Position, TextOnTop.Color, Radian, Origin - new Vector2(HitBox.Width / 2, HitBox.Height / 2) + TextOnTop.Origin, TextOnTop.Scale, TextOnTop.Effect, LayerDepth - .1f);
             if (debugManager.IsDebuging)
                 spriteBatch.Draw(debugManager.debugTexture, HitBox, Color.White * .5f);
         }
@@ -358,24 +410,62 @@ namespace ExplorerOpenGL.Model.Sprites
             alignOption = AlignOptions.None;
             isDraggable = false;
             IsDisplayed = true;
+            IsEnable = true; 
             IsHUD = false;
+            gameStateForced = false;
             Scale = 1;
             Opacity = 1f;
             LayerDepth = 1f;
             debugManager = DebugManager.Instance;
             gameManager = GameManager.Instance;
-            timeManager = TimeManager.Instance;
             shaderManager = ShaderManager.Instance;
             renderManager = RenderManager.Instance; 
             Gravity = 0.2f;
             Shader = shaderManager.LoadShader("Normal");
+            IsPartOfGameState = false;
         }
 
         public Sprite Clone()
         {
             return (Sprite)this.MemberwiseClone(); 
         }
+
+        public virtual NetDataWriter WriteToNet(NetGameState gameState, Type type)
+        {
+            NetDataWriter data = gameState.GetDataWriter();
+
+            /*read on event handler*/
+            data.Put(gameManager.SpriteTypeToId[type]); 
+            data.Put(ID);
+            data.Put(gameStateForced);
+            /*end of read on event handler*/
+
+            data.Put(PositionX);
+            data.Put(PositionY);
+            data.Put(direction.X);
+            data.Put(direction.Y);
+            data.Put(Velocity);
+            data.Put((int)Effect);
+            return data; 
+        }
+
+        public virtual void ReadGameState(NetDataReader r)
+        {
+            float positionX = r.GetFloat(); 
+            float positionY = r.GetFloat(); 
+            float directionX = r.GetFloat();
+            float directionY = r.GetFloat();
+            float velocity = r.GetFloat();
+            int effect = r.GetInt();
+
+            Effect = (SpriteEffects)effect; 
+            Position = new Vector2(positionX, positionY);
+            direction = new Vector2(directionX, directionY);
+
+        }
     }
+
+    
 
     public enum AlignOptions 
     {

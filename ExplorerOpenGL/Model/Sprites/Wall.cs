@@ -5,28 +5,28 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ExplorerOpenGL.Model.Sprites
+namespace ExplorerOpenGL2.Model.Sprites
 {
     public class Wall : Sprite
     {
         public Wall(Texture2D texture)
             :base(texture)
         {
-            //_texture = texture;
-            isCollidable = true; 
+            init(); 
         }
 
-        public Wall(params Animation[] animations)
-            :base(animations)
-        {
-            isDraggable = true;
-            Play("run"); 
-        }
 
         public Wall()
             : base()
         {
+            init();
+        }
 
+        private void init()
+        {
+            isCollidable = true;
+            IsPartOfGameState = true;
+            isDraggable = true;
         }
     }
 }

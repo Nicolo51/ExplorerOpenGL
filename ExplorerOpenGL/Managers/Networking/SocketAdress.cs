@@ -5,7 +5,7 @@ using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ExplorerOpenGL.Managers.Networking
+namespace ExplorerOpenGL2.Managers.Networking
 {
     public class SocketAddress
     {
@@ -16,6 +16,11 @@ namespace ExplorerOpenGL.Managers.Networking
         {
             IP = ip;
             Port = port; 
+        }
+
+        public override string ToString()
+        {
+            return IP + ":" + Port;
         }
 
     }

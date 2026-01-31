@@ -1,30 +1,34 @@
-﻿using ExplorerOpenGL.Managers.Networking.EventArgs;
-using ExplorerOpenGL.Model.Sprites;
-using SharedClasses;
+﻿using ExplorerOpenGL2.Managers.Networking.EventArgs;
+using ExplorerOpenGL2.Model.Sprites;
+using LiteNetLib;
+using Model.Network;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
-namespace ExplorerOpenGL.Managers.Networking
+namespace ExplorerOpenGL2.Managers.Networking
 {
     public class Client : IDisposable
     {
-        public int myId = 0;
+        public int ID { get; set; }
         public int serverTickRate = 0;
 
-        public delegate void PacketHandler(Packet packet);
+        public delegate void PacketHandler(NetPacketReader packet);
         public Dictionary<int, PacketHandler> packetHandlers;
-        public Dictionary<int, PlayerData> PlayersData;
-        public TCP tcp;
-        public UDP udp;
+        public Dictionary<int, Player> PlayersData { get; set; }
         private GameManager manager; 
         public SocketAddress socketAddress { get; private set; }
         private ClientHandle clientHandle;
         private ClientSend clientSend;
-        
+
+        EventBasedNetListener listener;
+        NetManager netManager;
+        NetPeer peer; 
+
         public delegate void PacketReceivedEventHandler(NetworkEventArgs e);
         public event PacketReceivedEventHandler OnPacketReceived;
 
@@ -34,46 +38,70 @@ namespace ExplorerOpenGL.Managers.Networking
         public Client(GameManager manager)
         {
             this.manager = manager; 
-            clientSend = new ClientSend(this); 
             clientHandle = new ClientHandle(this, clientSend); 
         }
 
-        public void Start(SocketAddress SocketAddress)
+        public void ConnectToServer(SocketAddress socketAddress)
         {
-            socketAddress = SocketAddress;
-            PlayersData = new Dictionary<int, PlayerData>(); 
-            tcp = new TCP(socketAddress, this);
-            udp = new UDP(socketAddress, this);
-        }
-        public void ConnectToServer()
-        {
-            tcp.Connect();
+            this.socketAddress = socketAddress;
+            PlayersData = new Dictionary<int, Player>();
             InitClientData();
+            listener = new EventBasedNetListener();
+            netManager = new NetManager(listener);
+
+            netManager.Start();
+            netManager.Connect(socketAddress.IP, socketAddress.Port, "pass");
+
+            listener.PeerConnectedEvent += Listener_PeerConnectedEvent;
+            listener.NetworkReceiveEvent += Listener_NetworkReceiveEvent;
+            listener.PeerDisconnectedEvent += Listener_PeerDisconnectedEvent;
+
         }
-        
+
+        private void Listener_PeerDisconnectedEvent(NetPeer peer, DisconnectInfo disconnectInfo)
+        {
+            DebugManager.Instance.AddEventToTerminal("Peer disconected");    
+        }
+
+        public void PollEvents()
+        {
+            netManager.PollEvents(); 
+        }
+
+        private void Listener_NetworkReceiveEvent(NetPeer peer, NetPacketReader reader, byte channel, DeliveryMethod deliveryMethod)
+        {
+            int handleId = reader.GetInt();
+            packetHandlers[handleId].Invoke(reader);
+        }
+
+        private void Listener_PeerConnectedEvent(NetPeer peer)
+        {
+            this.peer = peer;
+            clientSend = new ClientSend(peer);
+        }
+
         public bool Disconnect()
         {
             try
             {
-                udp.Close();
-                tcp.Close(); 
+                peer.Disconnect(); 
                 return true; 
             }
             catch(Exception e)
             {
-                DebugManager.Instance.AddEvent(e.Message);
+                DebugManager.Instance.AddEventToTerminal("Disconect failed : " + e.Message);
                 return false;
             }
         }
 
-        public void ConnectUdp()
+        public void SendResponseWelcome(string name, int myId)
         {
-            udp.Connect(((IPEndPoint)tcp.socket.Client.LocalEndPoint).Port);
+            clientSend.SendResponseWelcome(name, myId);
         }
 
-        public void SendResponseWelcome(string name)
+        public void SendMessage(object obj, ClientPackets idHandler)
         {
-            clientSend.SendResponseWelcome(name);
+            clientSend.SendMessage(obj, (int)idHandler);
         }
 
         public void SendMessage(object obj, int idHandler)
@@ -100,13 +128,14 @@ namespace ExplorerOpenGL.Managers.Networking
                 { (int)ServerPackets.TcpChatMessage, clientHandle.OnChatMessage },
                 { (int)ServerPackets.ChangeNameResult, clientHandle.OnChangeNameResult },
                 { (int)ServerPackets.DisconnectPlayer, clientHandle.OnDisconnectPlayer },
-                { (int)ServerPackets.UpdateGameObject, clientHandle.OnUpdateGameObject },
                 { (int)ServerPackets.Sync, clientHandle.OnResponse },
                 { (int)ServerPackets.ChangeHealth, clientHandle.OnChangeHealth },
                 { (int)ServerPackets.Teleport, clientHandle.OnTeleport },
                 { (int)ServerPackets.MoveObject, clientHandle.OnMoveObject },
                 { (int)ServerPackets.RemoveObject, clientHandle.OnRemoveObject },
                 { (int)ServerPackets.CreateObject, clientHandle.OnCreateObject},
+                { (int)ServerPackets.UpdateGameState, clientHandle.OnUpdateGameState },
+                { (int)ServerPackets.Map, clientHandle.GetMaps },
             };
             Console.WriteLine("Initialized packets.");
         }
@@ -131,8 +160,6 @@ namespace ExplorerOpenGL.Managers.Networking
             if (disposing)
             {
                 //get rid of managed resources
-                tcp.Dispose();
-                udp.Dispose();
                 manager = null; 
                 socketAddress = null;
                 packetHandlers.Clear(); 

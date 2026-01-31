@@ -1,4 +1,4 @@
-﻿using ExplorerOpenGL.Managers;
+﻿using ExplorerOpenGL2.Managers;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -8,7 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ExplorerOpenGL.Model.Sprites
+namespace ExplorerOpenGL2.Model.Sprites
 {
     public class Button : Sprite
     {
@@ -86,14 +86,16 @@ namespace ExplorerOpenGL.Model.Sprites
             base.SetAlignOption(ao);
         }
 
-        public override void Update(Sprite[] sprites)
+        public override void Update(List<Sprite> sprites, GameTime gametime, NetGameState netGameState)
         {
             if (IsEnable)
-                base.Update(sprites);
+                base.Update(sprites, gametime, netGameState);
         }
 
         private void OnMouseOver(object sender, MousePointer mousePointer)
         {
+            if (!IsEnable)
+                return; 
             isMouseOver = true;
             gameManager.MousePointer.SetCursorIcon(MousePointerType.Pointer);
             //gameManager.MousePointer.SourceRectangle = new Rectangle(300, 0, 75, 75);

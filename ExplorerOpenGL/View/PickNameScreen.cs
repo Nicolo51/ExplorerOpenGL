@@ -1,4 +1,4 @@
-﻿using ExplorerOpenGL.Model.Sprites;
+﻿using ExplorerOpenGL2.Model.Sprites;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -7,9 +7,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ExplorerOpenGL.View
+namespace ExplorerOpenGL2.View
 {
-    class PickNameScreen : MessageBox
+    class PickNameScreen : MessageBoxIG
     {
         public const int Height = 150;
         public const int Width = 350;

@@ -1,4 +1,4 @@
-﻿using ExplorerOpenGL.Model.Sprites;
+﻿using ExplorerOpenGL2.Model.Sprites;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -8,7 +8,7 @@ using System.Security.Policy;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ExplorerOpenGL.View
+namespace ExplorerOpenGL2.View
 {
     public class Camera
     {
@@ -29,8 +29,7 @@ namespace ExplorerOpenGL.View
             if (IsFollowingSprite)
             {
                 Vector2 PositionSprite; 
-                lock (SpriteToFollow)
-                    PositionSprite = Vector2.Lerp(SpriteToFollow.LastPosition, SpriteToFollow.Position, lerpAmount); 
+                PositionSprite = Vector2.Lerp(SpriteToFollow.LastPosition, SpriteToFollow.Position, lerpAmount); 
 
                 position = Matrix.CreateTranslation(
                     -PositionSprite.X,

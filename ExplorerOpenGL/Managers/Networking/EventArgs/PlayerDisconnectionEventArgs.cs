@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ExplorerOpenGL.Managers.Networking.EventArgs
+namespace ExplorerOpenGL2.Managers.Networking.EventArgs
 {
     public class PlayerDisconnectionEventArgs : NetworkEventArgs
     {

@@ -1,19 +1,26 @@
-﻿using ExplorerOpenGL.Model;
-using ExplorerOpenGL.Model.Sprites;
+﻿using ExplorerOpenGL2.Model;
+using ExplorerOpenGL2.Model.Sprites;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
+using SixLabors.ImageSharp.PixelFormats;
+using SixLabors.ImageSharp.Processing.Processors.Transforms;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.ExceptionServices;
+using System.Runtime.InteropServices;
+using System.Security.Cryptography;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using static System.Formats.Asn1.AsnWriter;
 
-namespace ExplorerOpenGL.Managers
+namespace ExplorerOpenGL2.Managers
 {
     public class TextureManager
     {
@@ -33,6 +40,9 @@ namespace ExplorerOpenGL.Managers
         private Dictionary<int, CreateBorderTextureRenderArgs> CreateBorderTextureToDraw;
         private Dictionary<int, CreateTextureRenderArgs> CreateTextureToDraw;
         private Dictionary<int, TextToTextureRenderArgs> TextToTextureToDraw;
+        private Dictionary<int, LoadTextureRenderArgs> LoadTextureToDraw;
+
+        public bool WaitForRendering { get { return (IssuedTextures.Count > 0 || OutlineTextToDraw.Count > 0 || CreateBorderTextureToDraw.Count > 0 || CreateTextureToDraw.Count > 0 || TextToTextureToDraw.Count > 0 ); } }
 
         public static event EventHandler Initialized;
 
@@ -65,6 +75,7 @@ namespace ExplorerOpenGL.Managers
             TextToTextureToDraw = new Dictionary<int, TextToTextureRenderArgs>();
             CreateTextureToDraw = new Dictionary<int, CreateTextureRenderArgs>();
             CreateBorderTextureToDraw = new Dictionary<int, CreateBorderTextureRenderArgs>();
+            LoadTextureToDraw = new Dictionary<int, LoadTextureRenderArgs>(); 
         }
 
         public void Update()
@@ -126,6 +137,20 @@ namespace ExplorerOpenGL.Managers
                     TextToTextureToDraw.Clear();
                 }
             }
+            lock (LoadTextureToDraw)
+            {
+                if(LoadTextureToDraw.Count > 0)
+                {
+                    foreach (KeyValuePair<int, LoadTextureRenderArgs> entry in LoadTextureToDraw)
+                    {
+                        LoadTextureRenderArgs ra = entry.Value;
+                        Texture2D texture = LoadTexture(ra.Asset);
+                        lock (IssuedTextures)
+                            IssuedTextures[ra.ID] = texture;
+                    }
+                    LoadTextureToDraw.Clear();
+                }
+            }
         }
         public void InitDependencies(GraphicsDeviceManager graphics, ContentManager content, SpriteBatch spriteBatch)
         {
@@ -135,6 +160,52 @@ namespace ExplorerOpenGL.Managers
             renderManager = RenderManager.Instance;
             fontManager = FontManager.Instance;
             gameManager = GameManager.Instance; 
+        }
+
+        public Texture2D CreateAnimationFromTextures(params Texture2D[] textures)
+        {
+            if (mainThreadID == Thread.CurrentThread.ManagedThreadId)
+                return CreateAnimationFromTexturesThread(textures);
+            return null;
+        }
+
+        private Texture2D CreateAnimationFromTexturesThread(Texture2D[] textures)
+        {
+            int widthOut = 0;
+            int heightOut = 0; 
+
+            for(int i = 0; i < textures.Length; i++)
+            {
+                Texture2D texture = textures[i];
+                widthOut += texture.Width;
+                if (heightOut < texture.Height)
+                    heightOut = texture.Height;
+            }
+
+            Texture2D output = new Texture2D(graphics.GraphicsDevice, widthOut, heightOut);
+            Color[] dataOut = new Color[widthOut * heightOut];
+
+            int columnOffset = 0; 
+            for (int i = 0; i < textures.Length; i++)
+            {
+                Texture2D texture = textures[i];
+                Color[] data = new Color[texture.Width * texture.Height];
+                texture.GetData(data);
+                int row = -1; 
+
+                for(int j = 0; j < data.Length; j++)
+                {
+                    if (j % texture.Width == 0)
+                        row++;
+
+                    dataOut[(j % texture.Width)+ columnOffset + widthOut * row] = data[j]; 
+                }
+                columnOffset += texture.Width; 
+            }
+
+            output.SetData(dataOut); 
+
+            return output; 
         }
 
         private Texture2D CreateTextureThread(int width, int height, Func<int, Color> paint)
@@ -154,7 +225,7 @@ namespace ExplorerOpenGL.Managers
         {
             if (mainThreadID == Thread.CurrentThread.ManagedThreadId)
                 return CreateTextureThread(width, height, paint);
-                int id = getIdTicket();
+            int id = getIdTicket();
             var ra = new CreateTextureRenderArgs()
             {
                 ID = id,
@@ -273,6 +344,7 @@ namespace ExplorerOpenGL.Managers
             return textTexture;
 
         }
+
         public Texture2D OutlineText(string input, string font, Color borderColor, Color textColor, int Thickness)
         {
             if (mainThreadID == Thread.CurrentThread.ManagedThreadId)
@@ -299,7 +371,7 @@ namespace ExplorerOpenGL.Managers
         {
             return TextureText(text, fontManager.GetFont(font), color); 
         }
-            public Texture2D TextureText(string text, SpriteFont font, Color color)
+        public Texture2D TextureText(string text, SpriteFont font, Color color)
         {
             if (mainThreadID == Thread.CurrentThread.ManagedThreadId)
                 return TextureTextThread(text, font, color);
@@ -359,8 +431,10 @@ namespace ExplorerOpenGL.Managers
         public Texture2D LoadNoneContentLoadedTexture(string path)
         {
             if (LoadedTextures.ContainsKey(path))
-                return LoadedTextures[path]; 
-            var image = (System.Drawing.Bitmap)System.Drawing.Image.FromFile(path);
+                return LoadedTextures[path];
+
+            SixLabors.ImageSharp.Image imagedata = SixLabors.ImageSharp.Image.Load(path);
+            SixLabors.ImageSharp.Image<Rgba32> image = imagedata.CloneAs<Rgba32>();
 
             int ImageWidth = image.Width;
             int ImageHeight = image.Height;
@@ -375,7 +449,7 @@ namespace ExplorerOpenGL.Managers
             {
                 for (int j = 0; j < ImageHeight; j++)
                 {
-                    data[ImageWidth * j + i] = SystemDrawingColorToXnaColor(image.GetPixel(i, j));
+                    data[ImageWidth * j + i] = ImageSharpToXnaColor(image[i, j]);
                 }
             }
             texture.SetData(data);
@@ -385,12 +459,12 @@ namespace ExplorerOpenGL.Managers
         }
 
 
-        private Color SystemDrawingColorToXnaColor(System.Drawing.Color color)
+        private Color ImageSharpToXnaColor(Rgba32 color)
         {
-            return new Color(color.R, color.G, color.B);
+            return new Color(color.R, color.G, color.B, color.A);
         }
 
-        public Texture2D LoadTexture(string path)
+        private Texture2D LoadTextureThread(string path)
         {
             if (LoadedTextures.ContainsKey(path))
                 return LoadedTextures[path];
@@ -400,19 +474,302 @@ namespace ExplorerOpenGL.Managers
             return texture;
         }
 
-        public Animation LoadAnimation(string textureName, int nbrFrame, int looptime, string name, AlignOptions alignOption = AlignOptions.None) 
+        public Texture2D LoadTexture(string path)
         {
-            if (animations.ContainsKey(name))
-                return animations[name]; 
+            if (mainThreadID == Thread.CurrentThread.ManagedThreadId)
+                return LoadTextureThread(path);
+            int id = getIdTicket();
+            var ra = new LoadTextureRenderArgs()
+            {
+                ID = id,
+                Asset = path,
+            };
+            lock (LoadTextureToDraw)
+                LoadTextureToDraw.Add(id, ra);
+            return waitTexture(id);
+            
+        }
+
+        public Texture2D ScaleTexture(Texture2D texture, int scale)
+        {
+            Color[] dataout = new Color[texture.Width * texture.Height * scale*scale];
+            Color[] data = new Color[texture.Width * texture.Height];
+            texture.GetData(data);
+            int row  = - scale;
+            int col = 0; 
+            for (int i = 0; i < data.Length; i++)
+            {
+                col = i % texture.Width; 
+                if (col == 0) 
+                    row+=scale;
+                for(int j = 0; j < scale; j++)
+                {
+                    for(int k = 0; k < scale; k++)
+                    {
+                        dataout[row * texture.Width * scale + col * scale + j * texture.Width * scale + k] = data[i];
+                        //Debug.WriteLine(row * texture.Width + i * scale + j * texture.Width * scale + k);
+                    }
+                }
+            }
+
+            var textureOut = new Texture2D(graphics.GraphicsDevice, texture.Width * scale, texture.Height * scale);
+            textureOut.SetData(dataout);
+            return textureOut;
+        }
+
+        public Animation LoadAnimation(string textureName, int nbrFrame, int looptime, AlignOptions alignOption = AlignOptions.None) 
+        {
+            string name = textureName.Split('/')[textureName.Split('/').Length-1];
+            if (animations.ContainsKey(textureName))
+                return animations[textureName]; 
             Animation animation = new Animation(LoadTexture(textureName), nbrFrame, looptime, name, alignOption); 
             animations.Add(animation.Name, animation); 
             return animation; 
         }
+
+        public Texture2D TrimAnimation(Texture2D texture, bool verticalTrim = true, bool debug = false)
+        {
+            int biggestWidth = 0; 
+            //Vertical Trim have to rotate 'cause to dumb not to lol
+            Color[] data = new Color[texture.Width * texture.Height];
+            List<Color> dataVertical = new List<Color>();
+            List<Color> dataVerticalNormalizeSpacing = new List<Color>();
+
+            bool islastColumnBlank = true; 
+            
+            texture.GetData(data);
+
+            
+
+
+            int widthSubTexture = 1; 
+
+
+            for (int j = 0; j < texture.Width; j++)
+            {
+                bool iscolumnblank = true;
+                for (int i = 0; i < data.Length && iscolumnblank; i += texture.Width)
+                {
+                    if (data[j + i] != Color.Transparent)
+                    {
+                        var color = data[j + i]; 
+                        iscolumnblank = false;
+                        if (!islastColumnBlank)
+                            widthSubTexture++;
+                        islastColumnBlank = false; 
+                        for (int k = 0; k < data.Length; k += texture.Width)
+                        {
+                            dataVertical.Add(data[j + k]);
+                        }
+                    }
+                }
+                if(iscolumnblank && !islastColumnBlank)
+                {
+                    for (int k = 0; k < data.Length && iscolumnblank; k += texture.Width)
+                    {
+                        dataVertical.Add(data[j + k]);
+                    }
+                    islastColumnBlank = true;
+                }
+                if (widthSubTexture > biggestWidth)
+                    biggestWidth = widthSubTexture;
+                if (iscolumnblank)
+                    widthSubTexture = 1; 
+            }
+
+            //add normalize horizontal line in rotated texture
+            int verticallineAdded = 0; 
+
+            int newWidth = dataVertical.Count / texture.Height; //Height before rotating
+            int newHeight = texture.Height; //Width before rotating 
+
+            if (debug == true)
+            {
+                var fs = File.Create("C:\\Users\\nicol\\Desktop\\rotatetrim.png");
+                Texture2D debugTexture = new Texture2D(graphics.GraphicsDevice, newWidth, newHeight);
+                debugTexture.SetData(dataVertical.ToArray());
+                debugTexture.SaveAsPng(fs, debugTexture.Height, debugTexture.Width);
+                fs.Close();
+            }
+
+
+            int verticalline = 0; 
+            widthSubTexture = 1; 
+            for(int i = 0; i < newWidth; i++)
+            {
+                bool isBlank = true;
+                for(int j = 0; j < newHeight && isBlank; j++)
+                {
+                    if(dataVertical[j+ i* newHeight] != Color.Transparent)
+                    {
+                        for (int k = 0; k < newHeight ; k++)
+                        {
+                            dataVerticalNormalizeSpacing.Add(dataVertical[k + i * newHeight]);
+                        }
+                        verticalline++;
+                        isBlank = false;
+                        widthSubTexture++;
+                    }
+                }
+                if (isBlank)
+                {
+                    for (int k = 0; k < newHeight; k++)
+                    {
+                        dataVerticalNormalizeSpacing.Add(dataVertical[k + i * newHeight]);
+                    }
+                    if (widthSubTexture < biggestWidth)
+                    {
+                        for(widthSubTexture = widthSubTexture;  widthSubTexture < biggestWidth; widthSubTexture++)
+                        {
+                            for (int k = 0; k < newHeight; k++)
+                            {
+                                dataVerticalNormalizeSpacing.Add(Color.Transparent);
+                            }
+                            verticallineAdded++; 
+                        }
+                    }
+                    widthSubTexture = 1; 
+                }
+            }
+
+            newWidth += verticallineAdded;
+
+            if (debug == true)
+            {
+                var fs = File.Create("C:\\Users\\nicol\\Desktop\\rotateNormalizeTrim.png");
+                Texture2D debugTexture = new Texture2D(graphics.GraphicsDevice, newWidth, newHeight);
+                debugTexture.SetData(dataVerticalNormalizeSpacing.ToArray());
+                debugTexture.SaveAsPng(fs, debugTexture.Height, debugTexture.Width);
+                fs.Close();
+            }
+
+            //Re Rotate
+            Color[] outData = new Color[dataVerticalNormalizeSpacing.Count];
+            for(int i = 0; i < newWidth; i++)
+            {
+                for(int j = 0; j < newHeight; j++)
+                {
+                    outData[j * newWidth + i] = dataVerticalNormalizeSpacing[j + i * newHeight];
+                }
+            }
+
+            //DeleteTopAndBot
+            int trimedVerticalHeight = newHeight; 
+            bool isRowBlank = true; 
+            List<Color> trimedVertical = new List<Color>();
+            for (int j = 0; j < newHeight; j++)
+            {
+                isRowBlank = true; 
+                for (int i = 0; i < newWidth && isRowBlank; i++)
+                {
+                    if (outData[i + j * newWidth] != Color.Transparent)
+                    {
+                        for(int k  = 0; k < newWidth; k++)
+                        {
+                            trimedVertical.Add(outData[k + j * newWidth]);
+                            isRowBlank = false;
+                        }
+                    }
+                }
+                if (isRowBlank)
+                    trimedVerticalHeight--; 
+            }
+
+            var textureOut = new Texture2D(graphics.GraphicsDevice, newWidth, verticalTrim ? trimedVerticalHeight : newHeight);
+            textureOut.SetData(verticalTrim ? trimedVertical.ToArray() : outData);
+            return textureOut; 
+        }
+
+        public Animation[] NormalizeHeights(params Animation[] animations)
+        {
+            int maxHeight = 0;
+            maxHeight = (int)animations.Select(e => e.Bounds.Y).Max();
+            for (int a = 0; a < animations.Length; a++)
+            {
+                Animation anim = animations[a];
+                if (anim.Bounds.Y == maxHeight)
+                    continue;
+
+                int heightMissing = (maxHeight - anim.Texture.Height) * anim.Texture.Width;
+                Color[] textureData = new Color[anim.Texture.Width * anim.Texture.Height];
+                anim.Texture.GetData(textureData);
+                Color[] normalizeTextureData = new Color[textureData.Length + heightMissing];
+                for (int i = 0; i < heightMissing; i++)
+                {
+                    normalizeTextureData[i] = Color.Transparent;
+                }
+                for (int i = heightMissing; i < normalizeTextureData.Length; i++)
+                {
+                    normalizeTextureData[i] = textureData[i - heightMissing];
+                }
+                Texture2D normalizeTexture = new Texture2D(graphics.GraphicsDevice, anim.Texture.Width, maxHeight);
+                normalizeTexture.SetData(normalizeTextureData);
+                animations[a] = new Animation(normalizeTexture, anim.FrameCount, anim.LoopTime, anim.Name, anim.AlignOption, anim.IsLooping);
+            }
+            return animations;
+        }
+
+        public Animation LoadAnimation(Texture2D texture, int nbrFrame, int looptime, string name, AlignOptions alignOption = AlignOptions.None)
+        {
+            Animation animation = new Animation(texture, nbrFrame, looptime, name, alignOption);
+            animations.Add(animation.Name, animation);
+            return animation;
+        }
         public Animation GetAnimation(string name)
         {
             if (animations.ContainsKey(name))
-                return animations[name];
+                return (Animation)animations[name].Clone();
+
+
             return null; 
+        }
+
+        public void SaveTexture(Texture2D t, string path = "./texture.png")
+        {
+            if(File.Exists(path))
+                File.Delete(path);
+            var fs = File.Create(path);
+            t.SaveAsPng(fs, t.Width, t.Height);
+            fs.Close();
+        }
+
+        public byte[] GetTextureBytes(Sprite sprite)
+        {
+            if(sprite.Texture == null)
+                return new byte[0];
+
+            byte[] data = new byte[sprite.Texture.Width * sprite.Texture.Height*4];
+            sprite.Texture.GetData(data);
+
+            byte[] output = new byte[(sizeof(int) * 2) + data.Length];
+            byte[] width = BitConverter.GetBytes(sprite.Texture.Width);
+            byte[] height = BitConverter.GetBytes(sprite.Texture.Height);
+
+
+            Array.Copy(data, 0, output, sizeof(int) * 2, data.Length); 
+            Array.Copy(width, 0, output, 0, width.Length); 
+            Array.Copy(height, 0, output, sizeof(int), height.Length);
+
+            SaveTexture(GetTextureFromBytes(output)); 
+
+            return output;
+        }
+
+        public Texture2D GetTextureFromBytes(byte[] data)
+        {
+            byte[] textureData = new byte[data.Length - (sizeof(int) * 2)];
+
+            Array.Copy(data, sizeof(int) * 2, textureData, 0, textureData.Length);
+            int width = BitConverter.ToInt32(data, 0); 
+            int height = BitConverter.ToInt32(data, sizeof(int));
+            
+            Texture2D output = new Texture2D(graphics.GraphicsDevice, width, height);
+
+
+            output.SetData(textureData);
+
+            return output;
+
         }
     }
     public class OutlineTextRenderArgs
@@ -448,4 +805,11 @@ namespace ExplorerOpenGL.Managers
         public SpriteFont Font { get; set; }
         public Color Color { get; set; }
     }
+
+    public class LoadTextureRenderArgs
+    {
+        public int ID { get; set; }
+        public string Asset { get; set; }
+    }
+
 }
