@@ -468,7 +468,7 @@ namespace ExplorerOpenGL2.Managers
             Sprite sprite = CreateInstance(gs.Type);
             sprite.ID = gs.ID;
             AddSprite(sprite, this);
-            1spriteById[gs.ID].ReadGameState(gs.Packet); 
+            spriteById[gs.ID].ReadGameState(gs.Packet); 
         }
         public Sprite CreateInstance(int type)
         {
