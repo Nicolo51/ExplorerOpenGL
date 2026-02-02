@@ -52,9 +52,7 @@ namespace ExplorerOpenGL2.View
 
         private void BtnConnect_MouseClicked(object sender, MousePointer mousePointer, Vector2 clickPosition)
         {
-            //gameManager.StartGame(tbName.Text, tbIP.Text);
-            //gameManager.StartGame("Test", "192.168.1.29");
-            gameManager.StartGame("Nicolas", "127.0.0.1");
+            gameManager.StartGame(string.IsNullOrWhiteSpace(tbName.Text) ? "Nicolas" : tbName.Text, string.IsNullOrWhiteSpace(tbIP.Text) ? "127.0.0.1" : tbIP.Text); 
             this.Close(); 
         }
 
