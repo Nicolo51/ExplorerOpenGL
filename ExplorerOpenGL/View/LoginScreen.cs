@@ -21,7 +21,6 @@ namespace ExplorerOpenGL2.View
         public TextZone txtIP;
         public Button btnConnect;
         public Button btnBack;
-        public TickBox tickbox;
 
         public LoginScreen()
             :base()
@@ -38,8 +37,6 @@ namespace ExplorerOpenGL2.View
             txtIP = new TextZone("Host address :", font, Color.Black);
             btnConnect = new Button(textureManager.OutlineText("Connect", "Default", Color.CornflowerBlue, Color.Black, 1), textureManager.OutlineText("Connect", "Default", Color.CornflowerBlue, Color.Black, 2));
             btnBack = new Button(textureManager.OutlineText("Back", "Default", Color.CornflowerBlue, Color.Black, 1), textureManager.OutlineText("Back", "Default", Color.CornflowerBlue, Color.Black, 2));
-            tickbox = new TickBox(textureManager.CreateBorderedTexture(50, 50, 2, 0, paint => Color.Black, paint => Color.Transparent), textureManager.CreateBorderedTexture(50, 50, 2, 0,paint => Color.Black, paint => Color.Red)); 
-
 
             tbName.SetAlignOption(AlignOptions.TopLeft);
             tbIP.SetAlignOption(AlignOptions.TopLeft);
@@ -47,7 +44,6 @@ namespace ExplorerOpenGL2.View
             txtIP.SetAlignOption(AlignOptions.TopLeft);
             btnConnect.SetAlignOption(AlignOptions.Left);
             btnBack.SetAlignOption(AlignOptions.Right);
-            tickbox.SetAlignOption(AlignOptions.Center);
             SetAlignOption(AlignOptions.Center);
 
             btnBack.MouseClicked += BtnBack_MouseClicked;
@@ -76,7 +72,6 @@ namespace ExplorerOpenGL2.View
             AddChildSprite(tbIP, new Vector2(50, 150));
             AddChildSprite(btnConnect, new Vector2(50, 205));
             AddChildSprite(btnBack, new Vector2(300, 205));
-            AddChildSprite(tickbox, new Vector2(300, 150));
             base.Show();
         }
     }
