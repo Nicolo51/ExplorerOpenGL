@@ -19,12 +19,12 @@ namespace ExplorerOpenGL2.Model.Sprites
     public class Sprite
     {
         public int MyProperty { get; set; }
-        private Vector2 LastDrawnPos; 
+        private Vector2 LastDrawnPos;
         public bool IsRemove { get; set; }
-        public int ID { get; set; } 
+        public int ID { get; set; }
         public Vector2 Position { get; set; }
         [MapEditable]
-        public float PositionX { get { return Position.X; } set { Position = new Vector2(value, Position.X); } }
+        public float PositionX { get { return Position.X; } set { Position = new Vector2(value, Position.Y); } }
         [MapEditable]
         public float PositionY { get { return Position.Y; } set { Position = new Vector2(Position.X, value); } }
         public Vector2 LastPosition { get; set; }
@@ -43,23 +43,26 @@ namespace ExplorerOpenGL2.Model.Sprites
         public float Velocity { get; set; }
 
         public Rectangle SourceRectangle { get; set; }
-        public virtual Rectangle HitBox { get {
-                if (_texture != null && SourceRectangle != null) 
+        public virtual Rectangle HitBox
+        {
+            get
+            {
+                if (_texture != null && SourceRectangle != null)
                     return new Rectangle(
-                        (int)Position.X - (int)(Origin.X * Scale), 
-                        (int)Position.Y - (int)(Origin.Y * Scale), 
-                        (int)(Bounds.X * Scale), 
+                        (int)Position.X - (int)(Origin.X * Scale),
+                        (int)Position.Y - (int)(Origin.Y * Scale),
+                        (int)(Bounds.X * Scale),
                         (int)(Bounds.Y * Scale));
 
-                else if (_animation != null && _animation.currentAnimation != null) 
+                else if (_animation != null && _animation.currentAnimation != null)
                     return new Rectangle(
-                        (int)Position.X - (int)(Origin.X * Scale), 
-                        (int)Position.Y - (int)(Origin.Y * Scale), 
-                        (int)(_animation.currentAnimation.Bounds.X * Scale), 
+                        (int)Position.X - (int)(Origin.X * Scale),
+                        (int)Position.Y - (int)(Origin.Y * Scale),
+                        (int)(_animation.currentAnimation.Bounds.X * Scale),
                         (int)(_animation.currentAnimation.Bounds.Y * Scale)
                         );
 
-                else 
+                else
                     return new Rectangle((int)Position.X, (int)Position.Y, 1, 1);
             }
         }
@@ -94,7 +97,7 @@ namespace ExplorerOpenGL2.Model.Sprites
         protected bool IsGravityAffected;
         protected bool isCollidable;
         protected bool isMovingTowardPosition;
-        protected bool gameStateForced; 
+        protected bool gameStateForced;
 
         public delegate void MouseOverEventHandler(object sender, MousePointer mousePointer);
         public event MouseOverEventHandler MouseOvered;
@@ -116,14 +119,14 @@ namespace ExplorerOpenGL2.Model.Sprites
 
         public Sprite(params Animation[] animations)
         {
-            
+
             Init();
             if (animations.Length < 1)
                 return;
             foreach (var a in animations)
                 _animation.Add(a.Name, a);
             Play(animations[0]);
-            Bounds = _animation.GetBounds(); 
+            Bounds = _animation.GetBounds();
         }
 
         public Sprite(Texture2D texture)
@@ -137,22 +140,22 @@ namespace ExplorerOpenGL2.Model.Sprites
         {
             Init();
         }
-        
+
         public virtual void Update(List<Sprite> sprites, GameTime gametime, NetGameState netGameState)
         {
-            double lerp = gametime.ElapsedGameTime.TotalMilliseconds / 16; 
+            double lerp = gametime.ElapsedGameTime.TotalMilliseconds / 16;
             if (!IsDisplayed)
                 return;
             LastPosition = Position;
-            
+
             if (IsGravityAffected)
                 ComputeGravity(sprites, lerp);
 
             if (isCollidable && Direction != Vector2.Zero)
                 CheckCollision(sprites);
 
-            if(IsPartOfGameState)
-                WriteToNet(netGameState, this.GetType()); 
+            if (IsPartOfGameState)
+                WriteToNet(netGameState, this.GetType());
         }
 
         public virtual void ComputeGravity(List<Sprite> sprites, double lerp)
@@ -163,7 +166,7 @@ namespace ExplorerOpenGL2.Model.Sprites
         public virtual void CheckCollision(List<Sprite> sprites)
         {
             isGrounded = false;
-            
+
             for (int i = 0; i < sprites.Count; i++)
             {
                 var sprite = sprites[i];
@@ -171,34 +174,40 @@ namespace ExplorerOpenGL2.Model.Sprites
                     continue;
                 if (sprites[i].isCollidable)
                 {
-                    
-                    if (direction.Y != 0)
+                    bool isTouchiSide = false;
+                    if (this.IsTouchingLeft(sprite))
                     {
-                        if (this.IsTouchingTop(sprite) && direction.Y > 0)
-                        {
-                            direction.Y = sprite.HitBox.Top - this.HitBox.Bottom; 
-                            if(direction.Y < -5)
-                                debugManager.AddEventToTerminal("chelou");
-                        }
-                        if (direction.Y < 0 & this.IsTouchingBottom(sprite))
-                        {
-                            direction.Y = sprite.HitBox.Bottom - this.HitBox.Top;
-                        }
+                        PositionX = sprite.HitBox.Left - Origin.X;
+                        isTouchiSide = true; 
                     }
+                    else if (this.IsTouchingRight(sprite))
+                    {
+                        PositionX = sprite.HitBox.Right + Origin.X;
+                        isTouchiSide = true;
+                    }
+                    else if (this.IsTouchingTop(sprite) && direction.Y > 0)
+                    {
+                        PositionY += sprite.HitBox.Top - this.HitBox.Bottom;
+                        direction.Y = 0; 
+                    }
+                    else if (direction.Y < 0 & this.IsTouchingBottom(sprite))
+                    {
+                        PositionY -= sprite.HitBox.Bottom - this.HitBox.Top;
+                        direction.Y = 0;
+                    }
+                    
                     if (direction.X != 0)
                     {
-                        if ((direction.X > 0 && this.IsTouchingLeft(sprite)) ||
-                        (direction.X < 0 & this.IsTouchingRight(sprite)))
+                        if (isTouchiSide)
                         {
                             int heightDiff = this.HitBox.Bottom - sprite.HitBox.Top;
                             if (heightDiff < 10)
                                 PositionY += -heightDiff;
-                            else
-                                direction.X = 0;
                         }
                     }
                 }
             }
+
         }
 
         public virtual void SetTexture(Texture2D texture)
@@ -210,7 +219,7 @@ namespace ExplorerOpenGL2.Model.Sprites
 
         public virtual void SetShaderArgs(ShaderArgument[] args)
         {
-            ShaderArgs = args; 
+            ShaderArgs = args;
         }
 
         public void AddAfterAnimation(Animation animation, Animation afterAnimation)
@@ -235,12 +244,12 @@ namespace ExplorerOpenGL2.Model.Sprites
                 foreach (Delegate d in MouseLeft?.GetInvocationList())
                     MouseLeft -= (MouseLeaveEventHandler)d;
             }
-            if (MouseOvered != null) 
+            if (MouseOvered != null)
             {
                 foreach (Delegate d in MouseOvered?.GetInvocationList())
                     MouseOvered -= (MouseOverEventHandler)d;
-            } 
-            IsRemove = true; 
+            }
+            IsRemove = true;
         }
 
         public virtual void SetPosition(Vector2 newPos, bool instant = true)
@@ -252,7 +261,7 @@ namespace ExplorerOpenGL2.Model.Sprites
 
         public virtual void SetPosition(float x, float y, bool instant = true)
         {
-            SetPosition(new Vector2(x, y), instant); 
+            SetPosition(new Vector2(x, y), instant);
         }
 
         public virtual void MoveTo(Vector2 newPos, float time) // time in ms
@@ -274,7 +283,7 @@ namespace ExplorerOpenGL2.Model.Sprites
         {
             //if (ao == alignOption)
             //    return;
-            Vector2 bounds = new Vector2(HitBox.Width , HitBox.Height);
+            Vector2 bounds = new Vector2(HitBox.Width, HitBox.Height);
             switch (ao)
             {
                 case AlignOptions.Left:
@@ -311,10 +320,13 @@ namespace ExplorerOpenGL2.Model.Sprites
         {
             if (_animation == null || string.IsNullOrWhiteSpace(animationName))
                 return;
-            _animation.Play(animationName);
-            Bounds = _animation.currentAnimation.Bounds; 
-            if(animationName != _animation.currentAnimation.Name)
-                SetAlignOption(_animation.currentAnimation.AlignOption); 
+
+            if(_animation.Play(animationName))
+                SetAlignOption(alignOption); 
+
+            Bounds = _animation.currentAnimation.Bounds;
+            if (animationName != _animation.currentAnimation.Name)
+                SetAlignOption(_animation.currentAnimation.AlignOption);
         }
 
         public void Play(Animation animation)
@@ -345,20 +357,20 @@ namespace ExplorerOpenGL2.Model.Sprites
             MouseClicked?.Invoke(this, mousePointer, clickPosition);
         }
 
-        public virtual void Draw(SpriteBatch spriteBatch,  GameTime gameTime, float lerpAmount, params ShaderArgument[] shaderArgs)
+        public virtual void Draw(SpriteBatch spriteBatch, GameTime gameTime, float lerpAmount, params ShaderArgument[] shaderArgs)
         {
             //Vector2 OSPos = Vector2.Lerp(LastPosition, Position, lerpAmount > 1 ? 1: lerpAmount);
-            LastDrawnPos = Position; 
+            LastDrawnPos = Position;
             if ((_texture != null || _animation.currentAnimation != null) && IsDisplayed)
             {
                 if (_animation.currentAnimation != null)
                     SourceRectangle = _animation.GetRectangle(gameTime);
-                
+
                 //shaderManager.Apply(this, Shader, ShaderArgs);
                 //shaderManager.GetDefaultShader().CurrentTechnique.Passes[0].Apply();
-                if(_texture != null)
+                if (_texture != null)
                     spriteBatch.Draw(_texture, new Rectangle((int)Position.X, (int)Position.Y, (int)(Bounds.X * Scale), (int)(Bounds.Y * Scale)), SourceRectangle, Color.White * Opacity, Radian, Origin, Effect, LayerDepth);
-                if(_animation.currentAnimation != null)
+                if (_animation.currentAnimation != null)
                     spriteBatch.Draw(_animation.Texture, new Rectangle((int)Position.X, (int)Position.Y, SourceRectangle.Width, SourceRectangle.Height), SourceRectangle, Color.White * Opacity, Radian, Origin, Effect, LayerDepth);
             }
 
@@ -370,7 +382,7 @@ namespace ExplorerOpenGL2.Model.Sprites
 
         public bool IsTouchingLeft(Sprite sprite)
         {
-            return this.HitBox.Right + this.Velocity * direction.X > sprite.HitBox.Left &&
+            return this.HitBox.Right + this.direction.X > sprite.HitBox.Left &&
               this.HitBox.Left < sprite.HitBox.Left &&
               this.HitBox.Bottom > sprite.HitBox.Top &&
               this.HitBox.Top < sprite.HitBox.Bottom;
@@ -378,7 +390,7 @@ namespace ExplorerOpenGL2.Model.Sprites
 
         public bool IsTouchingRight(Sprite sprite)
         {
-            return this.HitBox.Left + this.Velocity * direction.X < sprite.HitBox.Right &&
+            return this.HitBox.Left + this.direction.X < sprite.HitBox.Right &&
               this.HitBox.Right > sprite.HitBox.Right &&
               this.HitBox.Bottom > sprite.HitBox.Top &&
               this.HitBox.Top < sprite.HitBox.Bottom;
@@ -386,13 +398,13 @@ namespace ExplorerOpenGL2.Model.Sprites
 
         public bool IsTouchingTop(Sprite sprite)
         {
-            bool output =  this.HitBox.Bottom + direction.Y > sprite.HitBox.Top &&
+            bool output = this.HitBox.Bottom + direction.Y > sprite.HitBox.Top &&
               this.HitBox.Top < sprite.HitBox.Top &&
               this.HitBox.Right > sprite.HitBox.Left &&
               this.HitBox.Left < sprite.HitBox.Right;
-            if(!isGrounded)
+            if (!isGrounded)
                 isGrounded = output;
-            
+
             return output;
         }
 
@@ -410,7 +422,7 @@ namespace ExplorerOpenGL2.Model.Sprites
             alignOption = AlignOptions.None;
             isDraggable = false;
             IsDisplayed = true;
-            IsEnable = true; 
+            IsEnable = true;
             IsHUD = false;
             gameStateForced = false;
             Scale = 1;
@@ -419,7 +431,7 @@ namespace ExplorerOpenGL2.Model.Sprites
             debugManager = DebugManager.Instance;
             gameManager = GameManager.Instance;
             shaderManager = ShaderManager.Instance;
-            renderManager = RenderManager.Instance; 
+            renderManager = RenderManager.Instance;
             Gravity = 0.2f;
             Shader = shaderManager.LoadShader("Normal");
             IsPartOfGameState = false;
@@ -427,7 +439,7 @@ namespace ExplorerOpenGL2.Model.Sprites
 
         public Sprite Clone()
         {
-            return (Sprite)this.MemberwiseClone(); 
+            return (Sprite)this.MemberwiseClone();
         }
 
         public virtual NetDataWriter WriteToNet(NetGameState gameState, Type type)
@@ -435,7 +447,7 @@ namespace ExplorerOpenGL2.Model.Sprites
             NetDataWriter data = gameState.GetDataWriter();
 
             /*read on event handler*/
-            data.Put(gameManager.SpriteTypeToId[type]); 
+            data.Put(gameManager.SpriteTypeToId[type]);
             data.Put(ID);
             data.Put(gameStateForced);
             /*end of read on event handler*/
@@ -446,28 +458,28 @@ namespace ExplorerOpenGL2.Model.Sprites
             data.Put(direction.Y);
             data.Put(Velocity);
             data.Put((int)Effect);
-            return data; 
+            return data;
         }
 
         public virtual void ReadGameState(NetDataReader r)
         {
-            float positionX = r.GetFloat(); 
-            float positionY = r.GetFloat(); 
+            float positionX = r.GetFloat();
+            float positionY = r.GetFloat();
             float directionX = r.GetFloat();
             float directionY = r.GetFloat();
             float velocity = r.GetFloat();
             int effect = r.GetInt();
 
-            Effect = (SpriteEffects)effect; 
+            Effect = (SpriteEffects)effect;
             Position = new Vector2(positionX, positionY);
             direction = new Vector2(directionX, directionY);
 
         }
     }
 
-    
 
-    public enum AlignOptions 
+
+    public enum AlignOptions
     {
         None,
         Left,
@@ -478,7 +490,7 @@ namespace ExplorerOpenGL2.Model.Sprites
         BottomRight,
         BottomLeft,
         TopRight,
-        TopLeft, 
+        TopLeft,
     }
 
 }

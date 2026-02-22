@@ -60,9 +60,6 @@ namespace ExplorerOpenGL2.Managers
         double elapsedTimeSinceLastUpdatePlayer;
         double lastUpdate;
 
-        public bool pingUdp { get; private set;  } = false; 
-        public bool pingTcp { get; private set; } = false;
-
         public static NetworkManager Instance { get
             {
                 if (instance == null)
@@ -277,6 +274,10 @@ namespace ExplorerOpenGL2.Managers
             {
                 Disconnect(); 
                 gameManager.StopGame();
+                var msgb = MessageBoxIG.Show("You've disconnected by the server", "Error", MessageBoxIGType.Ok);
+
+                msgb.Result += Msgb_Result;
+
                 return; 
             }
 
@@ -284,6 +285,12 @@ namespace ExplorerOpenGL2.Managers
             client.PlayersData.Remove(e.ID);
             gameManager.Terminal.AddMessageToTerminal(e.Message, "System", Color.White);
         }
+
+        private void Msgb_Result(MessageBoxIG sender, MessageBoxIGResultEventArgs e)
+        {
+            gameManager.ToMainMenu(); 
+        }
+
         public void OnPlayerConnection(PlayerConnectEventArgs e)
         {
             //PlayerData playerDataCo = new PlayerData(e.ID, e.Name);
@@ -403,9 +410,6 @@ namespace ExplorerOpenGL2.Managers
         {
             switch (e)
             {
-                case PongEventArgs pea:
-                    OnPong(pea); 
-                    break;
                 case ChatMessageEventArgs cmea:
                     OnMessage(cmea);
                     break;
@@ -471,14 +475,6 @@ namespace ExplorerOpenGL2.Managers
                 return; 
 
             gameManager.UpdateSprite(gsea);
-        }
-
-        private void OnPong(PongEventArgs pea)
-        {
-            if (pea.Type == PongType.Udp)
-                pingUdp = true;
-            if(pea.Type == PongType.Tcp)
-                pingTcp = true;
         }
 
         private void OnUpdateSelf(UpdateSelfEventArgs e)

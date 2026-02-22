@@ -41,20 +41,21 @@ namespace ExplorerOpenGL2.Managers
         {
             return new Vector2(currentAnimation.Bounds.X, currentAnimation.Bounds.Y);
         }
-        public void Play(string animationName, bool looping = true)
+        public bool Play(string animationName, bool looping = true)
         {
             if (!animations.Keys.Contains(animationName))
-                return;
+                return false;
 
-            Play(animations[animationName]);
+            return Play(animations[animationName]);
         }
-        public void Play(Animation animation)
+        public bool Play(Animation animation)
         {
             if (animation == currentAnimation)
-                return;
+                return false;
             timer = 0f;
             currentAnimation = animation;
             currentAnimation.Play();
+            return true; 
         }
         public void Stop()
         {

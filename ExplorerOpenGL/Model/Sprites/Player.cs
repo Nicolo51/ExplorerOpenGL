@@ -17,18 +17,18 @@ namespace ExplorerOpenGL2.Model.Sprites
 {
     public class Player : Sprite
     {
-        private int height; 
+        private int height;
         private int width;
         private MousePointer mousePointer;
         public Input input;
         private Texture2D TextureName;
-        private Vector2 PositionName { get { return new Vector2(Position.X, Position.Y - 10); } }
+        private Vector2 PositionName { get { return new Vector2(Position.X, Position.Y - Origin.Y - 10); } }
         private Vector2 OriginName;
 
         public bool IsNetContolled { get; private set; }
 
-        public int Health { get; set;  }
-        public string Name{ get; private set; }
+        public int Health { get; set; }
+        public string Name { get; private set; }
         public string CurrentAnimationName { get { if (_animation != null) return _animation.currentAnimation.Name; else return string.Empty; } }
 
         private TextureManager textureManager;
@@ -43,9 +43,9 @@ namespace ExplorerOpenGL2.Model.Sprites
             textureManager = TextureManager.Instance;
             keyboardManager = KeyboardManager.Instance;
             networkManager = NetworkManager.Instance;
-            mouseManager = MouseManager.Instance; 
+            mouseManager = MouseManager.Instance;
 
-            mousePointer = gameManager.MousePointer; 
+            mousePointer = gameManager.MousePointer;
             ChangeName(name);
             direction = new Vector2(0, 0);
             Velocity = 3;
@@ -54,10 +54,12 @@ namespace ExplorerOpenGL2.Model.Sprites
             Health = 100;
             font = FontManager.Instance.GetFont();
             mouseManager.LeftClicked += FireBullet;
-            Radian = 0; 
+            Radian = 0;
+            alignOption = AlignOptions.Center;
+
 
             isDraggable = true;
-            IsGravityAffected = true; 
+            IsGravityAffected = true;
             isCollidable = true;
             IsPartOfGameState = true;
 
@@ -77,7 +79,7 @@ namespace ExplorerOpenGL2.Model.Sprites
         public override void Remove()
         {
             base.Remove();
-            mouseManager.LeftClicked -= FireBullet; 
+            mouseManager.LeftClicked -= FireBullet;
         }
 
         public override void Update(List<Sprite> sprites, GameTime gametime, NetGameState netGameState)
@@ -101,10 +103,9 @@ namespace ExplorerOpenGL2.Model.Sprites
             }
             return output;
         }
-
         public void ChangeName(object name)
         {
-            TextureName = textureManager.OutlineText((name as string), "Default", Color.Black, Color.White, 2); 
+            TextureName = textureManager.OutlineText((name as string), "Default", Color.Black, Color.White, 2);
             Name = (name as string);
             OriginName = new Vector2(TextureName.Width / 2, TextureName.Height / 2);
         }
@@ -112,7 +113,7 @@ namespace ExplorerOpenGL2.Model.Sprites
         protected virtual void Move(List<Sprite> sprites, float lerp)
         {
             if (input == null)
-                return; 
+                return;
             direction.X = 0;
 
             if (keyboardManager.IsKeyDown(input.Up))
@@ -136,15 +137,16 @@ namespace ExplorerOpenGL2.Model.Sprites
                     Effect = SpriteEffects.FlipHorizontally;
                 if (base.direction.X > 0)
                     Effect = SpriteEffects.None;
-                
+
             }
 
-            if (direction.Y > 0)
-                Play("falling"); 
+            if (direction.Y > 2)
+                Play("falling");
 
             if (!isGrounded)
                 return;
-            if (direction.X != 0) {
+            if (direction.X != 0)
+            {
                 if (Math.Abs(direction.X) > 4)
                     Play("run");
                 else
@@ -160,8 +162,8 @@ namespace ExplorerOpenGL2.Model.Sprites
                 debugManager.AddEvent(direction.Y);
                 Play("idle");
                 Play("jump");
-                isGrounded = false; 
-                direction.Y = -5;
+                isGrounded = false;
+                direction.Y = -7;
             }
         }
 
@@ -173,7 +175,7 @@ namespace ExplorerOpenGL2.Model.Sprites
         public override void Draw(SpriteBatch spriteBatch, GameTime gameTime, float lerpAmount, params ShaderArgument[] shaderArgs)
         {
             base.Draw(spriteBatch, gameTime, lerpAmount);
-            spriteBatch.Draw(TextureName, PositionName , null, Color.White, 0f, OriginName, .75f, SpriteEffects.None, LayerDepth);
+            spriteBatch.Draw(TextureName, PositionName, null, Color.White, 0f, OriginName, .75f, SpriteEffects.None, LayerDepth);
             //playerFeet.Draw(spriteBatch, gameTime, lerpAmount);
             //spriteBatch.DrawString(font, Health.ToString("#"), Position - new Vector2(0,50), Color.White, 0f, font.MeasureString(Health.ToString("#")) / 2, 1f, SpriteEffects.None, layerDepth);
         }
@@ -183,7 +185,7 @@ namespace ExplorerOpenGL2.Model.Sprites
             NetDataWriter data = base.WriteToNet(netGameState, this.GetType());
             data.Put(Animation.currentAnimation.Name);
             data.Put(Name);
-            return data; 
+            return data;
         }
 
         public override void ReadGameState(NetDataReader r)
@@ -192,14 +194,13 @@ namespace ExplorerOpenGL2.Model.Sprites
             string animation = r.GetString();
             string name = r.GetString();
             Play(animation);
-            if(Name != name)
+            if (Name != name)
                 ChangeName(name);
         }
 
-        public string GetJSON()
+        public override string ToString()
         {
-            string output = Position.ToString(); 
-            return output;
+            return $"{Name} : {PositionX} ; {PositionY}"; 
         }
     }
 }

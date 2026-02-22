@@ -175,8 +175,6 @@ namespace ExplorerOpenGL2.Managers
                 debugMessage.Append("Fps : " + fps.ToString("#") + " \n");
                 debugMessage.Append("Elapse update = " + gameTime.ElapsedGameTime.TotalMilliseconds.ToString("#.##") + "\n");
                 debugMessage.Append("Sprite Count = " + sprites.Length.ToString() + "\n");
-                debugMessage.Append($"UDP : {networkManager.pingUdp} ms\n"); 
-                debugMessage.Append($"TCP : {networkManager.pingTcp} ms\n");
 
                 Dictionary<Type, int> debugTypeList = new Dictionary<Type, int>();
                 foreach (Sprite sprite in sprites)
@@ -202,9 +200,11 @@ namespace ExplorerOpenGL2.Managers
                 }
 
                 if (debugMouse != null)
-                    debugMessage.Append(debugMouse.ToString());
+                    debugMessage.Append(debugMouse.ToString() +" \n");
                 else
-                    debugMessage.Append("No MouseCursor Detected :(");
+                    debugMessage.Append("No MouseCursor Detected :(\n");
+
+                debugMessage.Append($"{gameManager.Player}\n");
             }
         }
         private void ClearDebugMember()

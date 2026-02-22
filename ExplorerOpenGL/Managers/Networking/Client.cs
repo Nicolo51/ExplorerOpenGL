@@ -60,6 +60,18 @@ namespace ExplorerOpenGL2.Managers.Networking
 
         private void Listener_PeerDisconnectedEvent(NetPeer peer, DisconnectInfo disconnectInfo)
         {
+            if(this.peer == peer)
+            {
+                PlayerDisconnectionEventArgs e = new PlayerDisconnectionEventArgs()
+                {
+                    Message = $"Server closed",
+                    PacketType = ServerPackets.DisconnectPlayer,
+                    ID = ID,
+                    Name = "SELF",
+                    Packet = null,
+                };
+                PacketReceived(e);
+            }
             DebugManager.Instance.AddEventToTerminal("Peer disconected");    
         }
 
