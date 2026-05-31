@@ -88,6 +88,7 @@ namespace ExplorerOpenGL2.Model.Sprites
             {
                 actionTimer-= gametime.ElapsedGameTime.TotalMilliseconds;
                 Play();
+                base.Update(sprites, gametime, netGameState);
                 return;
             }
             //Position = mousePointer.Position;
