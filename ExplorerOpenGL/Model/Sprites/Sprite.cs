@@ -311,17 +311,22 @@ namespace ExplorerOpenGL2.Model.Sprites
             }
             alignOption = ao;
         }
-        public void Play(string animationName)
+        public void Play(string animationName, bool playToEnd = false)
         {
             if (_animation == null || string.IsNullOrWhiteSpace(animationName))
                 return;
-
-            if(_animation.Play(animationName))
+            
+            if(_animation.Play(animationName, playToEnd))
                 SetAlignOption(alignOption); 
 
             Bounds = _animation.currentAnimation.Bounds;
             if (animationName != _animation.currentAnimation.Name)
                 SetAlignOption(_animation.currentAnimation.AlignOption);
+        }
+
+        public void Play()
+        {
+            Play(Animation.currentAnimation.Name); 
         }
 
         public void Play(Animation animation)

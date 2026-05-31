@@ -17,7 +17,8 @@ namespace ExplorerOpenGL2.Managers
         public Animation currentAnimation { get; private set; }
         public int Count { get => animations.Count;  }
 
-        private float timer; 
+        private float timer;
+        private bool playToEnd; 
 
         public AnimationManager()
         {
@@ -41,20 +42,24 @@ namespace ExplorerOpenGL2.Managers
         {
             return new Vector2(currentAnimation.Bounds.X, currentAnimation.Bounds.Y);
         }
-        public bool Play(string animationName, bool looping = true)
+        public bool Play(string animationName, bool playToEnd)
         {
             if (!animations.Keys.Contains(animationName))
                 return false;
 
-            return Play(animations[animationName]);
+            return Play(animations[animationName], playToEnd);
         }
-        public bool Play(Animation animation)
+        public bool Play(Animation animation, bool playToEnd)
         {
+            if (this.playToEnd && !currentAnimation.IsFinished)
+                return false;
+            
             if (animation == currentAnimation)
                 return false;
             timer = 0f;
             currentAnimation = animation;
             currentAnimation.Play();
+            this.playToEnd = playToEnd;
             return true; 
         }
         public void Stop()
@@ -87,7 +92,7 @@ namespace ExplorerOpenGL2.Managers
             timer += (float)gameTime.ElapsedGameTime.TotalMilliseconds;
             if (currentAnimation.IsFinished && playAfter.ContainsKey(currentAnimation))
             {
-                Play(playAfter[currentAnimation]); 
+                Play(playAfter[currentAnimation], false); 
             }
             return currentAnimation.GetRectangle(gameTime, timer); 
         }

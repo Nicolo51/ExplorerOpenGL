@@ -14,5 +14,6 @@ namespace ExplorerOpenGL2.Model
         public Keys Right { get; set; }
         public Keys Left { get; set; }
         public Keys Run { get; set; }
+        public Keys Attack { get; set; }
     }
 }

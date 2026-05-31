@@ -285,7 +285,6 @@ namespace ExplorerOpenGL2.Managers
                     spriteById.Add(sprite.ID, sprite);
             }
 
-            sprite.IsEnable = true; 
 
             sprites.Add(sprite);
             sprites = sprites.OrderByDescending(s => s.LayerDepth).ToList();  
@@ -498,13 +497,16 @@ namespace ExplorerOpenGL2.Managers
             Animation running = TextureManager.GetAnimation("run");
             Animation jump = TextureManager.GetAnimation("jump");
             Animation falling = TextureManager.GetAnimation("falling");
+            Animation attack1 = TextureManager.GetAnimation("attack1");
+            Animation attack2 = TextureManager.GetAnimation("attack2");
+            Animation attack3 = TextureManager.GetAnimation("attack3");
             jump.IsLooping = false;
 
-            var player = new Player("???", TextureManager.NormalizeHeights(walking, standing, running, jump, falling))
+            var player = new Player("???", TextureManager.NormalizeHeights(walking, standing, running, jump, falling, attack1, attack2, attack3))
             {
                 Position = new Vector2(0, 0),
-                IsEnable = false,
             };
+            player.IsEnable = false;
             return player;
         }
 

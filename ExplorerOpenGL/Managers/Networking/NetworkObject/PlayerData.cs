@@ -58,14 +58,16 @@ namespace ExplorerOpenGL2.Managers.Networking
                 Animation running = TextureManager.GetAnimation("run");
                 Animation jump = TextureManager.GetAnimation("jump");
                 Animation falling = TextureManager.GetAnimation("falling");
+                Animation attack = TextureManager.GetAnimation("attack1");
 
-                Animation[] animations = TextureManager.NormalizeHeights(walking, standing, running, jump, falling);
+                Animation[] animations = TextureManager.NormalizeHeights(walking, standing, running, jump, falling, attack);
 
                 _animation.Add(animations[0]); 
                 _animation.Add(animations[1]); 
                 _animation.Add(animations[2]); 
                 _animation.Add(animations[3]); 
                 _animation.Add(animations[4]);
+                _animation.Add(animations[5]);
                 Play(standing);
                 Bounds = _animation.GetBounds(); 
             }

@@ -89,7 +89,7 @@ namespace ExplorerOpenGL2
             Window.AllowUserResizing = true;
             InitManager();
 
-            Texture2D attack1 = TextureManager.TrimAnimation(TextureManager.ScaleTexture(TextureManager.LoadTexture("Robber/attack1"), 10));
+            Texture2D attack1 = TextureManager.TrimAnimation(TextureManager.ScaleTexture(TextureManager.LoadTexture("Robber/attack1"), 4));
             Texture2D attack2 = TextureManager.TrimAnimation(TextureManager.ScaleTexture(TextureManager.LoadTexture("Robber/attack2"), 4));
             Texture2D attack3 = TextureManager.TrimAnimation(TextureManager.ScaleTexture(TextureManager.LoadTexture("Robber/attack3"), 4));
             Texture2D climb = TextureManager.TrimAnimation(TextureManager.ScaleTexture(TextureManager.LoadTexture("Robber/climb"), 4));
@@ -103,9 +103,9 @@ namespace ExplorerOpenGL2
             Texture2D idle = TextureManager.TrimAnimation(TextureManager.ScaleTexture(TextureManager.LoadTexture("Robber/idle"), 4), true);
             Texture2D falling = TextureManager.TrimAnimation(TextureManager.ScaleTexture(TextureManager.LoadTexture("Robber/falling"), 4), true);
 
-            TextureManager.LoadAnimation(attack1, 3, 750, "attack1", AlignOptions.Top);
-            TextureManager.LoadAnimation(attack2, 3, 750, "attack2", AlignOptions.Top);
-            TextureManager.LoadAnimation(attack3, 3, 750,"attack3", AlignOptions.Top);
+            TextureManager.LoadAnimation(attack1, 6, 400, "attack1", AlignOptions.Top);
+            TextureManager.LoadAnimation(attack2, 6, 400, "attack2", AlignOptions.Top);
+            TextureManager.LoadAnimation(attack3, 6, 400, "attack3", AlignOptions.Top);
             TextureManager.LoadAnimation(climb, 3, 750,"climb", AlignOptions.Top);
             TextureManager.LoadAnimation(craft, 3, 750,"craft", AlignOptions.Top);
             TextureManager.LoadAnimation(death, 3, 750,"death", AlignOptions.Top);

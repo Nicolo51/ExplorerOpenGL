@@ -6,6 +6,7 @@ using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices.Marshalling;
@@ -30,8 +31,10 @@ namespace ExplorerOpenGL2.Model.Sprites
         public int Health { get; set; }
         public string Name { get; private set; }
         public string CurrentAnimationName { get { if (_animation != null) return _animation.currentAnimation.Name; else return string.Empty; } }
-
+        
         private SpriteFont font;
+
+        private double actionTimer = 0; 
 
         public Player(string name, params Animation[] animations)
             : base(animations)
@@ -48,13 +51,13 @@ namespace ExplorerOpenGL2.Model.Sprites
             Radian = 0;
             alignOption = AlignOptions.Center;
 
-
             isDraggable = true;
             IsGravityAffected = true;
             isCollidable = true;
             IsPartOfGameState = true;
 
             Play("idle");
+
             //Shader = ShaderManager.LoadShader("Outline");
             //height = 100;
             //width = 40;
@@ -67,6 +70,12 @@ namespace ExplorerOpenGL2.Model.Sprites
             //NetworkManager.CreateBullet(this); 
         }
 
+        private void Attack()
+        {
+            Play("attack" + new Random().Next(1,3));
+            actionTimer = Animation.currentAnimation.LoopTime; 
+        }
+
         public override void Remove()
         {
             base.Remove();
@@ -75,11 +84,18 @@ namespace ExplorerOpenGL2.Model.Sprites
 
         public override void Update(List<Sprite> sprites, GameTime gametime, NetGameState netGameState)
         {
+            if (actionTimer > 0)
+            {
+                actionTimer-= gametime.ElapsedGameTime.TotalMilliseconds;
+                Play();
+                return;
+            }
             //Position = mousePointer.Position;
             float lerp = (float)(gametime.ElapsedGameTime.TotalMilliseconds / 16);
             //Radian = CalculateAngle(Position, mousePointer.InGamePosition);
-
             Move(sprites, lerp);
+            if (KeyboardManager.IsKeyDown(input.Attack) && isGrounded)
+                Attack();
             base.Update(sprites, gametime, netGameState);
             SetPosition(Position + direction * lerp, false);
         }

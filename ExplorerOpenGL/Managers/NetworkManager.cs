@@ -241,6 +241,7 @@ namespace ExplorerOpenGL2.Managers
                 Left = Keys.Q,
                 Right = Keys.D,
                 Run = Keys.LeftShift,
+                Attack = Keys.L,
             };
             player.Position = Vector2.Zero;
             GameManager.AddSprite(player); 
