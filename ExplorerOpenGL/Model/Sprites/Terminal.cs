@@ -1,4 +1,4 @@
-﻿using ExplorerOpenGL.Model;
+﻿using ExplorerOpenGL.Managers;
 using ExplorerOpenGL2.Managers;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;

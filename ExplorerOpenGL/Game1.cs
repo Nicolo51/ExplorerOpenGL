@@ -1,4 +1,4 @@
-﻿using ExplorerOpenGL.Model;
+﻿using ExplorerOpenGL.Managers;
 using ExplorerOpenGL2.Managers;
 using ExplorerOpenGL2.Model;
 using ExplorerOpenGL2.Model.Sprites;

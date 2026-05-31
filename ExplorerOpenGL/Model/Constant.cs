@@ -7,12 +7,15 @@ namespace ExplorerOpenGL.Model
         public Type Type { get; set; }
         public object Value { get; set; }
         public string Description { get; set; }
+        public ConstantType ConstantType { get; set; }
 
-        public Constant(Type type, object value, string description)
+
+        public Constant(Type type, object value, string description, ConstantType valueType = ConstantType.Option)
         {
             Type = type;
             Value = value;
             Description = description;
+            ConstantType = valueType; 
         }
 
         public T GetValue<T>()
@@ -24,5 +27,13 @@ namespace ExplorerOpenGL.Model
         {
             Value = Convert.ChangeType(value, Type);
         }
+
+    }
+
+    public enum ConstantType
+    {
+        Option, 
+        AutoComp, 
+        Both
     }
 }

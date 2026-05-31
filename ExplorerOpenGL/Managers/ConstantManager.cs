@@ -1,19 +1,14 @@
-﻿using ExplorerOpenGL.Model.Interface;
+﻿using ExplorerOpenGL.Model;
+using ExplorerOpenGL.Model.Interface;
 using ExplorerOpenGL2.Managers;
 using ExplorerOpenGL2.Model.Sprites;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Reflection;
-using System.Reflection.Metadata.Ecma335;
-using System.Runtime.Remoting;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace ExplorerOpenGL.Model
+namespace ExplorerOpenGL.Managers
 {
     public class ConstantManager
     {
@@ -43,7 +38,7 @@ namespace ExplorerOpenGL.Model
                     {
                         var prop = typeof(ConstantManager).GetProperty(field);
                         Constant obj = (Constant)prop.GetValue(prop, null);
-                        obj.Set(value); 
+                        obj.Set(value);
                         //prop.GetValue(prop, null);
                         //property.SetValue(null, new Constant(t, Convert.ChangeType(value, t), desc));
                     }
@@ -57,18 +52,57 @@ namespace ExplorerOpenGL.Model
         }
         public static void SaveConstants(IUserControl[] ucs)
         {
+            Dictionary<string, string> config = GetConfig();
+
+            foreach (var uc in ucs)
+                config[uc.Description] = uc.ToConfigFile();
+
+            WriteConfigFile(config);
+        }
+
+        public static void SaveConstant(IUserControl uc)
+        {
+            Dictionary<string, string> config = GetConfig();
+            config[uc.Description] = uc.ToConfigFile(); 
+            WriteConfigFile(config);
+        }
+
+        public static void SaveConstant(string PropertyName, string Value)
+        {
+            Dictionary<string, string> config = GetConfig();
+            config[PropertyName] = Value; 
+            WriteConfigFile(config);
+        }
+        private static void WriteConfigFile(Dictionary<string, string> config)
+        {
             using (StreamWriter sw = new StreamWriter("config.ini", false))
             {
-                foreach (var uc in ucs)
+                foreach (var uc in config)
                 {
-                    string propName = uc.Description;
-                    string propValue = uc.ToConfigFile(); 
+                    string propName = uc.Key;
+                    string propValue = uc.Value;
 
                     sw.WriteLine($"{propName}={propValue}");
                 }
             }
-
             Init();
+        }
+
+        public static Dictionary<string, string> GetConfig()
+        {
+            string[] configEntries = File.ReadAllText("config.ini").Split("\n");
+            Dictionary<string, string> output = new Dictionary<string, string>();
+            foreach (string entry in configEntries)
+            {
+                if(string.IsNullOrWhiteSpace(entry)) 
+                    continue;
+                string[] keyValuePaire = entry.Trim().Split("=");
+                if (keyValuePaire.Length != 2)
+                    continue; 
+
+                output.Add(keyValuePaire[0], keyValuePaire[1]); 
+            }
+            return output;
         }
 
         public static Sprite[] GetConstantEditor()
@@ -78,19 +112,25 @@ namespace ExplorerOpenGL.Model
             foreach (var prop in props)
             {
                 if (prop.Name == "Assertions")
+                    continue;
+
+                Constant constant = (prop.GetValue(prop, null) as Constant);
+
+                if (constant.ConstantType == ConstantType.AutoComp)
                     continue; 
-                TextZone tz = new TextZone((prop.GetValue(prop, null) as Constant).Description, FontManager.GetFont("Default"), Color.Black);
+
+                TextZone tz = new TextZone(constant.Description, FontManager.GetFont("Default"), Color.Black);
                 IUserControl tb = new TextinputBox(TextureManager.DefaultTextInputTexture);
 
-                if ((prop.GetValue(prop, null) as Constant).Type.Name == "String[]")
-                    (tb as TextinputBox).Text = string.Join(";", ((prop.GetValue(prop, null) as Constant).Value as string[]));
-                else if ((prop.GetValue(prop, null) as Constant).Type.Name == "Boolean")
+                if (constant.Type.Name == "String[]")
+                    (tb as TextinputBox).Text = string.Join(";", constant.Value as string[]);
+                else if (constant.Type.Name == "Boolean")
                 {
                     tb = new CheckBox(TextureManager.LoadTexture("UnCheck"), TextureManager.LoadTexture("Check"));
-                    (tb as CheckBox).IsCheck = (prop.GetValue(prop, null) as Constant).GetValue<bool>();
+                    (tb as CheckBox).IsCheck = constant.GetValue<bool>();
                 }
                 else
-                    (tb as TextinputBox).Text = (prop.GetValue(prop, null) as Constant).Value.ToString();
+                    (tb as TextinputBox).Text = constant.Value.ToString();
 
                 tb.Description = prop.Name;
                 if(Assertions.ContainsKey(tb.Description))
@@ -102,14 +142,17 @@ namespace ExplorerOpenGL.Model
         }
         public static Constant WIDTH { get; set; } = new Constant(typeof(int), 800, "Resolution width :");
         public static Constant HEIGHT { get; set; } = new Constant(typeof(int), 600, "Resolution height :");
-        public static Constant NAME { get; set; } = new Constant(typeof(string), "Nicolas", "Default Name :");
+        public static Constant LOGIN_NAME { get; set; } = new Constant(typeof(string), "", "Username :", ConstantType.Both);
         public static Constant FULLSCREEN { get; set; } = new Constant(typeof(bool), false, "Is full screen :");
+        public static Constant VSYNC { get; set; } = new Constant(typeof(bool), false, "Vsync :");
+        public static Constant LOGIN_HOST { get; set; } = new Constant(typeof(string), "", "", ConstantType.AutoComp);
+         
 
         public static Dictionary<string, Func<IUserControl, AssertResult>> Assertions { get; private set; } = new Dictionary<string, Func<IUserControl, AssertResult>>()
         {
-            { "WIDTH", (IUserControl uc) => { int intout = -1;  Int32.TryParse((string)uc.GetValueOfUC(), out intout); return new AssertResult(intout >= 800, "Width need to be a number and at least 600"); } },
-            { "HEIGHT", (IUserControl uc) => { int intout = -1;  Int32.TryParse((string)uc.GetValueOfUC(), out intout); return new AssertResult(intout >= 600, "Height need to be a number and at least 800"); } },
-            { "NAME", (IUserControl uc) => { return new AssertResult(!string.IsNullOrWhiteSpace(uc.GetValueOfUC().ToString()), "Your name can't be empty"); } },
+            { "WIDTH", (uc) => { int intout = -1;  int.TryParse((string)uc.GetValueOfUC(), out intout); return new AssertResult(intout >= 800, "Width need to be a number and at least 600"); } },
+            { "HEIGHT", (uc) => { int intout = -1;  int.TryParse((string)uc.GetValueOfUC(), out intout); return new AssertResult(intout >= 600, "Height need to be a number and at least 800"); } },
+            { "NAME", (uc) => { return new AssertResult(!string.IsNullOrWhiteSpace(uc.GetValueOfUC().ToString()), "Your name can't be empty"); } },
         };
     }
 }

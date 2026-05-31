@@ -1,4 +1,5 @@
-﻿using ExplorerOpenGL2.Managers;
+﻿using ExplorerOpenGL.Managers;
+using ExplorerOpenGL2.Managers;
 using ExplorerOpenGL2.Model.Sprites;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -7,6 +8,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace ExplorerOpenGL2.View
@@ -47,13 +49,46 @@ namespace ExplorerOpenGL2.View
             btnBack.SetAlignOption(AlignOptions.Right);
             SetAlignOption(AlignOptions.Center);
 
+            tbName.Description = "LOGIN_NAME";
+            tbIP.Description = "LOGIN_HOST";
+            tbIP.Text = ConstantManager.LOGIN_HOST.GetValue<string>();
+            tbName.Text = ConstantManager.LOGIN_NAME.GetValue<string>();
+
             btnBack.MouseClicked += BtnBack_MouseClicked;
             btnConnect.MouseClicked += BtnConnect_MouseClicked;
         }
 
         private void BtnConnect_MouseClicked(object sender, MousePointer mousePointer, Vector2 clickPosition)
         {
-            GameManager.StartGame(string.IsNullOrWhiteSpace(tbName.Text) ? "Nicolas" : tbName.Text, string.IsNullOrWhiteSpace(tbIP.Text) ? "127.0.0.1" : tbIP.Text); 
+            if (string.IsNullOrWhiteSpace(tbIP.Text))
+            {
+                MessageBoxIG.Show("Please enter a valide host addresse", "Error", MessageBoxIGType.Ok);
+                return; 
+            }
+            if (!Regex.Match(tbIP.Text.Trim(), "^(?:(?:25[0-5]|2[0-4]\\d|1?\\d{1,2})(?:\\.(?!$)|$)){4}$").Success)
+            {
+                MessageBoxIG.Show("Please enter a valide host addresse", "Error", MessageBoxIGType.Ok);
+                return;
+            }
+            if(tbName.Text.Contains("="))
+            { 
+                MessageBoxIG.Show("You can't put '=' in you name", "Error", MessageBoxIGType.Ok);
+                return; 
+            }
+            if (string.IsNullOrWhiteSpace(tbName.Text))
+            {
+                MessageBoxIG.Show("Name is empty", "Error", MessageBoxIGType.Ok);
+                return;
+            }
+            if (tbName.Text.Length > 15)
+            {
+                MessageBoxIG.Show("Name is too long", "Error", MessageBoxIGType.Ok);
+                return; 
+            }
+
+            ConstantManager.SaveConstants(GetUserControls());
+
+            GameManager.StartGame(tbName.Text, tbIP.Text); 
             this.Close(); 
         }
 

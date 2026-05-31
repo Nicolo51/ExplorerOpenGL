@@ -1,4 +1,4 @@
-﻿using ExplorerOpenGL.Model;
+﻿using ExplorerOpenGL.Managers;
 using ExplorerOpenGL.Model.Interface;
 using ExplorerOpenGL2.Managers;
 using ExplorerOpenGL2.Model;
@@ -95,19 +95,18 @@ namespace ExplorerOpenGL.View
 
         private void BtnApply_MouseClicked(object sender, MousePointer mousePointer, Vector2 clickPosition)
         {
-            IUserControl[] ucs = Array.ConvertAll(childSprites.Where(e => e is IUserControl).ToArray(), e => (IUserControl)e);
+            IUserControl[] ucs = GetUserControls(); 
 
             foreach (IUserControl uc in ucs) 
             {
-
-                if (uc.Assert != null)
+                if (uc.Assert == null)
+                    continue; 
+             
+                var ar = uc.Assert(uc);
+                if (!ar.Sucess)
                 {
-                    var ar = uc.Assert(uc);
-                    if (!ar.Sucess)
-                    {
-                        MessageBoxIG.Show(ar.Message, "Error", MessageBoxIGType.Ok);
-                        return;
-                    }
+                    MessageBoxIG.Show(ar.Message, "Error", MessageBoxIGType.Ok);
+                    return;
                 }
             }
 

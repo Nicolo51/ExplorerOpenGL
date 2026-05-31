@@ -1,4 +1,5 @@
-﻿using ExplorerOpenGL2.Managers;
+﻿using ExplorerOpenGL.Model.Interface;
+using ExplorerOpenGL2.Managers;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -47,6 +48,10 @@ namespace ExplorerOpenGL2.Model.Sprites
             IsHUD = true; 
         }
 
+        protected IUserControl[] GetUserControls()
+        {
+            return Array.ConvertAll(childSprites.Where(e => e is IUserControl && !string.IsNullOrWhiteSpace((e as IUserControl).Description)).ToArray(), e => (IUserControl)e);
+        }
         public override void Update(List<Sprite> sprites, GameTime gametime, NetGameState netGameState)
         {
             base.Update(sprites, gametime, netGameState);
