@@ -25,7 +25,7 @@ namespace ExplorerOpenGL2.View
 
             btnSinglePlayer = new Button(TextureManager.OutlineText("Singleplayer", "Menu", Color.Black, Color.White, 2), TextureManager.OutlineText("Singleplayer", "Menu", Color.Black, Color.White, 4));
             btnMultiPlayer = new Button(TextureManager.OutlineText("Multiplayer", "Menu", Color.Black, Color.White, 2), TextureManager.OutlineText("Multiplayer", "Menu", Color.Black, Color.White, 4));
-            btnOption = new Button(TextureManager.OutlineText("Test", "Menu", Color.Black, Color.White, 2), TextureManager.OutlineText("Options", "Menu", Color.Black, Color.White, 4));
+            btnOption = new Button(TextureManager.OutlineText("Options", "Menu", Color.Black, Color.White, 2), TextureManager.OutlineText("Options", "Menu", Color.Black, Color.White, 4));
             btnQuit = new Button(TextureManager.OutlineText("Quit", "Menu", Color.Black, Color.White, 2), TextureManager.OutlineText("Quit", "Menu", Color.Black, Color.White, 4));
             
             btnSinglePlayer.SetAlignOption(AlignOptions.Center);
