@@ -18,13 +18,13 @@ namespace ExplorerOpenGL2.View
         public PauseMenu()
             : base()
         {
-            SetTexture(textureManager.CreateTexture(gameManager.Width, gameManager.Height, paint => Color.Black));
+            SetTexture(TextureManager.CreateTexture(GameManager.Width, GameManager.Height, paint => Color.Black));
             isDraggable = false;
             SetPosition(Vector2.Zero);
 
-            MainMenuButton = new Button(textureManager.OutlineText("Main Menu", "Default", Color.CornflowerBlue, Color.Black, 1), textureManager.OutlineText("Main Menu", "Default", Color.CornflowerBlue, Color.Black, 2));
-            ResumeButton = new Button(textureManager.OutlineText("Resume", "Default", Color.CornflowerBlue, Color.Black, 1), textureManager.OutlineText("Resume", "Default", Color.CornflowerBlue, Color.Black, 2));
-            SetTexture(textureManager.CreateTexture(gameManager.Width, gameManager.Height, paint => new Color(Color.Black, .5f))); 
+            MainMenuButton = new Button(TextureManager.OutlineText("Main Menu", "Default", Color.CornflowerBlue, Color.Black, 1), TextureManager.OutlineText("Main Menu", "Default", Color.CornflowerBlue, Color.Black, 2));
+            ResumeButton = new Button(TextureManager.OutlineText("Resume", "Default", Color.CornflowerBlue, Color.Black, 1), TextureManager.OutlineText("Resume", "Default", Color.CornflowerBlue, Color.Black, 2));
+            SetTexture(TextureManager.CreateTexture(GameManager.Width, GameManager.Height, paint => new Color(Color.Black, .5f))); 
             ResumeButton.SetAlignOption(AlignOptions.Center); 
             MainMenuButton.SetAlignOption(AlignOptions.Center); 
 
@@ -39,30 +39,30 @@ namespace ExplorerOpenGL2.View
 
         private void MainMenuButton_MouseClicked(object sender, MousePointer mousePointer, Vector2 clickPosition)
         {
-            gameManager.ToMainMenu();
-            gameManager.Terminal.EnableMouseOver();
+            GameManager.ToMainMenu();
+            GameManager.Terminal.EnableMouseOver();
             this.Close();
         }
 
         public override void Show()
         {
-            gameManager.ChangeGameState(GameState.Pause);
-            AddChildSprite(MainMenuButton, new Vector2(gameManager.Width / 2, gameManager.Height / 2 + 50));
-            AddChildSprite(ResumeButton, new Vector2(gameManager.Width / 2, gameManager.Height / 2 - 50));
+            GameManager.ChangeGameState(GameState.Pause);
+            AddChildSprite(MainMenuButton, new Vector2(GameManager.Width / 2, GameManager.Height / 2 + 50));
+            AddChildSprite(ResumeButton, new Vector2(GameManager.Width / 2, GameManager.Height / 2 - 50));
             foreach (Sprite s in childSprites)
             {
                 s.IsRemove = false;
             }
-            gameManager.ChangeGameState(GameState.Pause);
-            gameManager.Terminal.DisableMouseOver(); 
+            GameManager.ChangeGameState(GameState.Pause);
+            GameManager.Terminal.DisableMouseOver(); 
             base.Show();
         }
         public override void Close()
         {
-            if (gameManager.GameState == GameState.Pause)
+            if (GameManager.GameState == GameState.Pause)
             {
-                gameManager.ChangeToLastGameState();
-                gameManager.Terminal.EnableMouseOver();
+                GameManager.ChangeToLastGameState();
+                GameManager.Terminal.EnableMouseOver();
             }
             base.Close();
         }

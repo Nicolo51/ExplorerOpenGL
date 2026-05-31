@@ -10,47 +10,27 @@ namespace ExplorerOpenGL2.Managers
 {
     public class MouseManager
     {
-        MousePointer mousePointer; 
+        static MousePointer mousePointer; 
 
-        private MouseState currentMouseState; 
-        private MouseState previousMouseState;
+        static MouseState currentMouseState; 
+        static MouseState previousMouseState;
 
         public delegate void ButtonClickEventHandler(ButtonState state);
-        public event ButtonClickEventHandler LeftClicked;
-        public event ButtonClickEventHandler RightClicked;
-        public event ButtonClickEventHandler MiddleClicked;
-        public event ButtonClickEventHandler X1Clicked;
-        public event ButtonClickEventHandler X2Clicked;
+        public static event ButtonClickEventHandler LeftClicked;
+        public static event ButtonClickEventHandler RightClicked;
+        public static event ButtonClickEventHandler MiddleClicked;
+        public static event ButtonClickEventHandler X1Clicked;
+        public static event ButtonClickEventHandler X2Clicked;
 
         public delegate void ScrollWheelEventHandler(int wheelValue);
-        public event ScrollWheelEventHandler MouseWheeled; 
+        public static event ScrollWheelEventHandler MouseWheeled; 
 
-        public static event EventHandler Initialized;
-        private static MouseManager instance;
-        public static MouseManager Instance
-        {
-            get
-            {
-                if (instance == null)
-                {
-                    instance = new MouseManager();
-                    Initialized?.Invoke(instance, EventArgs.Empty);
-                    return instance;
-                }
-                return instance;
-            }
-        }
-
-        private MouseManager()
-        {
-
-        }
-        public void InitDependencies(MousePointer mouse)
+        public static void InitDependencies(MousePointer mouse)
         {
             mousePointer = mouse; 
         }
 
-        public void Update(Sprite[] sprites)
+        public static void Update(Sprite[] sprites)
         {
             //mousePointer.Update(sprites);
             previousMouseState = currentMouseState;

@@ -80,7 +80,7 @@ namespace ExplorerOpenGL2.Model.Sprites
             currentMouseState = Mouse.GetState();
             SetPosition(new Vector2(currentMouseState.Position.X, currentMouseState.Position.Y), false);
 
-            InGamePosition = new Vector2((gameManager.Camera.Position.X - gameManager.Camera.Bounds.X / 2 + currentMouseState.Position.X), (gameManager.Camera.Position.Y - gameManager.Camera.Bounds.Y / 2 + currentMouseState.Position.Y));
+            InGamePosition = new Vector2((GameManager.Camera.Position.X - GameManager.Camera.Bounds.X / 2 + currentMouseState.Position.X), (GameManager.Camera.Position.Y - GameManager.Camera.Bounds.Y / 2 + currentMouseState.Position.Y));
 
             if (!isDragging)
             {

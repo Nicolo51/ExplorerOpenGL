@@ -17,39 +17,12 @@ namespace ExplorerOpenGL2.Managers
 {
     public class XmlManager
     {
-        private static XmlManager instance;
-        public static event EventHandler Initialized;
-        public static XmlManager Instance
-        {
-            get
-            {
-                if (instance == null)
-                {
-                    instance = new XmlManager();
-                    Initialized?.Invoke(instance, EventArgs.Empty);
-                    return instance;
-                }
-                return instance;
-            }
-        }
-        private GameManager gameManager;
-        private TextureManager textureManager;
-        private RenderManager renderManager;
-        private ShaderManager shaderManager; 
-        private XmlManager()
+        public static void InitDependencies()
         {
 
         }
 
-        public void InitDependencies()
-        {
-            gameManager = GameManager.Instance;
-            textureManager = TextureManager.Instance;
-            renderManager = RenderManager.Instance;
-            shaderManager = ShaderManager.Instance; 
-        }
-
-        public MapXml[] ReadXml(string xml)
+        public static MapXml[] ReadXml(string xml)
         {
             List<MapXml> map = new List<MapXml>();
             var xmlMap = new XmlDocument();
@@ -62,7 +35,7 @@ namespace ExplorerOpenGL2.Managers
             return map.ToArray();
         }
 
-        public MapXml[] LoadMap(string pathMap, LoadingScreen loadingScreen = null)
+        public static MapXml[] LoadMap(string pathMap, LoadingScreen loadingScreen = null)
         {
             List<MapXml> map = new List<MapXml>(); 
             var xmlMap = new XmlDocument();
@@ -74,7 +47,7 @@ namespace ExplorerOpenGL2.Managers
             }
             return map.ToArray();  
         }
-        public MapXml[] LoadMapFromString(string xmlIn, LoadingScreen loadingScreen = null)
+        public static MapXml[] LoadMapFromString(string xmlIn, LoadingScreen loadingScreen = null)
         {
             List<MapXml> map = new List<MapXml>(); 
             var xmlMap = new XmlDocument();
@@ -90,7 +63,7 @@ namespace ExplorerOpenGL2.Managers
             return map.ToArray();  
         } 
 
-        public void SaveMap(Sprite[] sprites, string mapName)
+        public static void SaveMap(Sprite[] sprites, string mapName)
         {
             string path = $@"./maps/{mapName}";
             var xmlMap = new XDocument();
@@ -107,7 +80,7 @@ namespace ExplorerOpenGL2.Managers
             {
                 count++;
                 SaveTextureAsPngArg arg = new SaveTextureAsPngArg(path + "/" + count + ".png", s.Texture);
-                gameManager.AddActionToUIThread(new Action<object>(renderManager.SaveTextureAsPng), arg); 
+                GameManager.AddActionToUIThread(new Action<object>(RenderManager.SaveTextureAsPng), arg); 
                 XElement concat = new XElement("sprite",
                     new XElement("type", s.GetType().Name),
                     new XElement("texture", count),
@@ -121,7 +94,7 @@ namespace ExplorerOpenGL2.Managers
             xmlMap.Save(path + ".xml"); 
         }
 
-        public string GetMapXmlBySprites(Sprite[] sprites, string mapName)
+        public static string GetMapXmlBySprites(Sprite[] sprites, string mapName)
         {
             var xmlMap = new XDocument();
             xmlMap.Add(new XElement("map", new XElement("sprites", ""), new XElement("name", mapName)));
@@ -132,7 +105,7 @@ namespace ExplorerOpenGL2.Managers
                 XElement concat = new XElement("sprite",
                     new XElement("ID", s.ID),
                     new XElement("type", s.GetType().Name),
-                    new XElement("texture", Convert.ToBase64String(textureManager.GetTextureBytes(s))),
+                    new XElement("texture", Convert.ToBase64String(TextureManager.GetTextureBytes(s))),
                     new XElement("position", s.Position.X + "/" + s.Position.Y),
                     new XElement("bounds", s.Bounds.X + "/" + s.Bounds.Y),
                     new XElement("alignOption", s.AlignOption.ToString()),
@@ -144,7 +117,7 @@ namespace ExplorerOpenGL2.Managers
             return xmlMap.ToString(); 
         }
 
-        public Sprite GenerateSpriteFromXml(XmlNode node, string mapName)
+        public static Sprite GenerateSpriteFromXml(XmlNode node, string mapName)
         {
             if (node.Name != "sprite")
                 throw new Exception("The node passed as argument is note a Xml sprite");
@@ -166,15 +139,15 @@ namespace ExplorerOpenGL2.Managers
 
             if (texture.Length > 100)
             {
-                spriteTexture = textureManager.GetTextureFromBytes(Convert.FromBase64String(texture));
-                textureManager.SaveTexture(spriteTexture); 
+                spriteTexture = TextureManager.GetTextureFromBytes(Convert.FromBase64String(texture));
+                TextureManager.SaveTexture(spriteTexture); 
             }
             else
             {
                 if (File.Exists($@"./maps/{mapName}/{texture}.png"))
-                    spriteTexture = textureManager.LoadNoneContentLoadedTexture($@"./maps/{mapName}/{texture}.png");
+                    spriteTexture = TextureManager.LoadNoneContentLoadedTexture($@"./maps/{mapName}/{texture}.png");
                 else
-                    spriteTexture = textureManager.LoadTexture(texture);
+                    spriteTexture = TextureManager.LoadTexture(texture);
             }
 
             Vector2 spritePosition = new Vector2(Int32.Parse(position.Split('/')[0]), Int32.Parse(position.Split('/')[1]));
@@ -193,7 +166,7 @@ namespace ExplorerOpenGL2.Managers
             return sprite; 
         }
 
-        public Sprite[] GenerateSpritesFromXml(MapXml[] mapXmls)
+        public static Sprite[] GenerateSpritesFromXml(MapXml[] mapXmls)
         {
             Sprite[] sprites = new Sprite[mapXmls.Length];
             for(int i = 0; i < mapXmls.Length ; i++) 
@@ -203,7 +176,7 @@ namespace ExplorerOpenGL2.Managers
             return sprites;
         }
 
-        public Sprite GetInstance(Type type)
+        public static Sprite GetInstance(Type type)
         {
             var sprite = Activator.CreateInstance(type);
             return (Sprite)sprite;
@@ -221,12 +194,12 @@ namespace ExplorerOpenGL2.Managers
             return xmlDoc.Descendants("texture").Select(e => e.Value).ToArray();
         }
 
-        public void AddGameStateID(MapXml map, int id)
+        public static void AddGameStateID(MapXml map, int id)
         {
 
         }
 
-        public void AddTexture(MapXml map, byte[] data)
+        public static void AddTexture(MapXml map, byte[] data)
         {
             //map.node.SelectSingleNode("/map/texture").InnerText
         }

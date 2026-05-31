@@ -13,44 +13,25 @@ namespace ExplorerOpenGL2.Managers
 {
     public class ShaderManager
     {
-        private ContentManager content;
-        private SpriteBatch spriteBatch;
-        private GraphicsDeviceManager graphics;
+        static ContentManager Content;
+        static SpriteBatch SpriteBatch;
+        static GraphicsDeviceManager Graphics;
 
-        private Dictionary<string, Effect> LoadedShader;
-        delegate void ShaderHandler(Sprite sprite, Effect effect, params ShaderArgument[] args); 
-        private Dictionary<Effect, ShaderHandler> shaderHandler; 
+        static Dictionary<string, Effect> LoadedShader = new Dictionary<string, Effect>();
+        delegate void ShaderHandler(Sprite sprite, Effect effect, params ShaderArgument[] args);
+        static Dictionary<Effect, ShaderHandler> shaderHandler; 
 
-        public static event EventHandler Initialized;
-        private static ShaderManager instance;
-        public static ShaderManager Instance
+        
+       
+        public static void InitDependencies(GraphicsDeviceManager graphics, ContentManager content, SpriteBatch spriteBatch)
         {
-            get
-            {
-                if (instance == null)
-                {
-                    instance = new ShaderManager();
-                    Initialized?.Invoke(instance, EventArgs.Empty);
-                    return instance;
-                }
-                return instance;
-            }
-        }
-
-        private ShaderManager()
-        {
-            LoadedShader = new Dictionary<string, Effect>();
-            
-        }
-        public void InitDependencies(GraphicsDeviceManager graphics, ContentManager content, SpriteBatch spriteBatch)
-        {
-            this.content = content;
-            this.graphics = graphics;
-            this.spriteBatch = spriteBatch;
+            Content = content;
+            Graphics = graphics;
+            SpriteBatch = spriteBatch;
             InitShaderHandler();
         }
 
-        public void InitShaderHandler()
+        public static void InitShaderHandler()
         {
             shaderHandler = new Dictionary<Effect, ShaderHandler>()
             {
@@ -62,23 +43,23 @@ namespace ExplorerOpenGL2.Managers
 
         
 
-        public Effect GetDefaultShader()
+        public static Effect GetDefaultShader()
         {
             return LoadShader("Normal"); 
         }
 
-        public Effect LoadShader(string path)
+        public static Effect LoadShader(string path)
         {
             if (LoadedShader.ContainsKey("Effects/" + path))
                 return LoadedShader["Effects/" + path];
-            Effect effect = content.Load<Effect>("Effects/" + path);
+            Effect effect = Content.Load<Effect>("Effects/" + path);
             LoadedShader.Add("Effects/" + path, effect);
             return effect; 
         }
 
 
 
-        public void Apply(Sprite sprite, Effect effect, params ShaderArgument[] args)
+        public static void Apply(Sprite sprite, Effect effect, params ShaderArgument[] args)
         {
             if (effect == null)
                 return; 
@@ -86,7 +67,7 @@ namespace ExplorerOpenGL2.Managers
             effect.CurrentTechnique.Passes[0].Apply();
         }
 
-        private void ApplyParameters(Effect effect, string param, object arg)
+        static void ApplyParameters(Effect effect, string param, object arg)
         {
             switch (arg)
             {
@@ -138,11 +119,11 @@ namespace ExplorerOpenGL2.Managers
             }
         }
 
-        private void NormalHandler(Sprite sprite, Effect effect, params ShaderArgument[] args)
+        static void NormalHandler(Sprite sprite, Effect effect, params ShaderArgument[] args)
         {
             
         }
-        private void OutlineHandler(Sprite sprite, Effect effect, params ShaderArgument[] args)
+        static void OutlineHandler(Sprite sprite, Effect effect, params ShaderArgument[] args)
         {
             if (CheckShaderParamaters(effect, args))
             {
@@ -161,7 +142,7 @@ namespace ExplorerOpenGL2.Managers
             effect.Parameters["thickness"].SetValue(new Vector2(2f / ((sprite.Texture).Width - 1f), 2f / ((sprite.Texture).Height + 1f)));
             effect.Parameters["outlineColor"].SetValue(Color.Red.ToVector4());
         }
-        private bool CheckShaderParamaters(Effect effect, ShaderArgument[] args)
+        static bool CheckShaderParamaters(Effect effect, ShaderArgument[] args)
         {
             if (args == null)
                 return false; 

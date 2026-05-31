@@ -24,61 +24,25 @@ namespace ExplorerOpenGL2.Managers
 {
     public class TextureManager
     {
-        private GraphicsDeviceManager graphics;
-        private ContentManager content;
-        private SpriteBatch spriteBatch;
+        static GraphicsDeviceManager Graphics;
+        static ContentManager Content;
+        static SpriteBatch SpriteBatch;
 
-        private RenderManager renderManager;
-        private FontManager fontManager;
-        private GameManager gameManager;
+        static Dictionary<string, Texture2D> LoadedTextures = new Dictionary<string, Texture2D>();
+        static Dictionary<string, Animation> Animations = new Dictionary<string, Animation>();
 
-        private Dictionary<string, Texture2D> LoadedTextures;
-        private Dictionary<string, Animation> animations; 
+        static Dictionary<int, Texture2D> IssuedTextures = new Dictionary<int, Texture2D>();
+        static Dictionary<int, OutlineTextRenderArgs> OutlineTextToDraw = new Dictionary<int, OutlineTextRenderArgs>();
+        static Dictionary<int, CreateBorderTextureRenderArgs> CreateBorderTextureToDraw = new Dictionary<int, CreateBorderTextureRenderArgs>();
+        static Dictionary<int, CreateTextureRenderArgs> CreateTextureToDraw = new Dictionary<int, CreateTextureRenderArgs>();
+        static Dictionary<int, TextToTextureRenderArgs> TextToTextureToDraw = new Dictionary<int, TextToTextureRenderArgs>();
+        static Dictionary<int, LoadTextureRenderArgs> LoadTextureToDraw = new Dictionary<int, LoadTextureRenderArgs>();
 
-        private Dictionary<int, Texture2D> IssuedTextures;
-        private Dictionary<int, OutlineTextRenderArgs> OutlineTextToDraw;
-        private Dictionary<int, CreateBorderTextureRenderArgs> CreateBorderTextureToDraw;
-        private Dictionary<int, CreateTextureRenderArgs> CreateTextureToDraw;
-        private Dictionary<int, TextToTextureRenderArgs> TextToTextureToDraw;
-        private Dictionary<int, LoadTextureRenderArgs> LoadTextureToDraw;
+        public static Texture2D DefaultTextInputTexture { get; private set; }
 
-        public bool WaitForRendering { get { return (IssuedTextures.Count > 0 || OutlineTextToDraw.Count > 0 || CreateBorderTextureToDraw.Count > 0 || CreateTextureToDraw.Count > 0 || TextToTextureToDraw.Count > 0 ); } }
+        public static bool WaitForRendering { get { return (IssuedTextures.Count > 0 || OutlineTextToDraw.Count > 0 || CreateBorderTextureToDraw.Count > 0 || CreateTextureToDraw.Count > 0 || TextToTextureToDraw.Count > 0 ); } }
 
-        public static event EventHandler Initialized;
-
-        private static TextureManager instance;
-        private int mainThreadID; 
-
-        public static TextureManager Instance
-        {
-            get
-            {
-                if (instance == null)
-                {
-                    instance = new TextureManager();
-                    Initialized?.Invoke(instance, EventArgs.Empty);
-                    return instance;
-                }
-                return instance;
-            }
-        }
-
-        private TextureManager()
-        {
-            mainThreadID = Thread.CurrentThread.ManagedThreadId;
-
-            LoadedTextures = new Dictionary<string, Texture2D>();
-            animations = new Dictionary<string, Animation>(); 
-            IssuedTextures = new Dictionary<int, Texture2D>();
-
-            OutlineTextToDraw = new Dictionary<int, OutlineTextRenderArgs>();
-            TextToTextureToDraw = new Dictionary<int, TextToTextureRenderArgs>();
-            CreateTextureToDraw = new Dictionary<int, CreateTextureRenderArgs>();
-            CreateBorderTextureToDraw = new Dictionary<int, CreateBorderTextureRenderArgs>();
-            LoadTextureToDraw = new Dictionary<int, LoadTextureRenderArgs>(); 
-        }
-
-        public void Update()
+        public static void Update()
         {
             lock (OutlineTextToDraw)
             {
@@ -152,24 +116,26 @@ namespace ExplorerOpenGL2.Managers
                 }
             }
         }
-        public void InitDependencies(GraphicsDeviceManager graphics, ContentManager content, SpriteBatch spriteBatch)
+        public static void InitDependencies(GraphicsDeviceManager graphics, ContentManager content, SpriteBatch spriteBatch)
         {
-            this.content = content;
-            this.spriteBatch = spriteBatch;
-            this.graphics = graphics;
-            renderManager = RenderManager.Instance;
-            fontManager = FontManager.Instance;
-            gameManager = GameManager.Instance; 
+            Content = content;
+            SpriteBatch = spriteBatch;
+            Graphics = graphics;
         }
 
-        public Texture2D CreateAnimationFromTextures(params Texture2D[] textures)
+        public static void InitDefaultTextures()
         {
-            if (mainThreadID == Thread.CurrentThread.ManagedThreadId)
+            DefaultTextInputTexture = CreateTexture(150, 25, paint => Color.Black);
+        }
+
+        public static Texture2D CreateAnimationFromTextures(params Texture2D[] textures)
+        {
+            if (GameManager.MainThreadID == Thread.CurrentThread.ManagedThreadId)
                 return CreateAnimationFromTexturesThread(textures);
             return null;
         }
 
-        private Texture2D CreateAnimationFromTexturesThread(Texture2D[] textures)
+        static Texture2D CreateAnimationFromTexturesThread(Texture2D[] textures)
         {
             int widthOut = 0;
             int heightOut = 0; 
@@ -182,7 +148,7 @@ namespace ExplorerOpenGL2.Managers
                     heightOut = texture.Height;
             }
 
-            Texture2D output = new Texture2D(graphics.GraphicsDevice, widthOut, heightOut);
+            Texture2D output = new Texture2D(Graphics.GraphicsDevice, widthOut, heightOut);
             Color[] dataOut = new Color[widthOut * heightOut];
 
             int columnOffset = 0; 
@@ -208,9 +174,9 @@ namespace ExplorerOpenGL2.Managers
             return output; 
         }
 
-        private Texture2D CreateTextureThread(int width, int height, Func<int, Color> paint)
+        static Texture2D CreateTextureThread(int width, int height, Func<int, Color> paint)
         {
-            Texture2D texture = new Texture2D(graphics.GraphicsDevice, width, height);
+            Texture2D texture = new Texture2D(Graphics.GraphicsDevice, width, height);
 
             Color[] data = new Color[width * height];
             for (int pixel = 0; pixel < data.Count(); pixel++)
@@ -221,9 +187,9 @@ namespace ExplorerOpenGL2.Managers
 
             return texture;
         }
-        public Texture2D CreateTexture(int width, int height, Func<int, Color> paint)
+        public static Texture2D CreateTexture(int width, int height, Func<int, Color> paint)
         {
-            if (mainThreadID == Thread.CurrentThread.ManagedThreadId)
+            if (GameManager.MainThreadID == Thread.CurrentThread.ManagedThreadId)
                 return CreateTextureThread(width, height, paint);
             int id = getIdTicket();
             var ra = new CreateTextureRenderArgs()
@@ -238,9 +204,9 @@ namespace ExplorerOpenGL2.Managers
             return waitTexture(id);
         }
 
-        private Texture2D CreateBorderedTextureThread(int width, int height, int thickness, int distanceBorder, Func<int, Color> borderPaint, Func<int, Color> backgroundPaint)
+        static Texture2D CreateBorderedTextureThread(int width, int height, int thickness, int distanceBorder, Func<int, Color> borderPaint, Func<int, Color> backgroundPaint)
         {
-            Texture2D texture = new Texture2D(graphics.GraphicsDevice, width, height);
+            Texture2D texture = new Texture2D(Graphics.GraphicsDevice, width, height);
             Color[] data = new Color[width * height];
 
             for (int i = 0; i < height; i++)
@@ -275,9 +241,9 @@ namespace ExplorerOpenGL2.Managers
             texture.SetData(data);
             return texture;
         }
-        public Texture2D CreateBorderedTexture(int width, int height, int thickness, int distanceBorder, Func<int, Color> borderPaint, Func<int, Color> backgroundPaint)
+        public static Texture2D CreateBorderedTexture(int width, int height, int thickness, int distanceBorder, Func<int, Color> borderPaint, Func<int, Color> backgroundPaint)
         {
-            if (mainThreadID == Thread.CurrentThread.ManagedThreadId)
+            if (GameManager.MainThreadID == Thread.CurrentThread.ManagedThreadId)
                 return CreateBorderedTextureThread(width, height, thickness, distanceBorder, borderPaint, backgroundPaint);
             int id = getIdTicket();
             var ra = new CreateBorderTextureRenderArgs()
@@ -294,14 +260,14 @@ namespace ExplorerOpenGL2.Managers
                 CreateBorderTextureToDraw.Add(id, ra);
             return waitTexture(id);
         }
-        private Texture2D OutlineTextThread(string input, string font, Color borderColor, Color textColor, int Thickness)
+        static Texture2D OutlineTextThread(string input, string font, Color borderColor, Color textColor, int Thickness)
         {
-            Texture2D textTexture = renderManager.RenderTextToTexture(input, fontManager.GetFont(font), textColor, Thickness);
+            Texture2D textTexture = RenderManager.RenderTextToTexture(input, FontManager.GetFont(font), textColor, Thickness);
             Vector2 stringDimension = new Vector2(textTexture.Width, textTexture.Height);
             Color[] data = new Color[textTexture.Width * textTexture.Height];
 
             textTexture.GetData(data);
-            spriteBatch.GraphicsDevice.SetRenderTarget(null);
+            SpriteBatch.GraphicsDevice.SetRenderTarget(null);
 
             List<int> contour = new List<int>();
             for (int x = 0; x < (int)stringDimension.X; x++)
@@ -345,9 +311,9 @@ namespace ExplorerOpenGL2.Managers
 
         }
 
-        public Texture2D OutlineText(string input, string font, Color borderColor, Color textColor, int Thickness)
+        public static Texture2D OutlineText(string input, string font, Color borderColor, Color textColor, int Thickness)
         {
-            if (mainThreadID == Thread.CurrentThread.ManagedThreadId)
+            if (GameManager.MainThreadID == Thread.CurrentThread.ManagedThreadId)
                 return OutlineTextThread(input, font, borderColor, textColor, Thickness);
             int id = getIdTicket();
             var ra = new OutlineTextRenderArgs()
@@ -363,17 +329,17 @@ namespace ExplorerOpenGL2.Managers
                 OutlineTextToDraw.Add(id, ra);
             return waitTexture(id);
         }
-        private Texture2D TextureTextThread(string text, SpriteFont font, Color color)
+        static Texture2D TextureTextThread(string text, SpriteFont font, Color color)
         {
-            return renderManager.RenderTextToTexture(text, font, color, 0);
+            return RenderManager.RenderTextToTexture(text, font, color, 0);
         }
-        public Texture2D TextureText(string text, string font, Color color)
+        public static Texture2D TextureText(string text, string font, Color color)
         {
-            return TextureText(text, fontManager.GetFont(font), color); 
+            return TextureText(text, FontManager.GetFont(font), color); 
         }
-        public Texture2D TextureText(string text, SpriteFont font, Color color)
+        public static Texture2D TextureText(string text, SpriteFont font, Color color)
         {
-            if (mainThreadID == Thread.CurrentThread.ManagedThreadId)
+            if (GameManager.MainThreadID == Thread.CurrentThread.ManagedThreadId)
                 return TextureTextThread(text, font, color);
             int id = getIdTicket();
             var ra = new TextToTextureRenderArgs()
@@ -388,7 +354,7 @@ namespace ExplorerOpenGL2.Managers
             return waitTexture(id); 
         }
 
-        private int getIdTicket()
+        static int getIdTicket()
         {
             int i = 0; 
             lock (IssuedTextures)
@@ -399,7 +365,7 @@ namespace ExplorerOpenGL2.Managers
             return i; 
         }
 
-        private Texture2D waitTexture(int id)
+        static Texture2D waitTexture(int id)
         {
             KeyValuePair<int, Texture2D> valuePair = new KeyValuePair<int, Texture2D>(); 
             while(valuePair.Value == null)
@@ -415,7 +381,7 @@ namespace ExplorerOpenGL2.Managers
             return valuePair.Value; 
         }
 
-        private bool IsColoredPixelsArround(Color[] data, int coord, int length, int thickness)
+        static bool IsColoredPixelsArround(Color[] data, int coord, int length, int thickness)
         {
             if (data.Length <= coord + 1 || 0 >= coord - 1 || 0 >= coord - length || data.Length <= coord + length)
             {
@@ -428,7 +394,7 @@ namespace ExplorerOpenGL2.Managers
             }
             return false;
         }
-        public Texture2D LoadNoneContentLoadedTexture(string path)
+        public static Texture2D LoadNoneContentLoadedTexture(string path)
         {
             if (LoadedTextures.ContainsKey(path))
                 return LoadedTextures[path];
@@ -439,7 +405,7 @@ namespace ExplorerOpenGL2.Managers
             int ImageWidth = image.Width;
             int ImageHeight = image.Height;
 
-            Texture2D texture = new Texture2D(graphics.GraphicsDevice, ImageWidth, ImageHeight);
+            Texture2D texture = new Texture2D(Graphics.GraphicsDevice, ImageWidth, ImageHeight);
 
             Color[] data = new Color[ImageWidth * ImageHeight];
 
@@ -459,24 +425,24 @@ namespace ExplorerOpenGL2.Managers
         }
 
 
-        private Color ImageSharpToXnaColor(Rgba32 color)
+        static Color ImageSharpToXnaColor(Rgba32 color)
         {
             return new Color(color.R, color.G, color.B, color.A);
         }
 
-        private Texture2D LoadTextureThread(string path)
+        static Texture2D LoadTextureThread(string path)
         {
             if (LoadedTextures.ContainsKey(path))
                 return LoadedTextures[path];
 
-            Texture2D texture = content.Load<Texture2D>(path);
+            Texture2D texture = Content.Load<Texture2D>(path);
             LoadedTextures.Add(path, texture);
             return texture;
         }
 
-        public Texture2D LoadTexture(string path)
+        public static Texture2D LoadTexture(string path)
         {
-            if (mainThreadID == Thread.CurrentThread.ManagedThreadId)
+            if (GameManager.MainThreadID == Thread.CurrentThread.ManagedThreadId)
                 return LoadTextureThread(path);
             int id = getIdTicket();
             var ra = new LoadTextureRenderArgs()
@@ -490,7 +456,7 @@ namespace ExplorerOpenGL2.Managers
             
         }
 
-        public Texture2D ScaleTexture(Texture2D texture, int scale)
+        public static Texture2D ScaleTexture(Texture2D texture, int scale)
         {
             Color[] dataout = new Color[texture.Width * texture.Height * scale*scale];
             Color[] data = new Color[texture.Width * texture.Height];
@@ -512,22 +478,22 @@ namespace ExplorerOpenGL2.Managers
                 }
             }
 
-            var textureOut = new Texture2D(graphics.GraphicsDevice, texture.Width * scale, texture.Height * scale);
+            var textureOut = new Texture2D(Graphics.GraphicsDevice, texture.Width * scale, texture.Height * scale);
             textureOut.SetData(dataout);
             return textureOut;
         }
 
-        public Animation LoadAnimation(string textureName, int nbrFrame, int looptime, AlignOptions alignOption = AlignOptions.None) 
+        public static Animation LoadAnimation(string textureName, int nbrFrame, int looptime, AlignOptions alignOption = AlignOptions.None) 
         {
             string name = textureName.Split('/')[textureName.Split('/').Length-1];
-            if (animations.ContainsKey(textureName))
-                return animations[textureName]; 
-            Animation animation = new Animation(LoadTexture(textureName), nbrFrame, looptime, name, alignOption); 
-            animations.Add(animation.Name, animation); 
+            if (Animations.ContainsKey(textureName))
+                return Animations[textureName]; 
+            Animation animation = new Animation(LoadTexture(textureName), nbrFrame, looptime, name, alignOption);
+            Animations.Add(animation.Name, animation); 
             return animation; 
         }
 
-        public Texture2D TrimAnimation(Texture2D texture, bool verticalTrim = true, bool debug = false)
+        public static Texture2D TrimAnimation(Texture2D texture, bool verticalTrim = true, bool debug = false)
         {
             int biggestWidth = 0; 
             //Vertical Trim have to rotate 'cause to dumb not to lol
@@ -586,7 +552,7 @@ namespace ExplorerOpenGL2.Managers
             if (debug == true)
             {
                 var fs = File.Create("C:\\Users\\nicol\\Desktop\\rotatetrim.png");
-                Texture2D debugTexture = new Texture2D(graphics.GraphicsDevice, newWidth, newHeight);
+                Texture2D debugTexture = new Texture2D(Graphics.GraphicsDevice, newWidth, newHeight);
                 debugTexture.SetData(dataVertical.ToArray());
                 debugTexture.SaveAsPng(fs, debugTexture.Height, debugTexture.Width);
                 fs.Close();
@@ -637,7 +603,7 @@ namespace ExplorerOpenGL2.Managers
             if (debug == true)
             {
                 var fs = File.Create("C:\\Users\\nicol\\Desktop\\rotateNormalizeTrim.png");
-                Texture2D debugTexture = new Texture2D(graphics.GraphicsDevice, newWidth, newHeight);
+                Texture2D debugTexture = new Texture2D(Graphics.GraphicsDevice, newWidth, newHeight);
                 debugTexture.SetData(dataVerticalNormalizeSpacing.ToArray());
                 debugTexture.SaveAsPng(fs, debugTexture.Height, debugTexture.Width);
                 fs.Close();
@@ -675,12 +641,12 @@ namespace ExplorerOpenGL2.Managers
                     trimedVerticalHeight--; 
             }
 
-            var textureOut = new Texture2D(graphics.GraphicsDevice, newWidth, verticalTrim ? trimedVerticalHeight : newHeight);
+            var textureOut = new Texture2D(Graphics.GraphicsDevice, newWidth, verticalTrim ? trimedVerticalHeight : newHeight);
             textureOut.SetData(verticalTrim ? trimedVertical.ToArray() : outData);
             return textureOut; 
         }
 
-        public Animation[] NormalizeHeights(params Animation[] animations)
+        public static Animation[] NormalizeHeights(params Animation[] animations)
         {
             int maxHeight = 0;
             maxHeight = (int)animations.Select(e => e.Bounds.Y).Max();
@@ -702,29 +668,29 @@ namespace ExplorerOpenGL2.Managers
                 {
                     normalizeTextureData[i] = textureData[i - heightMissing];
                 }
-                Texture2D normalizeTexture = new Texture2D(graphics.GraphicsDevice, anim.Texture.Width, maxHeight);
+                Texture2D normalizeTexture = new Texture2D(Graphics.GraphicsDevice, anim.Texture.Width, maxHeight);
                 normalizeTexture.SetData(normalizeTextureData);
                 animations[a] = new Animation(normalizeTexture, anim.FrameCount, anim.LoopTime, anim.Name, anim.AlignOption, anim.IsLooping);
             }
             return animations;
         }
 
-        public Animation LoadAnimation(Texture2D texture, int nbrFrame, int looptime, string name, AlignOptions alignOption = AlignOptions.None)
+        public static Animation LoadAnimation(Texture2D texture, int nbrFrame, int looptime, string name, AlignOptions alignOption = AlignOptions.None)
         {
             Animation animation = new Animation(texture, nbrFrame, looptime, name, alignOption);
-            animations.Add(animation.Name, animation);
+            Animations.Add(animation.Name, animation);
             return animation;
         }
-        public Animation GetAnimation(string name)
+        public static Animation GetAnimation(string name)
         {
-            if (animations.ContainsKey(name))
-                return (Animation)animations[name].Clone();
+            if (Animations.ContainsKey(name))
+                return (Animation)Animations[name].Clone();
 
 
             return null; 
         }
 
-        public void SaveTexture(Texture2D t, string path = "./texture.png")
+        public static void SaveTexture(Texture2D t, string path = "./texture.png")
         {
             if(File.Exists(path))
                 File.Delete(path);
@@ -733,7 +699,7 @@ namespace ExplorerOpenGL2.Managers
             fs.Close();
         }
 
-        public byte[] GetTextureBytes(Sprite sprite)
+        public static byte[] GetTextureBytes(Sprite sprite)
         {
             if(sprite.Texture == null)
                 return new byte[0];
@@ -755,7 +721,7 @@ namespace ExplorerOpenGL2.Managers
             return output;
         }
 
-        public Texture2D GetTextureFromBytes(byte[] data)
+        public static Texture2D GetTextureFromBytes(byte[] data)
         {
             byte[] textureData = new byte[data.Length - (sizeof(int) * 2)];
 
@@ -763,7 +729,7 @@ namespace ExplorerOpenGL2.Managers
             int width = BitConverter.ToInt32(data, 0); 
             int height = BitConverter.ToInt32(data, sizeof(int));
             
-            Texture2D output = new Texture2D(graphics.GraphicsDevice, width, height);
+            Texture2D output = new Texture2D(Graphics.GraphicsDevice, width, height);
 
 
             output.SetData(textureData);

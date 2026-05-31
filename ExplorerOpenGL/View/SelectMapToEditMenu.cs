@@ -43,24 +43,24 @@ namespace ExplorerOpenGL2.View
             btnMaps = new Button[maps.Length];
             for (int i = 0; i < maps.Length; i++)
             {
-                btnMaps[i] = new Button(textureManager.TextureText(" - " + maps[i], "default", Color.Black), textureManager.TextureText(" - " + maps[i], "default", Color.White));
+                btnMaps[i] = new Button(TextureManager.TextureText(" - " + maps[i], "default", Color.Black), TextureManager.TextureText(" - " + maps[i], "default", Color.White));
                 btnMaps[i].SetAlignOption(AlignOptions.Left);
                 btnMaps[i].MouseClicked += OnMapClicked;
             }
-            SetTexture(textureManager.CreateBorderedTexture(Width, Height, 3, 0, paint => Color.Black, paint => (paint < (Width * 30) ? new Color(22, 59, 224) : new Color(245, 231, 213))));
+            SetTexture(TextureManager.CreateBorderedTexture(Width, Height, 3, 0, paint => Color.Black, paint => (paint < (Width * 30) ? new Color(22, 59, 224) : new Color(245, 231, 213))));
             
             SourceRectangle = new Rectangle(0, 0, Texture.Width, Texture.Height);
             Title = "Select maps to edit";
-            btnNext = new Button(textureManager.OutlineText(">", "Default", Color.CornflowerBlue, Color.Black, 1), textureManager.OutlineText(">", "Default", Color.CornflowerBlue, Color.Black, 2));
-            btnLast = new Button(textureManager.OutlineText("<", "Default", Color.CornflowerBlue, Color.Black, 1), textureManager.OutlineText("<", "Default", Color.CornflowerBlue, Color.Black, 2));
-            btnBack = new Button(textureManager.OutlineText("Back", "Default", Color.CornflowerBlue, Color.Black, 1), textureManager.OutlineText("Back", "Default", Color.CornflowerBlue, Color.Black, 2));
+            btnNext = new Button(TextureManager.OutlineText(">", "Default", Color.CornflowerBlue, Color.Black, 1), TextureManager.OutlineText(">", "Default", Color.CornflowerBlue, Color.Black, 2));
+            btnLast = new Button(TextureManager.OutlineText("<", "Default", Color.CornflowerBlue, Color.Black, 1), TextureManager.OutlineText("<", "Default", Color.CornflowerBlue, Color.Black, 2));
+            btnBack = new Button(TextureManager.OutlineText("Back", "Default", Color.CornflowerBlue, Color.Black, 1), TextureManager.OutlineText("Back", "Default", Color.CornflowerBlue, Color.Black, 2));
             Label = new TextZone("List of maps : ");
             PageCount = new TextZone("1 / " + NbrOfPages, AlignOptions.Center); 
 
             btnNext.SetAlignOption(AlignOptions.Center);
             btnBack.SetAlignOption(AlignOptions.Center);
             btnLast.SetAlignOption(AlignOptions.Center);
-            SetPosition(new Vector2(gameManager.Width / 2, gameManager.Height / 2));
+            SetPosition(new Vector2(GameManager.Width / 2, GameManager.Height / 2));
             SetAlignOption(AlignOptions.Center);
             CurrentPage = 1;
 
@@ -74,7 +74,7 @@ namespace ExplorerOpenGL2.View
             int index = Array.IndexOf(btnMaps, sender);
             if (index < 0)
                 return;
-            debugManager.AddEvent($"map {maps[index]} will be loaded !");
+            DebugManager.AddEvent($"map {maps[index]} will be loaded !");
             MapSelected?.Invoke(this, maps[index]);
             this.Close(); 
         }

@@ -10,46 +10,25 @@ namespace ExplorerOpenGL2.Managers
 {
     public class FontManager
     {
-        public static event EventHandler Initialized;
 
-        private ContentManager content;
+        private static ContentManager Content;
 
-        private Dictionary<string, SpriteFont> loadedFonts; 
+        private static Dictionary<string, SpriteFont> loadedFonts = new Dictionary<string, SpriteFont>();
 
-        private static FontManager instance; 
-        public static FontManager Instance
+        public static void InitDependencies(ContentManager content)
         {
-            get
-            {
-                if(instance == null)
-                {
-                    instance = new FontManager();
-                    Initialized?.Invoke(instance, EventArgs.Empty);
-                    return instance; 
-                }
-                return instance;
-            }
-        }
-        private FontManager()
-        {
-            loadedFonts = new Dictionary<string, SpriteFont>(); 
-        }
-
-
-        public void InitDependencies(ContentManager content)
-        {
-            this.content = content;
+            Content = content;
             InitFonts(); 
         }
 
-        public SpriteFont GetFont(string font = "default")
+        public static SpriteFont GetFont(string font = "default")
         {
             string fontTL = font.ToLower().Trim();
             if (loadedFonts.ContainsKey(fontTL))
                 return loadedFonts[fontTL];
             try
             {
-                SpriteFont spriteFont = content.Load<SpriteFont>("Fonts/" + font);
+                SpriteFont spriteFont = Content.Load<SpriteFont>("Fonts/" + font);
                 loadedFonts.Add(fontTL, spriteFont);
                 return spriteFont;
             }
@@ -59,10 +38,10 @@ namespace ExplorerOpenGL2.Managers
             }
         }
 
-        public void InitFonts()
+        public static void InitFonts()
         {
-            loadedFonts.Add("default", content.Load<SpriteFont>("Fonts/Default"));
-            loadedFonts.Add("menu", content.Load<SpriteFont>("Fonts/Menu"));
+            loadedFonts.Add("default", Content.Load<SpriteFont>("Fonts/Default"));
+            loadedFonts.Add("menu", Content.Load<SpriteFont>("Fonts/Menu"));
         }
     }
 }

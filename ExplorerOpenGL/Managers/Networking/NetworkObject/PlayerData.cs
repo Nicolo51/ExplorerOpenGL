@@ -28,11 +28,11 @@ namespace ExplorerOpenGL2.Managers.Networking
         public float opacity;
         public bool NameHasChange { get; set; }
         private Vector2 originFeet;
-        private TextureManager textureManager;
+        private TextureManager TextureManager;
         private SpriteFont font; 
         public double Health { get; set; }
 
-        private NetworkManager networkManager;
+        private NetworkManager NetworkManager;
         
         public int idTexture { get; set; }
         public int idFeetTexture { get; set; }
@@ -51,17 +51,15 @@ namespace ExplorerOpenGL2.Managers.Networking
 
         private void Init(int id)
         {
-            textureManager = TextureManager.Instance;
-            networkManager = NetworkManager.Instance;
-            if (networkManager.IDClient != id)
+            if (NetworkManager.IDClient != id)
             {
-                Animation walking = textureManager.GetAnimation("walk");
-                Animation standing = textureManager.GetAnimation("idle");
-                Animation running = textureManager.GetAnimation("run");
-                Animation jump = textureManager.GetAnimation("jump");
-                Animation falling = textureManager.GetAnimation("falling");
+                Animation walking = TextureManager.GetAnimation("walk");
+                Animation standing = TextureManager.GetAnimation("idle");
+                Animation running = TextureManager.GetAnimation("run");
+                Animation jump = TextureManager.GetAnimation("jump");
+                Animation falling = TextureManager.GetAnimation("falling");
 
-                Animation[] animations = textureManager.NormalizeHeights(walking, standing, running, jump, falling);
+                Animation[] animations = TextureManager.NormalizeHeights(walking, standing, running, jump, falling);
 
                 _animation.Add(animations[0]); 
                 _animation.Add(animations[1]); 
@@ -85,7 +83,7 @@ namespace ExplorerOpenGL2.Managers.Networking
 
             if(RenderName != Name)
             {
-                GenerateTexture(textureManager);
+                GenerateTexture();
             }
             base.Update(sprites, gametime, netGameState);
         }
@@ -100,9 +98,9 @@ namespace ExplorerOpenGL2.Managers.Networking
             originFeet = new Vector2(playerFeetTexture.Width / 2, playerFeetTexture.Height / 2);
         }
 
-        private void GenerateTexture(TextureManager tm)
+        private void GenerateTexture()
         {
-            TextureName = tm.OutlineText(Name, "Default", Color.Black, Color.White, 2);
+            TextureName = TextureManager.OutlineText(Name, "Default", Color.Black, Color.White, 2);
             OriginName = new Vector2(TextureName.Width / 2, TextureName.Height / 2);
             RenderName = Name; 
         }

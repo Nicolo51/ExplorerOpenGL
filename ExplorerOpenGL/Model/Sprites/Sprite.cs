@@ -18,7 +18,6 @@ namespace ExplorerOpenGL2.Model.Sprites
 {
     public class Sprite
     {
-        public int MyProperty { get; set; }
         private Vector2 LastDrawnPos;
         public bool IsRemove { get; set; }
         public int ID { get; set; }
@@ -108,10 +107,6 @@ namespace ExplorerOpenGL2.Model.Sprites
         public delegate void MouseClickEventHandler(object sender, MousePointer mousePointer, Vector2 clickPosition);
         public event MouseClickEventHandler MouseClicked;
 
-        protected GameManager gameManager;
-        protected DebugManager debugManager;
-        protected ShaderManager shaderManager;
-        protected RenderManager renderManager;
         public Sprite()
         {
             Init();
@@ -343,13 +338,13 @@ namespace ExplorerOpenGL2.Model.Sprites
         public virtual void OnMouseOver(List<Sprite> sprites, MousePointer mousePointer)
         {
             MouseOvered?.Invoke(this, mousePointer);
-            debugManager.AddEvent("Enter");
+            DebugManager.AddEvent("Enter");
         }
 
         public virtual void OnMouseLeave(List<Sprite> sprites, MousePointer mousePointer)
         {
             MouseLeft?.Invoke(this, mousePointer);
-            debugManager.AddEvent("Left");
+            DebugManager.AddEvent("Left");
         }
 
         public virtual void OnMouseClick(List<Sprite> sprites, Vector2 clickPosition, MousePointer mousePointer)
@@ -366,8 +361,8 @@ namespace ExplorerOpenGL2.Model.Sprites
                 if (_animation.currentAnimation != null)
                     SourceRectangle = _animation.GetRectangle(gameTime);
 
-                //shaderManager.Apply(this, Shader, ShaderArgs);
-                //shaderManager.GetDefaultShader().CurrentTechnique.Passes[0].Apply();
+                //ShaderManager.Apply(this, Shader, ShaderArgs);
+                //ShaderManager.GetDefaultShader().CurrentTechnique.Passes[0].Apply();
                 if (_texture != null)
                     spriteBatch.Draw(_texture, new Rectangle((int)Position.X, (int)Position.Y, (int)(Bounds.X * Scale), (int)(Bounds.Y * Scale)), SourceRectangle, Color.White * Opacity, Radian, Origin, Effect, LayerDepth);
                 if (_animation.currentAnimation != null)
@@ -375,9 +370,9 @@ namespace ExplorerOpenGL2.Model.Sprites
             }
 
             if (TextOnTop != null)
-                renderManager.DrawString(TextOnTop.Font, TextOnTop.Text, Position, TextOnTop.Color, Radian, Origin - new Vector2(HitBox.Width / 2, HitBox.Height / 2) + TextOnTop.Origin, TextOnTop.Scale, TextOnTop.Effect, LayerDepth - .1f);
-            if (debugManager.IsDebuging)
-                spriteBatch.Draw(debugManager.debugTexture, HitBox, Color.White * .5f);
+                RenderManager.DrawString(TextOnTop.Font, TextOnTop.Text, Position, TextOnTop.Color, Radian, Origin - new Vector2(HitBox.Width / 2, HitBox.Height / 2) + TextOnTop.Origin, TextOnTop.Scale, TextOnTop.Effect, LayerDepth - .1f);
+            if (DebugManager.IsDebuging)
+                spriteBatch.Draw(DebugManager.debugTexture, HitBox, Color.White * .5f);
         }
 
         public bool IsTouchingLeft(Sprite sprite)
@@ -428,12 +423,8 @@ namespace ExplorerOpenGL2.Model.Sprites
             Scale = 1;
             Opacity = 1f;
             LayerDepth = 1f;
-            debugManager = DebugManager.Instance;
-            gameManager = GameManager.Instance;
-            shaderManager = ShaderManager.Instance;
-            renderManager = RenderManager.Instance;
             Gravity = 0.2f;
-            Shader = shaderManager.LoadShader("Normal");
+            Shader = ShaderManager.LoadShader("Normal");
             IsPartOfGameState = false;
         }
 
@@ -447,7 +438,7 @@ namespace ExplorerOpenGL2.Model.Sprites
             NetDataWriter data = gameState.GetDataWriter();
 
             /*read on event handler*/
-            data.Put(gameManager.SpriteTypeToId[type]);
+            data.Put(GameManager.SpriteTypeToId[type]);
             data.Put(ID);
             data.Put(gameStateForced);
             /*end of read on event handler*/

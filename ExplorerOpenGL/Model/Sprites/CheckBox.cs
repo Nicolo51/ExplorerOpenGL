@@ -1,4 +1,6 @@
-﻿using ExplorerOpenGL2.Managers;
+﻿using ExplorerOpenGL.Model;
+using ExplorerOpenGL.Model.Interface;
+using ExplorerOpenGL2.Managers;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -9,11 +11,14 @@ using System.Threading.Tasks;
 
 namespace ExplorerOpenGL2.Model.Sprites
 {
-    public class TickBox : Sprite
+    public class CheckBox : Sprite, IUserControl
     {
         private Texture2D check;
-        public bool IsCheck { get; private set; }
-        public TickBox(params Texture2D[] textures)
+        public bool IsCheck { get; set; }
+        public string Description { get; set; }
+        public Func<IUserControl, AssertResult> Assert { get; set; }
+
+        public CheckBox(params Texture2D[] textures)
         {
             if (textures.Length != 2)
                 throw new Exception("Tickbox need 2 textures to work correctly");
@@ -22,6 +27,18 @@ namespace ExplorerOpenGL2.Model.Sprites
 
             IsClickable= true;
             MouseClicked += TickBox_MouseClicked;
+            MouseOvered += CheckBox_MouseOvered;
+            MouseLeft += CheckBox_MouseLeft;
+        }
+
+        private void CheckBox_MouseLeft(object sender, MousePointer mousePointer)
+        {
+            GameManager.MousePointer.SetCursorIcon(MousePointerType.Default);
+        }
+
+        private void CheckBox_MouseOvered(object sender, MousePointer mousePointer)
+        {
+            GameManager.MousePointer.SetCursorIcon(MousePointerType.Pointer);
         }
 
         private void TickBox_MouseClicked(object sender, MousePointer mousePointer, Vector2 clickPosition)
@@ -39,6 +56,26 @@ namespace ExplorerOpenGL2.Model.Sprites
             base.Draw(spriteBatch, gameTime, lerpAmount, shaderArgs);
             if(IsCheck)
                 spriteBatch.Draw(check, new Rectangle((int)Position.X, (int)Position.Y, (int)(Bounds.X * Scale), (int)(Bounds.Y * Scale)), SourceRectangle, Color.White * Opacity, Radian, Origin, Effect, LayerDepth-0.001f);
+        }
+
+        public object GetValueOfUC()
+        {
+            return IsCheck; 
+        }
+
+        public Type GetTypeOfUC()
+        {
+            return IsCheck.GetType(); 
+        }
+        public void SetValueOfUC(object value)
+        {
+            if(value.GetType() != GetTypeOfUC())
+                IsCheck = (bool)value;
+        }
+
+        public string ToConfigFile()
+        {
+            return IsCheck.ToString();
         }
     }
 }

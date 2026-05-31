@@ -18,6 +18,7 @@ namespace ExplorerOpenGL2.View
         public bool IsFollowingSprite { get; private set; }
         public Vector2 Position { get; private set; }
         public Vector2 LookAtPosition { get; private set; }
+
         public Camera(Vector2 bounds)
         {
             this.Bounds = bounds;
@@ -83,6 +84,9 @@ namespace ExplorerOpenGL2.View
             IsFollowingSprite = !IsFollowingSprite;
         }
 
-
+        internal void SetBounds(int width, int heigh)
+        {
+            Bounds = new Vector2(width, heigh); 
+        }
     }
 }

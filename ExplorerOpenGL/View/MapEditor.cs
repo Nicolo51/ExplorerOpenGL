@@ -20,13 +20,8 @@ namespace ExplorerOpenGL2.View
         Button Exit;
         Button Delete;
         Button DeleteMap;
-        Button Upload;
         List<Sprite> sprites; 
         Sprite selectedSprite; 
-
-        XmlManager xmlManager;
-        KeyboardManager keyboardManager;
-        NetworkManager networkManager;
 
         LoadingScreen loadingScreen; 
 
@@ -36,20 +31,16 @@ namespace ExplorerOpenGL2.View
         public MapEditor(string mapName)
         {
             sprites = new List<Sprite>(); 
-            networkManager = NetworkManager.Instance; 
             this.mapName = mapName; 
-            xmlManager = XmlManager.Instance;
-            keyboardManager = KeyboardManager.Instance; 
-
             
 
             isDraggable = false;
             IsHUD = true;
-            //SetTexture(textureManager.CreateTexture(gameManager.Width, gameManager.Height, paint => (paint < gameManager.Width * 100) ? Color.Transparent : Color.Transparent));
+            //SetTexture(TextureManager.CreateTexture(GameManager.Width, GameManager.Height, paint => (paint < GameManager.Width * 100) ? Color.Transparent : Color.Transparent));
             AddableElements = new Button[1];
-            Bounds = new Vector2(gameManager.Width, gameManager.Height);
+            Bounds = new Vector2(GameManager.Width, GameManager.Height);
 
-            Button wall = new Button(textureManager.LoadTexture("EditorTile"))
+            Button wall = new Button(TextureManager.LoadTexture("EditorTile"))
             {
                 TextOnTop = new TextZone("Wall", AlignOptions.Top),
                 Scale = 0.5f,
@@ -60,8 +51,8 @@ namespace ExplorerOpenGL2.View
             wall.MouseClicked += Wall_MouseClicked;
             
             
-            Texture2D texture = textureManager.CreateBorderedTexture(80, 40, 2, 0, paint => Color.Black, paint => Color.Green);
-            Texture2D textureDeletemap = textureManager.CreateBorderedTexture(135, 40, 2, 0, paint => Color.Black, paint => Color.DarkRed);
+            Texture2D texture = TextureManager.CreateBorderedTexture(80, 40, 2, 0, paint => Color.Black, paint => Color.Green);
+            Texture2D textureDeletemap = TextureManager.CreateBorderedTexture(135, 40, 2, 0, paint => Color.Black, paint => Color.DarkRed);
             Save = new Button(texture)
             {
                 TextOnTop = new TextZone("Save", AlignOptions.Center),
@@ -88,14 +79,6 @@ namespace ExplorerOpenGL2.View
             Delete.SetAlignOption(AlignOptions.TopRight);
             Delete.Disable(); 
 
-            Upload = new Button(texture)
-            {
-                TextOnTop = new TextZone("Upload", AlignOptions.Center),
-                Position = new Vector2(Bounds.X - 240, 0),
-            };
-            Upload.MouseClicked += Upload_MouseClicked; ;
-            Upload.SetAlignOption(AlignOptions.TopRight);
-
             DeleteMap = new Button(textureDeletemap)
             {
                 TextOnTop = new TextZone("Delete Map", AlignOptions.Center),
@@ -110,7 +93,7 @@ namespace ExplorerOpenGL2.View
             AddableElements[0] = wall;
             loadingScreen = new LoadingScreen();
             loadingScreen.Show();
-            ThreadManager.Instance.StartThread(LoadMap, delegate(object arg) { UnHide(); }); ;
+            ThreadManager.StartThread(LoadMap, delegate(object arg) { UnHide(); }); ;
             this.Hide(); 
         }
 
@@ -138,33 +121,22 @@ namespace ExplorerOpenGL2.View
 
         public object LoadMap()
         {
-            MapXml[] mapXml = xmlManager.LoadMap(mapName);
+            MapXml[] mapXml = XmlManager.LoadMap(mapName);
             Sprite[] map = new Sprite[mapXml.Length]; 
             for(int i = 0; i < mapXml.Length; i++)
             {
-                map[i] = xmlManager.GenerateSpriteFromXml(mapXml[i].node, mapXml[i].mapName);
+                map[i] = XmlManager.GenerateSpriteFromXml(mapXml[i].node, mapXml[i].mapName);
                 map[i].isDraggable = true; 
                 loadingScreen.ChangePercent((i + 1) / (float)mapXml.Length * 100); 
             }
             foreach (var s in map)
             {
-                gameManager.AddSprite(s, this); 
+                GameManager.AddSprite(s); 
                 sprites.Add(s);
                 s.MouseClicked += MapElementMouseClicked;
             }
             loadingScreen.Close(); 
             return null; 
-        }
-
-        private void Upload_MouseClicked(object sender, MousePointer mousePointer, Vector2 clickPosition)
-        {
-            Hide();
-            SaveMap();
-            var uploadScreen = new UploadScreen(mapName);
-            uploadScreen.UploadEnded += UploadScreen_UploadEnded;
-            uploadScreen.Show(); 
-            //networkManager.UploadMap(mapName);
-            //MessageBoxIG.Show("The map has been uploaded"); 
         }
 
         private void UploadScreen_UploadEnded(object sender, bool success, string mapName)
@@ -206,18 +178,18 @@ namespace ExplorerOpenGL2.View
             if (selectedSprite != null)
             {
                 selectedSprite.Opacity = 1f;
-                selectedSprite.Shader = shaderManager.GetDefaultShader(); 
+                selectedSprite.Shader = ShaderManager.GetDefaultShader(); 
             }
             selectedSprite = (Sprite)sender;
             //selectedSprite.Opacity = .5f;
-            selectedSprite.Shader = shaderManager.LoadShader("Outline");
+            selectedSprite.Shader = ShaderManager.LoadShader("Outline");
             selectedSprite.SetShaderArgs(new ShaderArgument[] 
             { 
                 new ShaderArgument("thickness", new Vector2(5, 5)), 
                 new ShaderArgument("outlineColor", Color.Red) 
             });
             Delete.Enable();
-            if (keyboardManager.IsKeyDown(Keys.LeftControl))
+            if (KeyboardManager.IsKeyDown(Keys.LeftControl))
             {
                 new ChoosePropertiesMenu(selectedSprite).Show();  ; 
             }
@@ -226,7 +198,7 @@ namespace ExplorerOpenGL2.View
         private void Exit_MouseClicked(object sender, MousePointer mousePointer, Vector2 clickPosition)
         {
             this.Close();
-            gameManager.ClearScene(); 
+            GameManager.ClearScene(); 
             new MainMenu().Show(); 
         }
 
@@ -234,24 +206,24 @@ namespace ExplorerOpenGL2.View
         {
             SaveMap(); 
             this.Close();
-            gameManager.ClearScene(); 
+            GameManager.ClearScene(); 
             new MainMenu().Show(); 
         }
 
         public void SaveMap()
         {
-            var sprites = gameManager.GetSprites().Where(s => s is Wall).ToArray(); // Interface to implemente later car on peut pas garder s is Wall, ça sera pas toujours des wall lol
-            xmlManager.SaveMap(sprites, mapName);
+            var sprites = GameManager.GetSprites().Where(s => s is Wall).ToArray(); // Interface to implemente later car on peut pas garder s is Wall, ça sera pas toujours des wall lol
+            XmlManager.SaveMap(sprites, mapName);
         }
 
         private void Wall_MouseClicked(object sender, MousePointer mousePointer, Vector2 clickPosition)
         {
-            Wall wall = new Wall(textureManager.CreateBorderedTexture(300, 75, 5, 0, paint => Color.Black, paint => Color.Beige));
+            Wall wall = new Wall(TextureManager.CreateBorderedTexture(300, 75, 5, 0, paint => Color.Black, paint => Color.Beige));
             wall.MouseClicked += MapElementMouseClicked;
-            //Wall wall = new Wall(textureManager.LoadNoneContentLoadedTexture(texturePath));
+            //Wall wall = new Wall(TextureManager.LoadNoneContentLoadedTexture(texturePath));
             wall.isDraggable = true;
             sprites.Add(wall);
-            gameManager.AddSprite(wall, this);
+            GameManager.AddSprite(wall);
         }
 
         private void Wall_MouseLeft(object sender, MousePointer mousePointer)
@@ -272,7 +244,6 @@ namespace ExplorerOpenGL2.View
             AddChildSprite(Save); 
             AddChildSprite(Delete); 
             AddChildSprite(Exit); 
-            AddChildSprite(Upload);
             AddChildSprite(DeleteMap); 
             base.Show();
         }

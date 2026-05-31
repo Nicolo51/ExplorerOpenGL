@@ -18,12 +18,10 @@ namespace ExplorerOpenGL2.Managers.Networking
     {
         private Client client; 
         private ClientSend clientSend;
-        private DebugManager debugManager;
 
         public ClientHandle(Client client, ClientSend clientSend)
         {
             this.client = client;
-            this.debugManager = DebugManager.Instance; 
             this.clientSend = clientSend;
         }
 
@@ -63,7 +61,7 @@ namespace ExplorerOpenGL2.Managers.Networking
         {
             string msg = _packet.GetString();
 
-            debugManager.AddEventToTerminal($"Received packet via UDP.Contains message: {msg}");
+            DebugManager.AddEventToTerminal($"Received packet via UDP.Contains message: {msg}");
         }
 
         public void OnTcpPlayersSync(NetPacketReader packet)
@@ -258,7 +256,6 @@ namespace ExplorerOpenGL2.Managers.Networking
                 //get rid of managed resources
                 client = null;
                 clientSend = null;
-                debugManager = null;
             }
             //get rid of unmanaged resources
             //nothing for now

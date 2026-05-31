@@ -1,4 +1,5 @@
-﻿using ExplorerOpenGL2.Model.Sprites;
+﻿using ExplorerOpenGL2.Managers;
+using ExplorerOpenGL2.Model.Sprites;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -22,16 +23,16 @@ namespace ExplorerOpenGL2.View
         public PickNameScreen()
             : base()
         {
-            SetPosition(new Vector2(gameManager.Width / 2, gameManager.Height / 2));
-            SpriteFont font = fontManager.GetFont("Default");
-            SetTexture(textureManager.CreateBorderedTexture(Width, Height, 3, 0, paint => Color.Black, paint => (paint < (Width * 30) ? new Color(22, 59, 224) : new Color(245, 231, 213))));
+            SetPosition(new Vector2(GameManager.Width / 2, GameManager.Height / 2));
+            SpriteFont font = FontManager.GetFont("Default");
+            SetTexture(TextureManager.CreateBorderedTexture(Width, Height, 3, 0, paint => Color.Black, paint => (paint < (Width * 30) ? new Color(22, 59, 224) : new Color(245, 231, 213))));
             SourceRectangle = new Rectangle(0, 0, Texture.Width, Texture.Height);
             Title = "Login in :";
 
-            tbName = new TextinputBox(textureManager.CreateTexture(250, 35, paint => Color.Black), font);
+            tbName = new TextinputBox(TextureManager.CreateTexture(250, 35, paint => Color.Black), font);
             txtName = new TextZone("Your name :", font, Color.Black);
-            btnStart = new Button(textureManager.OutlineText("Start", "Default", Color.CornflowerBlue, Color.Black, 1), textureManager.OutlineText("Start", "Default", Color.CornflowerBlue, Color.Black, 2));
-            btnBack = new Button(textureManager.OutlineText("Back", "Default", Color.CornflowerBlue, Color.Black, 1), textureManager.OutlineText("Back", "Default", Color.CornflowerBlue, Color.Black, 2));
+            btnStart = new Button(TextureManager.OutlineText("Start", "Default", Color.CornflowerBlue, Color.Black, 1), TextureManager.OutlineText("Start", "Default", Color.CornflowerBlue, Color.Black, 2));
+            btnBack = new Button(TextureManager.OutlineText("Back", "Default", Color.CornflowerBlue, Color.Black, 1), TextureManager.OutlineText("Back", "Default", Color.CornflowerBlue, Color.Black, 2));
 
             tbName.SetAlignOption(AlignOptions.TopLeft);
             txtName.SetAlignOption(AlignOptions.TopLeft);
@@ -48,7 +49,7 @@ namespace ExplorerOpenGL2.View
         private void BtnConnect_MouseClicked(object sender, MousePointer mousePointer, Vector2 clickPosition)
         {
             this.Close(); 
-            gameManager.StartGame(tbName.Text);
+            GameManager.StartGame(tbName.Text);
         }
 
         private void BtnBack_MouseClicked(object sender, MousePointer mousePointer, Vector2 clickPosition)

@@ -39,20 +39,16 @@ namespace GameServerTCP
         private NetManager server;
         private bool run;
 
-        private GameManager gameManager;
-        private DebugManager debugManager;
-        private NetworkManager networkManager;
         private ServerSend  serverSend;
         private ServerHandle serverHandle;
         
         private byte[] mapData; 
 
         public int ClientID { get; set; }
-        public GameServer(int port, NetworkManager networkManager)
+        public GameServer(int port)
         {
             serverSend = new ServerSend(this);
             serverHandle = new ServerHandle(this, serverSend);
-            this.networkManager = networkManager;
 
             ClientID = -1; 
             run = true; 
@@ -87,13 +83,12 @@ namespace GameServerTCP
                 GsForced = r.GetBool(),
                 Packet = r,
             };
-            networkManager.OnGameStateUpdate(gs);
+            NetworkManager.OnGameStateUpdate(gs);
         }
 
         public void InitDependencies()
         {
-            gameManager = GameManager.Instance;
-            debugManager = DebugManager.Instance;
+
         }
 
         private void Listener_PeerDisconnectedEvent(NetPeer peer, DisconnectInfo disconnectInfo)
@@ -120,9 +115,9 @@ namespace GameServerTCP
                 ClientID = id;
 
             clients.Add(id, new ServerClient(id, peer));
-            mapData = gameManager.GetMap();
+            mapData = GameManager.GetMap();
             float packetNumber = mapData.Length / 1000; 
-            serverSend.Welcome(id, gameManager.CurrentMap, packetNumber); 
+            serverSend.Welcome(id, GameManager.CurrentMap, packetNumber); 
         }
 
         public void SendMap(int toclient)
@@ -133,7 +128,7 @@ namespace GameServerTCP
             for (int i = 0; i < mapData.Length; i += splitSize)
             {
                 int size = Math.Min(splitSize, mapData.Length - i);
-                byte[] chunk = new byte[size];
+                byte[] chunk = new byte[splitSize];
                 Array.Copy(mapData, i, chunk, 0, size);
                 data.Add(chunk);
             }
@@ -209,8 +204,8 @@ namespace GameServerTCP
         public void Log(string message)
         {
 
-            if(gameManager != null && debugManager.IsDebuging)
-                gameManager.Terminal.AddMessageToTerminal(message);
+            if(GameManager.Terminal != null && DebugManager.IsDebuging)
+                GameManager.Terminal.AddMessageToTerminal(message);
 
             //if (_logMode == LogMode.classic)
             //{
@@ -307,24 +302,24 @@ namespace GameServerTCP
             {
                 ServerClient c = clients[fromClient];
                 c.clientPeer.Disconnect();
-                gameManager.RemoveSprite(fromClient);
+                GameManager.RemoveSprite(fromClient);
                 clients.Remove(fromClient);
             }
         }
 
         internal Player GetPlayer(int fromClient)
         {
-            return (gameManager.GetSpriteById(fromClient) as Player);
+            return (GameManager.GetSpriteById(fromClient) as Player);
         }
 
         public Player AddPlayer()
         {
-            return gameManager.AddPlayer(); 
+            return GameManager.AddPlayer(); 
         }
 
         public Sprite[] GetPlayers()
         {
-            return gameManager.GetPlayers();
+            return GameManager.GetPlayers();
         }
     }
     public enum LogMode : int

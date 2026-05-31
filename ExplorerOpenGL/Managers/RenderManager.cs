@@ -14,72 +14,48 @@ namespace ExplorerOpenGL2.Managers
 {
     public class RenderManager
     {
-        private GraphicsDeviceManager graphics;
-        private SpriteBatch spriteBatch;
-
-        private KeyboardManager keyboardManager;
-        private ShaderManager shaderManager; 
+        static GraphicsDeviceManager Graphics;
+        static SpriteBatch SpriteBatch;
         
-        private static RenderManager instance;
-        public static event EventHandler Initialized;
-        public static RenderManager Instance {
-            get
-            {
-                if(instance == null)
-                {
-                    instance = new RenderManager();
-                    Initialized?.Invoke(instance, EventArgs.Empty);
-                    return instance;
-                }
-                return instance;
-            }
-        }
 
-        public RenderManager()
+        public static void InitDependencies(GraphicsDeviceManager graphics, SpriteBatch spriteBatch)
         {
+            SpriteBatch = spriteBatch;
+            Graphics = graphics;
 
         }
 
-        public void InitDependencies(GraphicsDeviceManager graphics, SpriteBatch spriteBatch)
+        public static Texture2D RenderSceneToTexture()
         {
-            this.spriteBatch = spriteBatch;
-            this.graphics = graphics;
-            keyboardManager = KeyboardManager.Instance;
-            shaderManager = ShaderManager.Instance; 
+            int width = Graphics.PreferredBackBufferWidth;
+            int height = Graphics.PreferredBackBufferHeight; 
 
-        }
+            Texture2D texture = new Texture2D(Graphics.GraphicsDevice, width, height);
 
-        public Texture2D RenderSceneToTexture()
-        {
-            int width = graphics.PreferredBackBufferWidth;
-            int height = graphics.PreferredBackBufferHeight; 
-
-            Texture2D texture = new Texture2D(graphics.GraphicsDevice, width, height);
-
-            RenderTarget2D target = new RenderTarget2D(graphics.GraphicsDevice, width, height, false, graphics.GraphicsDevice.PresentationParameters.BackBufferFormat,
+            RenderTarget2D target = new RenderTarget2D(Graphics.GraphicsDevice, width, height, false, Graphics.GraphicsDevice.PresentationParameters.BackBufferFormat,
                 DepthFormat.Depth24);
 
             Color[] data = new Color[width * height];
 
-            spriteBatch.GraphicsDevice.SetRenderTarget(target);
-            spriteBatch.GraphicsDevice.DepthStencilState = new DepthStencilState() { DepthBufferEnable = true };
+            SpriteBatch.GraphicsDevice.SetRenderTarget(target);
+            SpriteBatch.GraphicsDevice.DepthStencilState = new DepthStencilState() { DepthBufferEnable = true };
 
-            spriteBatch.GraphicsDevice.Clear(Color.CornflowerBlue);
+            SpriteBatch.GraphicsDevice.Clear(Color.CornflowerBlue);
 
-            spriteBatch.Begin(SpriteSortMode.BackToFront,
+            SpriteBatch.Begin(SpriteSortMode.BackToFront,
                               BlendState.AlphaBlend,
                               SamplerState.PointClamp,
                               null, null, null, null);
 
             //for(int i = 0; i < _sprites.Count; i++)
             //{
-            //    _sprites[i].Draw(spriteBatch, new GameTime(), 1); 
+            //    _sprites[i].Draw(SpriteBatch, new GameTime(), 1); 
             //}
 
-            spriteBatch.End();
+            SpriteBatch.End();
             target.GetData(data);
 
-            spriteBatch.GraphicsDevice.SetRenderTarget(null);
+            SpriteBatch.GraphicsDevice.SetRenderTarget(null);
 
             texture.SetData(data);
 
@@ -89,7 +65,7 @@ namespace ExplorerOpenGL2.Managers
             return texture;
         }
 
-        public void SaveTextureAsPng(object args)
+        public static void SaveTextureAsPng(object args)
         {
             if (args.GetType() != typeof(SaveTextureAsPngArg))
                 throw new Exception("the argument of this function need to be of type SaveTextureAsPngArg");
@@ -100,7 +76,7 @@ namespace ExplorerOpenGL2.Managers
             stream.Dispose();
         }
 
-        public Texture2D RenderTextToTexture(string input, SpriteFont font, Color textColor, int outlineOffset)
+        public static Texture2D RenderTextToTexture(string input, SpriteFont font, Color textColor, int outlineOffset)
         {
             StringBuilder temp = new StringBuilder();
             temp.Append(" ");
@@ -116,31 +92,31 @@ namespace ExplorerOpenGL2.Managers
             Vector2 stringDimension = font.MeasureString(temp.ToString());
             Vector2 targetBounds = new Vector2(stringDimension.X + outlineOffset *2 , stringDimension.Y + outlineOffset * 2); 
 
-            Texture2D texture = new Texture2D(graphics.GraphicsDevice, (int)targetBounds.X, (int)targetBounds.Y);
+            Texture2D texture = new Texture2D(Graphics.GraphicsDevice, (int)targetBounds.X, (int)targetBounds.Y);
 
             RenderTarget2D target = new RenderTarget2D(
-                graphics.GraphicsDevice,
+                Graphics.GraphicsDevice,
                 (int)targetBounds.X,
                 (int)targetBounds.Y,
                 false,
-                graphics.GraphicsDevice.PresentationParameters.BackBufferFormat,
+                Graphics.GraphicsDevice.PresentationParameters.BackBufferFormat,
                 DepthFormat.Depth24);
 
             Color[] data = new Color[(int)targetBounds.X * (int)targetBounds.Y];
 
-            spriteBatch.GraphicsDevice.SetRenderTarget(target);
-            spriteBatch.GraphicsDevice.DepthStencilState = new DepthStencilState() { DepthBufferEnable = true };
+            SpriteBatch.GraphicsDevice.SetRenderTarget(target);
+            SpriteBatch.GraphicsDevice.DepthStencilState = new DepthStencilState() { DepthBufferEnable = true };
 
-            spriteBatch.GraphicsDevice.Clear(Color.Transparent);
-            spriteBatch.Begin(SpriteSortMode.BackToFront,
+            SpriteBatch.GraphicsDevice.Clear(Color.Transparent);
+            SpriteBatch.Begin(SpriteSortMode.BackToFront,
                               BlendState.AlphaBlend,
                               SamplerState.PointClamp,
                               null, null, null, null);
 
-            spriteBatch.DrawString(font, textToRender, targetBounds / 2, textColor, 0f, stringDimension / 2, 1f, SpriteEffects.None, 0f);
+            SpriteBatch.DrawString(font, textToRender, targetBounds / 2, textColor, 0f, stringDimension / 2, 1f, SpriteEffects.None, 0f);
 
-            spriteBatch.End();
-            spriteBatch.GraphicsDevice.SetRenderTarget(null);
+            SpriteBatch.End();
+            SpriteBatch.GraphicsDevice.SetRenderTarget(null);
             target.GetData(data);
             texture.SetData(data);
             data = null; 
@@ -179,13 +155,13 @@ namespace ExplorerOpenGL2.Managers
         }
 
 
-        public void DrawString(SpriteFont font, string text, Vector2 position, Color color, float radian, Vector2 origin, float scale, SpriteEffects spriteEffects, float layerDepth)
+        public static void DrawString(SpriteFont font, string text, Vector2 position, Color color, float radian, Vector2 origin, float scale, SpriteEffects spriteEffects, float layerDepth)
         {
-            shaderManager.LoadShader("FontEffect").CurrentTechnique.Passes[0].Apply(); 
-            spriteBatch.DrawString(font, text, position, color, radian, origin, scale, spriteEffects, layerDepth); 
+            ShaderManager.LoadShader("FontEffect").CurrentTechnique.Passes[0].Apply(); 
+            SpriteBatch.DrawString(font, text, position, color, radian, origin, scale, spriteEffects, layerDepth); 
         }
 
-        private string[] FitStringinAverage(string input, SpriteFont font, double Dim)
+        static string[] FitStringinAverage(string input, SpriteFont font, double Dim)
         {
             string[] words = input.Split(' ');
             StringBuilder rightLengthString = new StringBuilder();

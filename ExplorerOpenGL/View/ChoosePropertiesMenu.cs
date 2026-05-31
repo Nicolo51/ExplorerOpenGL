@@ -1,4 +1,5 @@
-﻿using ExplorerOpenGL2.Model.Attributes;
+﻿using ExplorerOpenGL2.Managers;
+using ExplorerOpenGL2.Model.Attributes;
 using ExplorerOpenGL2.Model.Sprites;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -31,19 +32,19 @@ namespace ExplorerOpenGL2.View
             : base()
         {
             this.sprite = sprite; 
-            SetPosition(new Vector2(gameManager.Width / 2, gameManager.Height / 2));
-            SpriteFont font = fontManager.GetFont("Default");
+            SetPosition(new Vector2(GameManager.Width / 2, GameManager.Height / 2));
+            SpriteFont font = FontManager.GetFont("Default");
             Title = "Properties :";
             var properties = sprite.GetType().GetProperties().Where(p => p.IsDefined(typeof(MapEditable), true)).ToArray();
 
             labels = new TextZone[properties.Length]; 
             textinputs = new TextinputBox[properties.Length];
             description = new TextZone("Properties for this element :");
-            close = new Button(textureManager.CreateTexture(30, 30, paint => Color.Transparent))
+            close = new Button(TextureManager.CreateTexture(30, 30, paint => Color.Transparent))
             {
                 TextOnTop = new TextZone("[X]", AlignOptions.Center),
             }; 
-            validate = new Button(textureManager.OutlineText("Validate", "Default", Color.CornflowerBlue, Color.Black, 1), textureManager.OutlineText("Validate", "Default", Color.CornflowerBlue, Color.Black, 2));
+            validate = new Button(TextureManager.OutlineText("Validate", "Default", Color.CornflowerBlue, Color.Black, 1), TextureManager.OutlineText("Validate", "Default", Color.CornflowerBlue, Color.Black, 2));
 
             textinputToProperty = new Dictionary<TextinputBox, PropertyInfo>(); 
 
@@ -55,7 +56,7 @@ namespace ExplorerOpenGL2.View
                 textZone.Position = new Vector2(50, 100 + i * 60);
                 textZone.SetAlignOption(AlignOptions.Left);
                 
-                TextinputBox textinputBox = new TextinputBox(textureManager.CreateTexture(150, 25, paint => Color.Black), fontManager.GetFont());
+                TextinputBox textinputBox = new TextinputBox(TextureManager.CreateTexture(150, 25, paint => Color.Black), FontManager.GetFont());
                 textinputBox.Validated += TextinputBox_Validated;
                 textinputBox.Unfocused += TextinputBox_Validated;
                 textinputBox.Position = new Vector2(50, 100 + 25 + i * 60); 
@@ -78,7 +79,7 @@ namespace ExplorerOpenGL2.View
             validate.SetAlignOption(AlignOptions.Center);
             close.SetAlignOption(AlignOptions.TopRight); 
 
-            SetTexture(textureManager.CreateBorderedTexture(Width, Height, 3, 0, paint => Color.Black, paint => (paint < (Width * 30) ? new Color(22, 59, 224) : new Color(245, 231, 213))));
+            SetTexture(TextureManager.CreateBorderedTexture(Width, Height, 3, 0, paint => Color.Black, paint => (paint < (Width * 30) ? new Color(22, 59, 224) : new Color(245, 231, 213))));
             SourceRectangle = new Rectangle(0, 0, Texture.Width, Texture.Height);
 
             SetAlignOption(AlignOptions.Center);

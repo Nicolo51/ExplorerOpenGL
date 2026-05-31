@@ -19,7 +19,7 @@ namespace ExplorerOpenGL2.Model.Sprites
         public Bullet()
             :base()
         {
-            SetTexture(TextureManager.Instance.CreateTexture(20, 20, paint => Color.Black)); 
+            SetTexture(TextureManager.CreateTexture(20, 20, paint => Color.Black)); 
         }
 
     }

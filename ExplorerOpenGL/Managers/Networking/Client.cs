@@ -72,7 +72,7 @@ namespace ExplorerOpenGL2.Managers.Networking
                 };
                 PacketReceived(e);
             }
-            DebugManager.Instance.AddEventToTerminal("Peer disconected");    
+            DebugManager.AddEventToTerminal("Peer disconected");    
         }
 
         public void PollEvents()
@@ -101,7 +101,7 @@ namespace ExplorerOpenGL2.Managers.Networking
             }
             catch(Exception e)
             {
-                DebugManager.Instance.AddEventToTerminal("Disconect failed : " + e.Message);
+                DebugManager.AddEventToTerminal("Disconect failed : " + e.Message);
                 return false;
             }
         }

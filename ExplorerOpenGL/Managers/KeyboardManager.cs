@@ -13,43 +13,27 @@ namespace ExplorerOpenGL2.Managers
 {
     public class KeyboardManager
     {
-        private GameManager gameManager; 
+        private GameManager GameManager;
 
-        KeyboardState currentKeyboardState;
-        KeyboardState previousKeyboardState;
+        static KeyboardState currentKeyboardState = Keyboard.GetState();
+        static KeyboardState previousKeyboardState;
 
         public delegate void KeySwitchEventHandler(KeysArray keys);
-        public event KeySwitchEventHandler KeyPressed;
-        public event KeySwitchEventHandler KeyRealeased;
+        public static event KeySwitchEventHandler KeyPressed;
+        public static event KeySwitchEventHandler KeyRealeased;
 
         public delegate void TextInputedEventHandler(TextInputEventArgs e);
-        public event TextInputedEventHandler TextInputed;
+        public static event TextInputedEventHandler TextInputed;
 
         public delegate void SpecificKeySwitch();
-        private Dictionary<Keys, SpecificKeySwitch> specificKeyPressed;
-        private Dictionary<Keys, SpecificKeySwitch> specificKeyReleased;
+        private static Dictionary<Keys, SpecificKeySwitch> specificKeyPressed = new Dictionary<Keys, SpecificKeySwitch>();
+        private static Dictionary<Keys, SpecificKeySwitch> specificKeyReleased = new Dictionary<Keys, SpecificKeySwitch>();
 
-        private List<TextinputBox> textinputBoxes;
-        public TextinputBox focusedTextInput { get; private set; } 
-        public bool IsTextInputBoxFocused { get { return (focusedTextInput != null); } }
+        private static List<TextinputBox> textinputBoxes = new List<TextinputBox>();
+        public static TextinputBox focusedTextInput { get; private set; } 
+        public static bool IsTextInputBoxFocused { get { return (focusedTextInput != null); } }
 
-        public static event EventHandler Initialized;
-        private static KeyboardManager instance;
-        public static KeyboardManager Instance
-        {
-            get
-            {
-                if(instance == null)
-                {
-                    instance = new KeyboardManager();
-                    Initialized?.Invoke(instance, EventArgs.Empty);
-                    return instance; 
-                }
-                return instance;
-            }
-        }
-
-        public void KeyPressedSubTo(Keys key, SpecificKeySwitch callback)
+        public static void KeyPressedSubTo(Keys key, SpecificKeySwitch callback)
         {
             if (specificKeyPressed.ContainsKey(key))
             {
@@ -59,7 +43,7 @@ namespace ExplorerOpenGL2.Managers
             specificKeyPressed.Add(key, callback);
         }
 
-        public void KeyPressedUnsubTo(Keys key, SpecificKeySwitch callback)
+        public static void KeyPressedUnsubTo(Keys key, SpecificKeySwitch callback)
         {
             if (specificKeyPressed.ContainsKey(key))
             {
@@ -67,7 +51,7 @@ namespace ExplorerOpenGL2.Managers
             }
         }
 
-        public void KeyReleasedSubTo(Keys key, SpecificKeySwitch callback)
+        public static void KeyReleasedSubTo(Keys key, SpecificKeySwitch callback)
         {
             if (specificKeyReleased.ContainsKey(key))
             {
@@ -76,7 +60,7 @@ namespace ExplorerOpenGL2.Managers
             }
             specificKeyReleased.Add(key, callback);
         }
-        public void KeyReleasedUnsubTo(Keys key, SpecificKeySwitch callback)
+        public static void KeyReleasedUnsubTo(Keys key, SpecificKeySwitch callback)
         {
             if (specificKeyReleased.ContainsKey(key))
             {
@@ -84,7 +68,7 @@ namespace ExplorerOpenGL2.Managers
             }
         }
 
-        private void RaiseSpecificKeyPressed(Keys[] keys)
+        private static void RaiseSpecificKeyPressed(Keys[] keys)
         {
             foreach(Keys k in keys)
             {
@@ -95,7 +79,7 @@ namespace ExplorerOpenGL2.Managers
             }
         }
 
-        private void RaiseSpecificKeyReleased(Keys[] keys)
+        private static void RaiseSpecificKeyReleased(Keys[] keys)
         {
             foreach (Keys k in keys)
             {
@@ -106,29 +90,50 @@ namespace ExplorerOpenGL2.Managers
             }
         }
 
-        private KeyboardManager()
+
+        public static void InitDependencies()
         {
-            currentKeyboardState = Keyboard.GetState();
-            textinputBoxes = new List<TextinputBox>();
-            specificKeyPressed = new Dictionary<Keys, SpecificKeySwitch>();
-            specificKeyReleased = new Dictionary<Keys, SpecificKeySwitch>();
+            GameManager.SpriteAdded += OnSpriteAdded;
+            GameManager.SpriteRemoved += OnSpriteRemove;
+            KeyPressedSubTo(Keys.Tab, SwitchFocus);
         }
 
-        public void InitDependencies()
+        private static void SwitchFocus()
         {
-            gameManager = GameManager.Instance;
-            gameManager.SpriteAdded += OnSpriteAdded;
+            if (textinputBoxes.Count == 1)
+                return; 
+
+            if (focusedTextInput == null && textinputBoxes.Count > 1)
+            {
+                textinputBoxes[1].Focus();
+                return; 
+            }
+
+            int indexTb = textinputBoxes.IndexOf(focusedTextInput);
+
+            if (textinputBoxes.Count > indexTb+1)
+            {
+                textinputBoxes[indexTb + 1].Focus();
+            }
+            else
+            {
+                textinputBoxes[1].Focus();
+            }
+        }   
+
+        public static void OnSpriteRemove(Sprite sprite)
+        {
+            if (sprite is TextinputBox)
+                textinputBoxes.Remove(sprite as TextinputBox); 
         }
 
-        public void OnSpriteAdded(Sprite sprite, object issuer)
+        public static void OnSpriteAdded(Sprite sprite)
         {
             if(sprite is TextinputBox)
-            {
                 textinputBoxes.Add(sprite as TextinputBox); 
-            }
         }
 
-        public void OnTextInput(object sender, TextInputEventArgs e)
+        public static void OnTextInput(object sender, TextInputEventArgs e)
         {
             TextInputed?.Invoke(e); 
             if(IsTextInputBoxFocused)
@@ -136,7 +141,7 @@ namespace ExplorerOpenGL2.Managers
         }
 
 
-        public void Update()
+        public static void Update()
         {
             previousKeyboardState = currentKeyboardState;
             currentKeyboardState = Keyboard.GetState();
@@ -162,7 +167,7 @@ namespace ExplorerOpenGL2.Managers
             }
         }
 
-        public void ProcessTextInput(TextInputEventArgs e, TextinputBox t)
+        public static void ProcessTextInput(TextInputEventArgs e, TextinputBox t)
         {
             if(e.Key == Keys.Enter || e.Key == Keys.Tab)
             {
@@ -185,7 +190,7 @@ namespace ExplorerOpenGL2.Managers
             }
         }
 
-        private KeysArray GetReleasedKey(Keys[] currentPressedKeys, Keys[] previousPressedKeys)
+        private static KeysArray GetReleasedKey(Keys[] currentPressedKeys, Keys[] previousPressedKeys)
         {
             List<Keys> KeyReleased = new List<Keys>();
 
@@ -208,7 +213,7 @@ namespace ExplorerOpenGL2.Managers
             return new KeysArray(KeyReleased.ToArray()); 
         }
 
-        private KeysArray GetPressedKey(Keys[] currentPressedKeys, Keys[] previousPressedKeys)
+        private static KeysArray GetPressedKey(Keys[] currentPressedKeys, Keys[] previousPressedKeys)
         {
 
             List<Keys> KeyPressed = new List<Keys>();
@@ -232,34 +237,34 @@ namespace ExplorerOpenGL2.Managers
             return new KeysArray(KeyPressed.ToArray());
         }
 
-        public bool IsKeyDown(Keys key)
+        public static bool IsKeyDown(Keys key)
         {
             return Keyboard.GetState().IsKeyDown(key);
         }
 
-        public bool IsKeyUp(Keys key)
+        public static bool IsKeyUp(Keys key)
         {
             return Keyboard.GetState().IsKeyUp(key); 
         }
 
-        private void OnKeyRelease(Keys[] keys)
+        private static void OnKeyRelease(Keys[] keys)
         {
             KeyRealeased?.Invoke(new KeysArray(keys));
         }
 
-        private void OnKeyPressed(Keys[] keys)
+        private static void OnKeyPressed(Keys[] keys)
         {
             KeyPressed?.Invoke(new KeysArray(keys));
         }
 
-        public void UnFocusTextinputBox()
+        public static void UnFocusTextinputBox()
         {
             focusedTextInput = null; 
         }
 
-        public void FocusTextinput(TextinputBox ti)//ti is the one which is going to be focused
+        public static void FocusTextinput(TextinputBox ti)//ti is the one which is going to be focused
         {
-            foreach(var t in textinputBoxes.Where(t => t.IsFocused).ToArray())
+            foreach(var t in textinputBoxes)
             {
                 t.UnFocus(); 
             }

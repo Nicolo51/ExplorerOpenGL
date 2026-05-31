@@ -18,6 +18,8 @@ namespace ExplorerOpenGL2.Model.Sprites
         public Color color { get; private set; }
 
         private Texture2D mouseOverTexture;
+        private Texture2D mouseNotOverTexture;
+
         public Vector2 originMouseOver;
         public Vector2 OriginMouseOver { get { return originMouseOver * Scale; } }
         public bool isMouseOver;
@@ -31,6 +33,8 @@ namespace ExplorerOpenGL2.Model.Sprites
             MouseLeft += OnMouseLeft;
 
             this.mouseOverTexture = MouseOverTexture ?? texture;
+            mouseNotOverTexture = texture; 
+
             SetAlignOption(AlignOptions.Center);
             Text = String.Empty;
             LayerDepth = 0.1f;
@@ -97,13 +101,17 @@ namespace ExplorerOpenGL2.Model.Sprites
             if (!IsEnable)
                 return; 
             isMouseOver = true;
-            gameManager.MousePointer.SetCursorIcon(MousePointerType.Pointer);
-            //gameManager.MousePointer.SourceRectangle = new Rectangle(300, 0, 75, 75);
+            GameManager.MousePointer.SetCursorIcon(MousePointerType.Pointer);
+            if(mouseOverTexture != mouseNotOverTexture)
+                SetTexture(mouseOverTexture); 
+            //GameManager.MousePointer.SourceRectangle = new Rectangle(300, 0, 75, 75);
         }
         private void OnMouseLeft(object sender, MousePointer mousePointer)
         {
             isMouseOver = false;
-            gameManager.MousePointer.SetCursorIcon(MousePointerType.Default);
+            GameManager.MousePointer.SetCursorIcon(MousePointerType.Default);
+            if (mouseOverTexture != mouseNotOverTexture)
+                SetTexture(mouseNotOverTexture);
 
         }
         private void OnMouseClick(object sender, MousePointer mousePointer, Vector2 clickPosition)

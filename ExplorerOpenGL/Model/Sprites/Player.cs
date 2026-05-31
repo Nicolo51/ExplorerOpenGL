@@ -31,29 +31,20 @@ namespace ExplorerOpenGL2.Model.Sprites
         public string Name { get; private set; }
         public string CurrentAnimationName { get { if (_animation != null) return _animation.currentAnimation.Name; else return string.Empty; } }
 
-        private TextureManager textureManager;
-        private KeyboardManager keyboardManager;
-        private NetworkManager networkManager;
-        private MouseManager mouseManager;
         private SpriteFont font;
 
         public Player(string name, params Animation[] animations)
             : base(animations)
         {
-            textureManager = TextureManager.Instance;
-            keyboardManager = KeyboardManager.Instance;
-            networkManager = NetworkManager.Instance;
-            mouseManager = MouseManager.Instance;
-
-            mousePointer = gameManager.MousePointer;
+            mousePointer = GameManager.MousePointer;
             ChangeName(name);
             direction = new Vector2(0, 0);
             Velocity = 3;
             LayerDepth = .9f;
             Scale = 1f;
             Health = 100;
-            font = FontManager.Instance.GetFont();
-            mouseManager.LeftClicked += FireBullet;
+            font = FontManager.GetFont();
+            MouseManager.LeftClicked += FireBullet;
             Radian = 0;
             alignOption = AlignOptions.Center;
 
@@ -64,22 +55,22 @@ namespace ExplorerOpenGL2.Model.Sprites
             IsPartOfGameState = true;
 
             Play("idle");
-            //Shader = shaderManager.LoadShader("Outline");
+            //Shader = ShaderManager.LoadShader("Outline");
             //height = 100;
             //width = 40;
         }
 
         private void FireBullet(ButtonState buttonState)
         {
-            //if (!networkManager.IsConnectedToAServer || buttonState == ButtonState.Released && (gameManager.GameState == GameState.OnlinePlaying || gameManager.GameState == GameState.Playing))
+            //if (!NetworkManager.IsConnectedToAServer || buttonState == ButtonState.Released && (GameManager.GameState == GameState.OnlinePlaying || GameManager.GameState == GameState.Playing))
             //    return;
-            //networkManager.CreateBullet(this); 
+            //NetworkManager.CreateBullet(this); 
         }
 
         public override void Remove()
         {
             base.Remove();
-            mouseManager.LeftClicked -= FireBullet;
+            MouseManager.LeftClicked -= FireBullet;
         }
 
         public override void Update(List<Sprite> sprites, GameTime gametime, NetGameState netGameState)
@@ -105,7 +96,7 @@ namespace ExplorerOpenGL2.Model.Sprites
         }
         public void ChangeName(object name)
         {
-            TextureName = textureManager.OutlineText((name as string), "Default", Color.Black, Color.White, 2);
+            TextureName = TextureManager.OutlineText((name as string), "Default", Color.Black, Color.White, 2);
             Name = (name as string);
             OriginName = new Vector2(TextureName.Width / 2, TextureName.Height / 2);
         }
@@ -116,14 +107,14 @@ namespace ExplorerOpenGL2.Model.Sprites
                 return;
             direction.X = 0;
 
-            if (keyboardManager.IsKeyDown(input.Up))
+            if (KeyboardManager.IsKeyDown(input.Up))
                 Jump();
-            if (keyboardManager.IsKeyDown(input.Right))
+            if (KeyboardManager.IsKeyDown(input.Right))
                 direction.X = Velocity;
-            if (keyboardManager.IsKeyDown(input.Left))
+            if (KeyboardManager.IsKeyDown(input.Left))
                 direction.X = -Velocity;
 
-            if (keyboardManager.IsKeyDown(input.Run))
+            if (KeyboardManager.IsKeyDown(input.Run))
                 direction.X *= 2;
 
             if (direction != Vector2.Zero)
@@ -159,7 +150,7 @@ namespace ExplorerOpenGL2.Model.Sprites
         {
             if (isGrounded && direction.Y == 0f)
             {
-                debugManager.AddEvent(direction.Y);
+                DebugManager.AddEvent(direction.Y);
                 Play("idle");
                 Play("jump");
                 isGrounded = false;

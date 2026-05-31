@@ -1,4 +1,6 @@
-﻿using ExplorerOpenGL2.Managers;
+﻿using ExplorerOpenGL.Model;
+using ExplorerOpenGL.Model.Interface;
+using ExplorerOpenGL2.Managers;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -11,11 +13,11 @@ using System.Text;
 
 namespace ExplorerOpenGL2.Model.Sprites
 {
-    public class TextinputBox : Sprite
+    public class TextinputBox : Sprite, IUserControl
     {
         StringBuilder inputText;
         SpriteFont spriteFont;
-        KeyboardManager keyboardManager;
+        KeyboardManager KeyboardManager;
         private int indexStartDrawing;
         private int indexEndDrawing;
 
@@ -28,22 +30,27 @@ namespace ExplorerOpenGL2.Model.Sprites
         public int width { get { return Texture.Width; } }
 
         public bool IsFocused { get; private set; }
+        public string Description { get; set; }
         public bool DoEraseWhenUnfocused { get; private set; }
         public bool MakeItTransparentWhenUnfocused { get; set; }
 
         public delegate void ValidateEventHandler(string message, TextinputBox textinput);
         public event ValidateEventHandler Validated;
 
+        public delegate void KeyPressedEventHandler(KeysArray key);
+        public event KeyPressedEventHandler KeyPressed;
+
         public delegate void UnfocusEventHandler(string message, TextinputBox textinput);
         public event UnfocusEventHandler Unfocused; 
 
         public string Text { get { return inputText.ToString().Trim(); } set { Clear(); AddRange(value); } }
+        public Func<IUserControl, AssertResult> Assert { get; set; }
 
         public TextinputBox(Texture2D texture, SpriteFont SpriteFont = null,  bool eraseWhenUnfocused = false, bool makeItTransparentUnfocused = false)
             : base(texture)
         {
             if (SpriteFont == null)
-                SpriteFont = FontManager.Instance.GetFont();
+                SpriteFont = FontManager.GetFont();
             TriggerMouseOver = true; 
             DoEraseWhenUnfocused = eraseWhenUnfocused;
             MakeItTransparentWhenUnfocused = makeItTransparentUnfocused;
@@ -59,18 +66,16 @@ namespace ExplorerOpenGL2.Model.Sprites
             IsFocused = false;
             IsClickable = true;
             inputText = new StringBuilder();
-            keyboardManager = KeyboardManager.Instance;
-            keyboardManager.KeyPressed += ArrowKeyPressed;
-            keyboardManager.KeyPressedSubTo(Keys.C, OnCopyShortCut); 
-            keyboardManager.KeyPressedSubTo(Keys.V, OnPasteShortCut);
+            KeyboardManager.KeyPressed += OnKeyPressed;
+            KeyboardManager.KeyPressedSubTo(Keys.C, OnCopyShortCut); 
+            KeyboardManager.KeyPressedSubTo(Keys.V, OnPasteShortCut);
         }
 
         private void OnPasteShortCut()
         {
-            debugManager.AddEvent("textinput event raised");
             if (!this.IsFocused)
                 return; 
-            if (keyboardManager.IsKeyDown(Keys.RightControl) || keyboardManager.IsKeyDown(Keys.LeftControl))
+            if (KeyboardManager.IsKeyDown(Keys.RightControl) || KeyboardManager.IsKeyDown(Keys.LeftControl))
             {
                 string clipText = TextCopy.ClipboardService.GetText();
                 if (string.IsNullOrWhiteSpace(clipText))
@@ -80,7 +85,7 @@ namespace ExplorerOpenGL2.Model.Sprites
         }
         private void OnCopyShortCut()
         {
-            if(keyboardManager.IsKeyDown(Keys.RightControl) || keyboardManager.IsKeyDown(Keys.LeftControl))
+            if(KeyboardManager.IsKeyDown(Keys.RightControl) || KeyboardManager.IsKeyDown(Keys.LeftControl))
                 TextCopy.ClipboardService.SetText(Text);
         }
         public void Clear()
@@ -225,7 +230,7 @@ namespace ExplorerOpenGL2.Model.Sprites
 
         public override void OnMouseClick(List<Sprite> sprites, Vector2 clickPosition, MousePointer mousePointer)
         {
-            if (gameManager.GameState == GameState.Pause)
+            if (GameManager.GameState == GameState.Pause)
                 return;
             if (IsFocused)
             {
@@ -304,7 +309,7 @@ namespace ExplorerOpenGL2.Model.Sprites
             if (DoEraseWhenUnfocused)
                 Clear();
             if(IsFocused)
-                keyboardManager.UnFocusTextinputBox(); 
+                KeyboardManager.UnFocusTextinputBox(); 
             IsFocused = false;
             Unfocused?.Invoke(Text, this);
         }
@@ -338,20 +343,20 @@ namespace ExplorerOpenGL2.Model.Sprites
         }
         public override void Remove()
         {
-            keyboardManager.KeyPressedUnsubTo(Keys.C, OnCopyShortCut);
-            keyboardManager.KeyPressedUnsubTo(Keys.V, OnPasteShortCut);
+            KeyboardManager.KeyPressedUnsubTo(Keys.C, OnCopyShortCut);
+            KeyboardManager.KeyPressedUnsubTo(Keys.V, OnPasteShortCut);
             base.Remove();
         }
         public void Focus()
         {
-            
-            keyboardManager.FocusTextinput(this);
-            gameManager.ChangeGameState(GameState.Typing);
+            KeyboardManager.FocusTextinput(this);
+            GameManager.ChangeGameState(GameState.Typing);
             IsFocused = true;
             Opacity = 1f;
+            cursorOpacity = 1; 
         }
 
-        private void ArrowKeyPressed(KeysArray keys)
+        private void OnKeyPressed(KeysArray keys)
         {
             if (!IsFocused)
                 return;
@@ -363,6 +368,7 @@ namespace ExplorerOpenGL2.Model.Sprites
             {
                 MoveCursor(1);
             }
+            KeyPressed?.Invoke(keys); 
         }
 
         public bool ToggleFocus(bool validate = false)
@@ -378,6 +384,26 @@ namespace ExplorerOpenGL2.Model.Sprites
                 UnFocus();
             }
             return IsFocused;
+        }
+
+        public object GetValueOfUC()
+        {
+            return Text; 
+        }
+
+        public Type GetTypeOfUC()
+        {
+            return Text.GetType();
+        }
+        public void SetValueOfUC(object value)
+        {
+            if (value.GetType() != GetTypeOfUC())
+                Text = (string)value;
+        }
+
+        public string ToConfigFile()
+        {
+            return Text;
         }
     }
 }

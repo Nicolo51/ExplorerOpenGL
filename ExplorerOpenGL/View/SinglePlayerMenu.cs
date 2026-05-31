@@ -18,16 +18,15 @@ namespace ExplorerOpenGL2.View
         public Button btnCreateMap;
         public Button btnEditMap;
         public Button btnBack;
-        NetworkManager networkManager; 
+        NetworkManager NetworkManager; 
         public SinglePlayerMenu()
             : base()
         {
             isDraggable = false;
-            networkManager = NetworkManager.Instance;
-            btnPlaymap = new Button(textureManager.OutlineText("Play map", "Menu", Color.Black, Color.White, 2), textureManager.OutlineText("Play map", "Menu", Color.Black, Color.White, 4));
-            btnCreateMap = new Button(textureManager.OutlineText("Create new map", "Menu", Color.Black, Color.White, 2), textureManager.OutlineText("Create new map", "Menu", Color.Black, Color.White, 4));
-            btnEditMap = new Button(textureManager.OutlineText("Edit existing map", "Menu", Color.Black, Color.White, 2), textureManager.OutlineText("Edit existing map", "Menu", Color.Black, Color.White, 4));
-            btnBack = new Button(textureManager.OutlineText("Back", "Menu", Color.Black, Color.White, 2), textureManager.OutlineText("Back", "Menu", Color.Black, Color.White, 4));
+            btnPlaymap = new Button(TextureManager.OutlineText("Play map", "Menu", Color.Black, Color.White, 2), TextureManager.OutlineText("Play map", "Menu", Color.Black, Color.White, 4));
+            btnCreateMap = new Button(TextureManager.OutlineText("Create new map", "Menu", Color.Black, Color.White, 2), TextureManager.OutlineText("Create new map", "Menu", Color.Black, Color.White, 4));
+            btnEditMap = new Button(TextureManager.OutlineText("Edit existing map", "Menu", Color.Black, Color.White, 2), TextureManager.OutlineText("Edit existing map", "Menu", Color.Black, Color.White, 4));
+            btnBack = new Button(TextureManager.OutlineText("Back", "Menu", Color.Black, Color.White, 2), TextureManager.OutlineText("Back", "Menu", Color.Black, Color.White, 4));
 
             btnCreateMap.SetAlignOption(AlignOptions.Center);
             btnEditMap.SetAlignOption(AlignOptions.Center);
@@ -51,7 +50,7 @@ namespace ExplorerOpenGL2.View
 
         private void OnMapSelectedToPlay(object sender, string mapName)
         {
-            gameManager.StartGame("Nicolas", "127.0.0.1", mapName, true);
+            GameManager.StartGame("Nicolas", "127.0.0.1", mapName, true);
             this.Close(); 
             //var us = new UploadScreen(mapName);
             //us.UploadEnded += Us_UploadEnded;
@@ -64,8 +63,8 @@ namespace ExplorerOpenGL2.View
         {
             (sender as UploadScreen).Close();
             this.UnHide(); 
-            //networkManager.ChangeMap(mapName, null);
-            gameManager.StartGame("Nicolas", "127.0.0.1","", true); 
+            //NetworkManager.ChangeMap(mapName, null);
+            GameManager.StartGame("Nicolas", "127.0.0.1","", true); 
             this.Close(); 
         }
 
@@ -78,7 +77,7 @@ namespace ExplorerOpenGL2.View
             }
             catch (Exception e)
             {
-                gameManager.Terminal.AddMessageToTerminal($"Failed to load ./maps/{mapName}.xml :{e.Message}", "Error", Color.Red);
+                GameManager.Terminal.AddMessageToTerminal($"Failed to load ./maps/{mapName}.xml :{e.Message}", "Error", Color.Red);
             }
         }
 
@@ -112,11 +111,11 @@ namespace ExplorerOpenGL2.View
 
         public override void Show()
         {
-            gameManager.ChangeGameState(GameState.MainMenu);
-            AddChildSprite(btnPlaymap, new Vector2(gameManager.Width / 2, gameManager.Height / 2 - 200));
-            AddChildSprite(btnCreateMap, new Vector2(gameManager.Width / 2, gameManager.Height / 2 - 100));
-            AddChildSprite(btnEditMap, new Vector2(gameManager.Width / 2, gameManager.Height / 2));
-            AddChildSprite(btnBack, new Vector2(gameManager.Width / 2, gameManager.Height / 2 + 100));
+            GameManager.ChangeGameState(GameState.MainMenu);
+            AddChildSprite(btnPlaymap, new Vector2(GameManager.Width / 2, GameManager.Height / 2 - 200));
+            AddChildSprite(btnCreateMap, new Vector2(GameManager.Width / 2, GameManager.Height / 2 - 100));
+            AddChildSprite(btnEditMap, new Vector2(GameManager.Width / 2, GameManager.Height / 2));
+            AddChildSprite(btnBack, new Vector2(GameManager.Width / 2, GameManager.Height / 2 + 100));
             base.Show();
         }
     }

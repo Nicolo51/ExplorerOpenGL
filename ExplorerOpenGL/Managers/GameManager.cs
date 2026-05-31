@@ -25,103 +25,65 @@ namespace ExplorerOpenGL2.Managers
 {
     public class GameManager 
     {
-        private List<Action<object>> action;
-        private List<object> actionArg; 
+        private static List<Action<object>> actions = new List<Action<object>>();
+        private static List<object> actionArg = new List<object>(); 
 
-        private KeyboardManager keyboardManager;
-        private DebugManager debugManager;
-        private TextureManager textureManager; 
-        private RenderManager renderManager;
-        private NetworkManager networkManager;
-        private FontManager fontManager;
-        private ScripterManager scripterManager;
-        private XmlManager xmlManager;
-        private NetGameState netGameState;
-        private GraphicsDeviceManager graphics; 
+        private static NetGameState netGameState = new NetGameState();
+        private static GraphicsDeviceManager Graphics;
+        private static Game1 Game; 
 
-        private PauseMenu pauseMenu;
+        private static PauseMenu pauseMenu;
 
-        public bool IsOnline { get { return networkManager.IsConnectedToAServer; } }
+        public static bool IsOnline { get { return NetworkManager.IsConnectedToAServer; } }
 
-        public Player Player { get; set; }
-        public Terminal Terminal { get; private set; }
-        public Camera Camera { get; private set; } 
-        public MousePointer MousePointer { get; private set; }
+        public static Player Player { get; set; }
+        public static Terminal Terminal { get; private set; }
+        public static Camera Camera { get; private set; } 
+        public static MousePointer MousePointer { get; private set; }
 
-        public List<Sprite> sprites { get; private set; } //accessing without lock might crash the game or make it unstable
-        public Dictionary<int, Sprite> spriteById { get; private set; }
-        public Dictionary<int, Type> IdToSpriteType { get; set; }
-        public Dictionary<Type, int> SpriteTypeToId{ get; set; }
+        public static List<Sprite> sprites { get; private set; } //accessing without lock might crash the game or make it unstable
+        public static Dictionary<int, Sprite> spriteById { get; private set; }
+        public static Dictionary<int, Type> IdToSpriteType { get; set; }
+        public static Dictionary<Type, int> SpriteTypeToId{ get; set; }
+        public static Dictionary<int, Sprite> NetworkObjects { get; private set; } = new Dictionary<int, Sprite>();
 
-        public Dictionary<int, Sprite> NetworkObjects { get; private set; }
+        public static int Height { get { return Graphics.PreferredBackBufferHeight;  } }
+        public static int Width { get { return Graphics.PreferredBackBufferWidth; } }
+        public static GameState GameState { get; private set; }
+        private static GameState lastGameState;
+        private static bool hasGameStateChanged = false;
+        private static int IDS = 0; 
 
-        public int Height;
-        public int Width;
-        public GameState GameState { get; private set; }
-        private GameState lastGameState;
-        private bool hasGameStateChanged;
-        private int IDS = 0; 
-
-        public string CurrentMap { get; private set; }
-        public int MainThreadID { get; set; }  
+        public static string CurrentMap { get; private set; }
+        public static int MainThreadID { get; set; }  
         
-        public static event EventHandler Initialized;
-        private static GameManager instance;
-        public static GameManager Instance
+        public delegate void AddSpriteEventHandler(Sprite sprite);
+        public static event AddSpriteEventHandler SpriteAdded;
+
+        public delegate void RemoveSpriteEventHandler(Sprite sprite);
+        public static event AddSpriteEventHandler SpriteRemoved;
+
+
+        public static void InitDependencies(GraphicsDeviceManager graphics, Game1 game)
         {
-            get
-            {
-                if (instance == null)
-                {
-                    instance = new GameManager();
-                    Initialized?.Invoke(instance, EventArgs.Empty);
-                    return instance;
-                }
-                return instance;
-            }
-        }
-
-        public delegate void AddSpriteEventHandler(Sprite sprite, object issuer);
-        public event AddSpriteEventHandler SpriteAdded; 
-
-        private GameManager()
-        {
-            NetworkObjects = new Dictionary<int, Sprite>(); 
-            hasGameStateChanged = false; 
-            action = new List<Action<object>>();
-            actionArg = new List<object>();
-            netGameState = new NetGameState(); 
-        }
-
-        public void InitDependencies(Camera camera, GraphicsDeviceManager graphics)
-        {
-            keyboardManager = KeyboardManager.Instance;
-            textureManager = TextureManager.Instance;
-            debugManager = DebugManager.Instance;
-            fontManager = FontManager.Instance;
-            scripterManager = ScripterManager.Instance; 
-            xmlManager = XmlManager.Instance;
-
-            this.graphics = graphics;
-            Width = graphics.PreferredBackBufferWidth;
-            Height = graphics.PreferredBackBufferHeight;
-
-            keyboardManager.KeyPressed += OnKeyPressed;
+            Graphics = graphics;
+            Game = game; 
+            KeyboardManager.KeyPressed += OnKeyPressed;
             MainThreadID = Thread.CurrentThread.ManagedThreadId; 
-            this.Camera = camera;
-            this.sprites = new List<Sprite>();
-            this.spriteById = new Dictionary<int, Sprite>();
+            Camera = new Camera(new Vector2(Width, Height));
+            sprites = new List<Sprite>();
+            spriteById = new Dictionary<int, Sprite>();
 
-            networkManager = NetworkManager.Instance;
-            Terminal = new Terminal(textureManager.CreateTexture(700, 30, paint => Color.Black), fontManager.GetFont("Default")) { Position = new Vector2(0, 185) };
+            Terminal = new Terminal(TextureManager.CreateTexture(700, 30, paint => Color.Black), FontManager.GetFont("Default")) { Position = new Vector2(0, 185) };
             
-            MousePointer = new MousePointer(textureManager.LoadTexture("cursor"));
+            MousePointer = new MousePointer(TextureManager.LoadTexture("cursor"));
             pauseMenu = new PauseMenu();
 
-            keyboardManager.KeyPressedSubTo(Keys.Escape, OnEscapePress);
-            AddSprite(Terminal, this);
-            AddSprite(MousePointer, this);
+            KeyboardManager.KeyPressedSubTo(Keys.Escape, OnEscapePress);
+            AddSprite(Terminal);
+            AddSprite(MousePointer);
 
+            TextureManager.InitDefaultTextures();
 
             IdToSpriteType = new Dictionary<int, Type>()
             {
@@ -140,7 +102,7 @@ namespace ExplorerOpenGL2.Managers
             
         }
 
-        private void OnEscapePress()
+        private static void OnEscapePress()
         {
             if ((GameState == GameState.Playing || GameState == GameState.OnlinePlaying) && !hasGameStateChanged)
             {
@@ -154,35 +116,35 @@ namespace ExplorerOpenGL2.Managers
             }
         }
 
-        public void AddActionToUIThread(Action<object> action, object arg)
+        public static void AddActionToUIThread(Action<object> action, object arg)
         {
             lock (action)
             {
                 lock (actionArg)
                 {
-                    this.action.Add(action);
-                    this.actionArg.Add(arg);
+                    actions.Add(action);
+                    actionArg.Add(arg);
 
                 }
             }
         }
 
-        public void StartGame(string name, string ip = null, string mapName = null,  bool isServer = false)
+        public static void StartGame(string name, string ip = null, string mapName = null,  bool isServer = false)
         {
-            Texture2D texture = textureManager.CreateBorderedTexture(300, 75, 5, 0, paint => Color.Black, paint => Color.Green);
+            Texture2D texture = TextureManager.CreateBorderedTexture(300, 75, 5, 0, paint => Color.Black, paint => Color.Green);
             CurrentMap = mapName; 
-            //AddSprite(new Wall(texture) { Position = new Vector2(0, 100) }, this);
-            //AddSprite(new Wall(texture) { Position = new Vector2(0, -150) }, this);
-            //AddSprite(new Wall(texture) { Position = new Vector2(600, 0) }, this);
-            //AddSprite(new Wall(texture) { Position = new Vector2(-100, 600) }, this);
-            //AddSprite(new Wall(textureManager.CreateBorderedTexture(300, 75, 5, 0, paint => Color.Black, paint => Color.Beige)) { Position = new Vector2(0, 100) }, this);
-            //AddSprite(new Wall(textureManager.CreateBorderedTexture(300, 75, 5, 0, paint => Color.Black, paint => Color.Beige)) { Position = new Vector2(0, 100) }, this);
-            //AddSprite(new Wall(textureManager.CreateBorderedTexture(300, 75, 5, 0, paint => Color.Black, paint => Color.Beige)) { Position = new Vector2(0, 100) }, this);
+            //AddSprite(new Wall(texture) { Position = new Vector2(0, 100) });
+            //AddSprite(new Wall(texture) { Position = new Vector2(0, -150) });
+            //AddSprite(new Wall(texture) { Position = new Vector2(600, 0) });
+            //AddSprite(new Wall(texture) { Position = new Vector2(-100, 600) });
+            //AddSprite(new Wall(TextureManager.CreateBorderedTexture(300, 75, 5, 0, paint => Color.Black, paint => Color.Beige)) { Position = new Vector2(0, 100) });
+            //AddSprite(new Wall(TextureManager.CreateBorderedTexture(300, 75, 5, 0, paint => Color.Black, paint => Color.Beige)) { Position = new Vector2(0, 100) });
+            //AddSprite(new Wall(TextureManager.CreateBorderedTexture(300, 75, 5, 0, paint => Color.Black, paint => Color.Beige)) { Position = new Vector2(0, 100) });
 
             if (!string.IsNullOrWhiteSpace(ip))
             {
-                networkManager.PacketReceived += Connected;
-                if (!networkManager.Connect(ip, name, isServer))
+                NetworkManager.PacketReceived += Connected;
+                if (!NetworkManager.Connect(ip, name, isServer))
                 {
                     return;
                 }
@@ -194,28 +156,44 @@ namespace ExplorerOpenGL2.Managers
                 ChangeGameState(GameState.Playing);
                 MousePointer.SetDefaultIcon(MousePointerType.Crosshair);
                 MousePointer.SetCursorIcon(MousePointerType.Crosshair);
-                AddSprite(Player, this);
+                AddSprite(Player);
             }
         }
 
-        private void Connected(Networking.EventArgs.NetworkEventArgs e)
+        private static void Connected(Networking.EventArgs.NetworkEventArgs e)
         {
             if(e is WelcomeEventArgs)
             {
                 MousePointer.SetDefaultIcon(MousePointerType.Crosshair);
                 MousePointer.SetCursorIcon(MousePointerType.Crosshair);
                 CurrentMap = (e as WelcomeEventArgs).MapName;
-                if (networkManager.IsServer)
+                if (NetworkManager.IsServer)
                 {
-                    Sprite[] mapSprites = xmlManager.GenerateSpritesFromXml(xmlManager.LoadMap(CurrentMap));
-                    AddSprites(mapSprites, this);
+                    Sprite[] mapSprites = XmlManager.GenerateSpritesFromXml(XmlManager.LoadMap(CurrentMap));
+                    AddSprites(mapSprites);
                 }
                 Terminal.AddMessageToTerminal("map and player loaded", "System", Color.Yellow);
-                networkManager.PacketReceived -= Connected;
+                NetworkManager.PacketReceived -= Connected;
             }
         }
 
-        public void StopGame()
+        public static void SetViewport(int width, int height)
+        {
+            Graphics.PreferredBackBufferHeight = height;
+            Graphics.PreferredBackBufferWidth = width;
+
+            Terminal.SetPosition(new Vector2((float)width, (float)height)); 
+            Camera.SetBounds(width, height);
+            Graphics.ApplyChanges(); 
+        }
+
+        public static void ToggleFullScreen(bool isFullScreen)
+        {
+            Graphics.IsFullScreen = isFullScreen;
+            Graphics.ApplyChanges(); 
+        }
+
+        public static void StopGame()
         {
             Camera.FollowSprite(null);
             Camera.ToggleFollow(false); 
@@ -225,18 +203,23 @@ namespace ExplorerOpenGL2.Managers
             MousePointer.SetDefaultIcon(MousePointerType.Arrow);
         }
 
-        public void Update(GameTime gametime)
+        public static void Exit()
+        {
+            Game.Exit();
+        }
+
+        public static void Update(GameTime gametime)
         {
             hasGameStateChanged = false; 
-            lock (action)
+            lock (actions)
             {
                 lock (actionArg)
                 {
-                    for (int i = 0; i < action.Count; i++)
+                    for (int i = 0; i < actions.Count; i++)
                     {
-                        action[i].Invoke(actionArg[i]);
+                        actions[i].Invoke(actionArg[i]);
                     }
-                    action.Clear(); 
+                    actions.Clear(); 
                     actionArg.Clear();
                 }
             }
@@ -267,10 +250,10 @@ namespace ExplorerOpenGL2.Managers
                     sprites[i].Update(sprites, gametime, netGameState);
                 }
             }
-            networkManager.Update(gametime, netGameState);
+            NetworkManager.Update(gametime, netGameState);
         }
 
-        public void AddSprite(Sprite sprite, object issuer)
+        public static void AddSprite(Sprite sprite)
         {
             if (sprite is Player && (sprite as Player).input != null)
             {
@@ -281,7 +264,7 @@ namespace ExplorerOpenGL2.Managers
             if (sprites.Contains(sprite))
                 return; 
 
-            SpriteAdded?.Invoke(sprite, issuer);
+            SpriteAdded?.Invoke(sprite);
 
             sprite.SetPosition(sprite.Position);
             int spriteid = GetId();
@@ -298,17 +281,17 @@ namespace ExplorerOpenGL2.Managers
 
             sprite.IsEnable = true; 
 
-            this.sprites.Add(sprite);
-            this.sprites = sprites.OrderByDescending(s => s.LayerDepth).ToList();  
+            sprites.Add(sprite);
+            sprites = sprites.OrderByDescending(s => s.LayerDepth).ToList();  
         }
 
-        public void AddSprites(Sprite[] sprites, object issuer)
+        public static void AddSprites(Sprite[] sprites)
         {
             foreach (Sprite s in sprites)
-                AddSprite(s, issuer); 
+                AddSprite(s); 
         }
 
-        private void OnKeyPressed(KeysArray keys)
+        private static void OnKeyPressed(KeysArray keys)
         {
             
             //if (keys.Contains(Keys.F2))
@@ -333,20 +316,18 @@ namespace ExplorerOpenGL2.Managers
             }
         }
 
-        public void OnWindowResize(object sender, EventArgs e)
+        public static void OnWindowResize(object sender, EventArgs e)
         {
 
         }
 
-        public void RemoveSprite(Sprite sprite)
+        public static void RemoveSprite(Sprite sprite)
         {
-            lock (sprites)
-            {
-                this.sprites.Remove(sprite);
-            }
+            SpriteRemoved?.Invoke(sprite); 
+            sprites.Remove(sprite);
         }
 
-        public void ChangeGameState(GameState gameState)
+        public static void ChangeGameState(GameState gameState)
         {
             if (gameState == GameState)
                 return; 
@@ -355,7 +336,7 @@ namespace ExplorerOpenGL2.Managers
             hasGameStateChanged = true;
         }
 
-        public void ChangeToLastGameState()
+        public static void ChangeToLastGameState()
         {
             GameState temps = GameState;
             GameState = lastGameState;
@@ -363,7 +344,7 @@ namespace ExplorerOpenGL2.Managers
             hasGameStateChanged = true; 
         }
 
-        public void SortSprites()
+        public static void SortSprites()
         {
             lock (sprites)
             {
@@ -371,13 +352,13 @@ namespace ExplorerOpenGL2.Managers
             }
         }
 
-        public Sprite[] GetSprites()
+        public static Sprite[] GetSprites()
         {
             lock (sprites)
                 return sprites.ToArray(); 
         }
 
-        public Sprite GetNetworkObject(int id)
+        public static Sprite GetNetworkObject(int id)
         {
             lock (NetworkObjects)
             {
@@ -387,7 +368,7 @@ namespace ExplorerOpenGL2.Managers
             }
         }
 
-        public void RemoveNetworkObjects(int id)
+        public static void RemoveNetworkObjects(int id)
         {
             Sprite s = null;
             
@@ -400,19 +381,20 @@ namespace ExplorerOpenGL2.Managers
                 RemoveSprite(s); 
         }
 
-        public int GetIndexOf(Sprite sprite)
+        public static int GetIndexOf(Sprite sprite)
         {
             return sprites.IndexOf(sprite);
         }
 
-        public void ClearScene()
+        public static void ClearScene()
         {
-            for (int i = 0; i < this.sprites.Count; i++)
+            for (int i = 0; i < sprites.Count; i++)
             {
-                var sprite = this.sprites[i];
+                var sprite = sprites[i];
                 if (!(sprite is Terminal || sprite is MousePointer))
                 {
-                    sprites[i].Remove(); 
+                    sprites[i].Remove();
+                    SpriteRemoved?.Invoke(sprites[i]);
                     sprites.RemoveAt(i);
                     i--;
                 }
@@ -420,44 +402,44 @@ namespace ExplorerOpenGL2.Managers
             spriteById.Clear(); 
         }
 
-        public void ToMainMenu()
+        public static void ToMainMenu()
         {
-            if (networkManager.IsConnectedToAServer)
-                networkManager.Disconnect();
+            if (NetworkManager.IsConnectedToAServer)
+                NetworkManager.Disconnect();
             StopGame();
             new MainMenu().Show();
         }
 
-        public int GetId()
+        public static int GetId()
         {
-            if(networkManager.IsServer)
+            if(NetworkManager.IsServer)
                 return IDS++; 
             return -1;
         }
 
-        internal Sprite GetSpriteById(int fromClient)
+        public static Sprite GetSpriteById(int fromClient)
         {
             return sprites.FirstOrDefault(s => s.ID == fromClient);
         }
 
-        internal void RemoveSprite(int fromClient)
+        public static void RemoveSprite(int fromClient)
         {
             GetSpriteById(fromClient).Remove();
         }
 
-        public Player AddPlayer()
+        public static Player AddPlayer()
         {
             var player = CreatePlayer(); 
-            AddSprite(player, this);
+            AddSprite(player);
             return player; 
         }
 
-        public Sprite[] GetPlayers()
+        public static Sprite[] GetPlayers()
         {
             return sprites.Where(s => s is Player).ToArray();
         }
 
-        public void UpdateSprite(GameStateEventArgs gs)
+        public static void UpdateSprite(GameStateEventArgs gs)
         {           
             if (spriteById.ContainsKey(gs.ID) && spriteById[gs.ID].GetType() == IdToSpriteType[gs.Type])
             {
@@ -467,10 +449,10 @@ namespace ExplorerOpenGL2.Managers
 
             Sprite sprite = CreateInstance(gs.Type);
             sprite.ID = gs.ID;
-            AddSprite(sprite, this);
+            AddSprite(sprite);
             spriteById[gs.ID].ReadGameState(gs.Packet); 
         }
-        public Sprite CreateInstance(int type)
+        public static Sprite CreateInstance(int type)
         {
             Sprite sprite = null;
             switch (type) 
@@ -488,31 +470,31 @@ namespace ExplorerOpenGL2.Managers
             return sprite;
         }
 
-        public byte[] GetMap()
+        public static byte[] GetMap()
         {
             NetDataWriter mapPacket = new NetDataWriter();
 
             Sprite[] spritesToSend = sprites.Where(s => !s.IsHUD && s.GetType() != typeof(Player)).ToArray();
 
-            string xml = xmlManager.GetMapXmlBySprites(spritesToSend, CurrentMap);
+            string xml = XmlManager.GetMapXmlBySprites(spritesToSend, CurrentMap);
             
             return Encoding.UTF8.GetBytes(xml);
         }
 
-        private Wall CreateWall()
+        static Wall CreateWall()
         {
             return new Wall();
         }
-        private Player CreatePlayer()
+        static Player CreatePlayer()
         {
-            Animation walking = textureManager.GetAnimation("walk");
-            Animation standing = textureManager.GetAnimation("idle");
-            Animation running = textureManager.GetAnimation("run");
-            Animation jump = textureManager.GetAnimation("jump");
-            Animation falling = textureManager.GetAnimation("falling");
+            Animation walking = TextureManager.GetAnimation("walk");
+            Animation standing = TextureManager.GetAnimation("idle");
+            Animation running = TextureManager.GetAnimation("run");
+            Animation jump = TextureManager.GetAnimation("jump");
+            Animation falling = TextureManager.GetAnimation("falling");
             jump.IsLooping = false;
 
-            var player = new Player("???", textureManager.NormalizeHeights(walking, standing, running, jump, falling))
+            var player = new Player("???", TextureManager.NormalizeHeights(walking, standing, running, jump, falling))
             {
                 Position = new Vector2(0, 0),
                 IsEnable = false,
@@ -520,7 +502,7 @@ namespace ExplorerOpenGL2.Managers
             return player;
         }
 
-        private Sprite CreateSprite()
+        static Sprite CreateSprite()
         {
             return null;
         }

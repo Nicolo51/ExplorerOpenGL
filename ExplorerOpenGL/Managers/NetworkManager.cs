@@ -29,75 +29,54 @@ namespace ExplorerOpenGL2.Managers
 {
     public class NetworkManager
     {
-        public ConnectionState ConnectionState { get; private set; }
-        public bool IsConnectedToAServer { get { return ConnectionState == ConnectionState.Connected; } }
-        SocketAddress socketAddress;
-        int serverTickRate;
-        double timer;
-        double clock;
-        private Client client;
-        GameManager gameManager;
-        DebugManager debugManager;
-        XmlManager xmlManager;
-        private int port;
-        private static NetworkManager instance;
-        public static event EventHandler Initialized;
-        private string playerNameOnConnection;
-        private GameTime gameTime;
-        GameServer gameServer;
+        public static ConnectionState ConnectionState { get; private set; }
+        public static bool IsConnectedToAServer { get { return ConnectionState == ConnectionState.Connected; } }
+        static SocketAddress socketAddress;
+        static int serverTickRate;
+        static double timer;
+        static double clock;
+        static Client client;
+        static GameManager GameManager;
+        static DebugManager DebugManager;
+        static XmlManager XmlManager;
+        static int port;
 
-        WelcomeEventArgs welcomeEventArgs;
-        int mapPacketCount = 0;
-        List<byte> mapData = new List<byte>();
-        public string  serverMap { get; private set; }
+        static string playerNameOnConnection;
+        static GameServer gameServer;
 
-        public int IDClient { get { return client.ID; } }
-        public bool IsServer { get; set; }
+        static WelcomeEventArgs welcomeEventArgs;
+        static int mapPacketCount = 0;
+        static List<byte> mapData = new List<byte>();
+        public static string  serverMap { get; private set; }
+
+        public static int IDClient { get { return client.ID; } }
+        public static bool IsServer { get; set; }
 
         public delegate void PacketReceivedHandler(NetworkEventArgs e); 
-        public event PacketReceivedHandler PacketReceived;
-        
-        double elapsedTimeSinceLastUpdatePlayer;
-        double lastUpdate;
+        public static event PacketReceivedHandler PacketReceived;
 
-        public static NetworkManager Instance { get
-            {
-                if (instance == null)
-                {
-                    instance = new NetworkManager();
-                    Initialized?.Invoke(instance, EventArgs.Empty);
-                    return instance;
-                }
-                return instance;
-            }
-        }
+        static double elapsedTimeSinceLastUpdatePlayer;
+        static double lastUpdate;
 
-        private NetworkManager()
+
+        public static void InitDependencies()
         {
             ConnectionState = ConnectionState.NotConnected;
             timer = 30;
             clock = 0d;
             port = 25789;
-            InitDependencies(); 
+
         }
 
-        public void InitDependencies()
-        {
-            gameManager = GameManager.Instance;
-            debugManager = DebugManager.Instance;
-            xmlManager = XmlManager.Instance;
-            
-        }
-
-        public bool Connect(string ip, string name, bool isServer = false) //port is 25789 by default
+        public static bool Connect(string ip, string name, bool isServer = false) //port is 25789 by default
         {
             if (isServer)
             {
-                gameServer = new GameServer(port, this);
+                gameServer = new GameServer(port);
                 gameServer.InitDependencies();
             }
 
-            client = new Client(gameManager);
+            client = new Client(GameManager);
             playerNameOnConnection = name;
 
             if (ip.IndexOf(':') != -1)
@@ -110,7 +89,7 @@ namespace ExplorerOpenGL2.Managers
             }
             if (ConnectionState == ConnectionState.NotConnected)
             {
-                gameManager.Terminal.AddMessageToTerminal($"Connecting to {ip}...", "System", Color.White);
+                GameManager.Terminal.AddMessageToTerminal($"Connecting to {ip}...", "System", Color.White);
                 socketAddress = new SocketAddress(ip, port);
 
                 ConnectionState = ConnectionState.WaitingForServer;
@@ -122,17 +101,17 @@ namespace ExplorerOpenGL2.Managers
             }
             else
             {
-                gameManager.Terminal.AddMessageToTerminal("You're already connected to a server.", "System", Color.Red);
+                GameManager.Terminal.AddMessageToTerminal("You're already connected to a server.", "System", Color.Red);
                 return false;
             }
         }
 
-        public void SendGameState(NetGameState netGameState)
+        public static void SendGameState(NetGameState netGameState)
         {
             client.SendMessage(netGameState, ClientPackets.UpdateGameState); 
         }
 
-        public void Disconnect()
+        public static void Disconnect()
         {
             mapPacketCount = 0;
             client.OnPacketReceived -= OnPacketReceived;
@@ -148,132 +127,46 @@ namespace ExplorerOpenGL2.Managers
             ConnectionState = ConnectionState.NotConnected;
         }
 
-        public Task ChangeMap(string mapName, string host)
-        {
-            Task t = new Task(() =>
-            {
-                HttpClient client = new HttpClient();
-                StringContent content = new StringContent(JsonSerializer.Serialize(
-                    new
-                    {
-                        MapName = mapName,
-                    }
-                    ));
-                if (string.IsNullOrWhiteSpace(host))
-                    host = "http://localhost:8000";
-                Task<HttpResponseMessage> task = client.PostAsync($"{host}/changemap", content);
-
-                while (!task.IsCompleted)
-                    Thread.Sleep(1);
-
-            }); 
-            t.Start();
-            return t;
-        }
-
-        public Task UploadMap(string mapName, string path, string host, UploadScreen view)
-        {
-            Task t = new Task(() => {
-                string filename = mapName + ".xml";
-                view.UploadCompletion = 0;
-                string[] imagesPath = Directory.GetFiles($"./maps/{mapName}");
-                double completionStep = 100d / (imagesPath.Length + 1);
-
-                HttpClient httpClient = new HttpClient();
-                if (string.IsNullOrWhiteSpace(host))
-                    host = "http://localhost:8000";
-                //Send Xml
-                string xml = File.ReadAllText($"./maps/{filename}");
-                StringContent content = new StringContent(JsonSerializer.Serialize(
-                    new
-                    {
-                        Xml = xml,
-                        FileName = filename,
-                    }
-                    ));
-                Task<HttpResponseMessage> task = httpClient.PostAsync($"{host}/MapXml", content);
-
-                while (!task.IsCompleted)
-                    Thread.Sleep(1);
-                if (task.Result.Content.ReadAsStringAsync().Result == "0")
-                    throw new Exception("Failed to upload xml");
-
-                view.UploadCompletion += completionStep;
-
-                //Send Texture;
-
-
-                foreach (string file in imagesPath)
-                {
-                    byte[] imageArray = System.IO.File.ReadAllBytes(file);
-                    string base64Image = Convert.ToBase64String(imageArray);
-                    StringContent imageContent = new StringContent(JsonSerializer.Serialize(
-                        new
-                        {
-                            image = base64Image,
-                            textureName = Path.GetFileName(file),
-                            mapName = mapName,
-                        }
-                        ));
-                    Task<HttpResponseMessage> imageTask = httpClient.PostAsync($"{host}/MapTexture", imageContent);
-
-                    while (!imageTask.IsCompleted)
-                        Thread.Sleep(1);
-                    if (task.Result.Content.ReadAsStringAsync().Result == "0")
-                        throw new Exception("Failed to upload image");
-                    view.UploadCompletion += completionStep;
-                }
-                view.UploadCompletion = 100;
-                return;
-            });
-            t.Start();
-            return t;
-        }
-
-        public void SendMessageToServer(string message)
+        public static void SendMessageToServer(string message)
         {
             client.SendMessage(message, (int)ClientPackets.TcpChatMessage);
         }
 
-        public void RequestNameChange(string name)
+        public static void RequestNameChange(string name)
         {
             if (!string.IsNullOrWhiteSpace(name))
                 client.RequestNameChange(name);
         }
-        public void CreateBullet(Player player)
+
+        public static void OnMessage(ChatMessageEventArgs e)
         {
-            client.CreateBullet(player);
+            GameManager.Terminal.AddMessageToTerminal(e.Text, e.Sender, e.TextColor);
         }
 
-        public void OnMessage(ChatMessageEventArgs e)
-        {
-            gameManager.Terminal.AddMessageToTerminal(e.Text, e.Sender, e.TextColor);
-        }
-
-        public void PlayerSync(PlayerSyncEventArgs e)
+        public static void PlayerSync(PlayerSyncEventArgs e)
         {
             foreach (PlayerData pd in e.PlayerData)
             {
-                var player = gameManager.CreateInstance(1) as Player;
+                var player = GameManager.CreateInstance(1) as Player;
 
                 player.ID = pd.ID; 
 
                 //Player playerDataSync = new Player(pd.ID, pd.Name);
                 client.PlayersData.Add(pd.ID, player);
-                gameManager.AddSprite(player, this);
+                GameManager.AddSprite(player);
             }
         }
 
-        public void OnRequestResponse(RequestResponseEventArgs e)
+        public static void OnRequestResponse(RequestResponseEventArgs e)
         {
-            gameManager.Terminal.AddMessageToTerminal(e.Message, "System", Color.White);
+            GameManager.Terminal.AddMessageToTerminal(e.Message, "System", Color.White);
         }
-        public void OnPlayerDisconnection(PlayerDisconnectionEventArgs e)
+        public static void OnPlayerDisconnection(PlayerDisconnectionEventArgs e)
         {
             if(e.ID == client.ID)
             {
                 Disconnect(); 
-                gameManager.StopGame();
+                GameManager.StopGame();
                 var msgb = MessageBoxIG.Show("You've disconnected by the server", "Error", MessageBoxIGType.Ok);
 
                 msgb.Result += Msgb_Result;
@@ -281,37 +174,37 @@ namespace ExplorerOpenGL2.Managers
                 return; 
             }
 
-            gameManager.RemoveSprite(client.PlayersData[e.ID]);
+            GameManager.RemoveSprite(client.PlayersData[e.ID]);
             client.PlayersData.Remove(e.ID);
-            gameManager.Terminal.AddMessageToTerminal(e.Message, "System", Color.White);
+            GameManager.Terminal.AddMessageToTerminal(e.Message, "System", Color.White);
         }
 
-        private void Msgb_Result(MessageBoxIG sender, MessageBoxIGResultEventArgs e)
+        static void Msgb_Result(MessageBoxIG sender, MessageBoxIGResultEventArgs e)
         {
-            gameManager.ToMainMenu(); 
+            GameManager.ToMainMenu(); 
         }
 
-        public void OnPlayerConnection(PlayerConnectEventArgs e)
+        public static void OnPlayerConnection(PlayerConnectEventArgs e)
         {
             //PlayerData playerDataCo = new PlayerData(e.ID, e.Name);
             //client.PlayersData.Add(e.ID, playerDataCo);
-            //gameManager.Terminal.AddMessageToTerminal(e.Message, "System", Color.White);
-            //gameManager.AddSprite(playerDataCo, this);
+            //GameManager.Terminal.AddMessageToTerminal(e.Message, "System", Color.White);
+            //GameManager.AddSprite(playerDataCo, this);
         }
 
-        public void OnPlayerChangeName(PlayerChangeNameEventArgs e)
+        public static void OnPlayerChangeName(PlayerChangeNameEventArgs e)
         {
             string exName = client.PlayersData[e.IDPlayer].Name;
             if (e.IDPlayer == client.ID)
             {
-                gameManager.AddActionToUIThread(gameManager.Player.ChangeName, e.Name);
+                GameManager.AddActionToUIThread(GameManager.Player.ChangeName, e.Name);
                 return;
             }
             client.PlayersData[e.IDPlayer].ChangeName(e.Name);
-            gameManager.Terminal.AddMessageToTerminal(exName + " is now known as " + e.Name, "System", Color.Green);
+            GameManager.Terminal.AddMessageToTerminal(exName + " is now known as " + e.Name, "System", Color.Green);
         }
 
-        public void OnWelcome(WelcomeEventArgs e)
+        public static void OnWelcome(WelcomeEventArgs e)
         {
             welcomeEventArgs = e; 
             client.SendResponseWelcome(playerNameOnConnection, e.ID);
@@ -319,25 +212,25 @@ namespace ExplorerOpenGL2.Managers
             ConnectionState = ConnectionState.Connected;
             if (IsServer)
                 InitOnlineGame(); 
-            //MapXml[] map = xmlManager.LoadMapFromString(e.Map);
-            //Sprite[] sprites = xmlManager.GenerateSpritesFromXml(map);
+            //MapXml[] map = XmlManager.LoadMapFromString(e.Map);
+            //Sprite[] sprites = XmlManager.GenerateSpritesFromXml(map);
 
             //foreach(var s in sprites)
-            //    TextureManager.Instance.SaveTexture(s.Texture);
+            //    TextureManager.SaveTexture(s.Texture);
 
             
             //GetMapOfServer();
 
         }
 
-        public void InitOnlineGame()
+        public static void InitOnlineGame()
         {
             Player player;
             if (IsServer)
-                player = gameManager.GetSpriteById(welcomeEventArgs.ID) as Player;
+                player = GameManager.GetSpriteById(welcomeEventArgs.ID) as Player;
             else
             {
-                player = gameManager.CreateInstance(1) as Player;
+                player = GameManager.CreateInstance(1) as Player;
                 player.ID = welcomeEventArgs.ID;
             }
             player.ChangeName(playerNameOnConnection);
@@ -350,10 +243,10 @@ namespace ExplorerOpenGL2.Managers
                 Run = Keys.LeftShift,
             };
             player.Position = Vector2.Zero;
-            gameManager.AddSprite(player, this); 
+            GameManager.AddSprite(player); 
         }
 
-        private void GetMapOfServer()
+        static void GetMapOfServer()
         {
             serverMap = Encoding.UTF8.GetString(SendHttpRequest($"http://{socketAddress.IP}:8000/currentmap"));
 
@@ -371,11 +264,11 @@ namespace ExplorerOpenGL2.Managers
             sw.Write(mapXml);
             sw.Close(); 
 
-            string[] mapTextures = xmlManager.GetMapTextureNames(mapXml);
+            string[] mapTextures = XmlManager.GetMapTextureNames(mapXml);
             DownloadMapTexture(serverMap, mapTextures);
         }
 
-        private void DownloadMapTexture(string mapName, string[] textureNames)
+        static void DownloadMapTexture(string mapName, string[] textureNames)
         {
             foreach (var texture in textureNames) 
             {
@@ -398,7 +291,7 @@ namespace ExplorerOpenGL2.Managers
             }
         }
 
-        private byte[] SendHttpRequest(string url)
+        static byte[] SendHttpRequest(string url)
         {
             HttpClient client = new HttpClient();
             var response = client.GetByteArrayAsync(url);
@@ -406,7 +299,7 @@ namespace ExplorerOpenGL2.Managers
             return response.Result; 
         }
 
-        public void OnPacketReceived(NetworkEventArgs e)
+        public static void OnPacketReceived(NetworkEventArgs e)
         {
             switch (e)
             {
@@ -443,69 +336,68 @@ namespace ExplorerOpenGL2.Managers
                 default:
                     if (e.PacketType == ServerPackets.UdpTest)
                     {
-                        gameManager.Terminal.AddMessageToTerminal($"Connected !", "System", Color.Green);
+                        GameManager.Terminal.AddMessageToTerminal($"Connected !", "System", Color.Green);
                         ConnectionState = ConnectionState.Connected;
                         break;
                     }
-                    gameManager.Terminal.AddMessageToTerminal(e.Message, "System", Color.White);
+                    GameManager.Terminal.AddMessageToTerminal(e.Message, "System", Color.White);
                     break;
             }
             PacketReceived?.Invoke(e); 
         }
 
-        private void OnMapDataReceived(MapEventArgs maea)
+        static void OnMapDataReceived(MapEventArgs maea)
         {
             mapData.AddRange(maea.data); 
             mapPacketCount++;
             if (mapPacketCount > welcomeEventArgs.MapSize)
             {
                 string text = Encoding.UTF8.GetString(mapData.ToArray());
-                MapXml[] mapxml = xmlManager.ReadXml(text);
+                MapXml[] mapxml = XmlManager.ReadXml(text);
                 foreach (var m in mapxml)
                 {
-                    gameManager.AddSprite(xmlManager.GenerateSpriteFromXml(m.node, m.mapName), this); 
+                    GameManager.AddSprite(XmlManager.GenerateSpriteFromXml(m.node, m.mapName)); 
                 }
                 InitOnlineGame(); 
             }
         }
 
-        public void OnGameStateUpdate(GameStateEventArgs gsea)
+        public static void OnGameStateUpdate(GameStateEventArgs gsea)
         {
-            if (gameManager.Player == null || (gsea.ID == gameManager.Player.ID && !gsea.GsForced))
-                return; 
+            if (GameManager.Player == null || (gsea.ID == GameManager.Player.ID && !gsea.GsForced))
+                return;
 
-            gameManager.UpdateSprite(gsea);
+            GameManager.UpdateSprite(gsea);
         }
 
-        private void OnUpdateSelf(UpdateSelfEventArgs e)
+        static void OnUpdateSelf(UpdateSelfEventArgs e)
         {
             if(e.PacketType == ServerPackets.Teleport)
-                gameManager.Player.SetPosition(e.Position, false);
+                GameManager.Player.SetPosition(e.Position, false);
             if(e.PacketType == ServerPackets.ChangeHealth)
-                gameManager.Player.Health = e.Health;
+                GameManager.Player.Health = e.Health;
         }
 
-        public void OnPacketSent(NetworkEventArgs e)
+        public static void OnPacketSent(NetworkEventArgs e)
         {
             if (string.IsNullOrWhiteSpace(e.Message))
             {
-                gameManager.Terminal.AddMessageToTerminal(e.Message, "System", Color.White);
+                GameManager.Terminal.AddMessageToTerminal(e.Message, "System", Color.White);
             }
         }
 
-        private void MoveObject(Packet packet)
+        static void MoveObject(Packet packet)
         {
             int id = packet.ReadInt(); 
             Vector2 position = new Vector2(packet.ReadFloat(), packet.ReadFloat()); 
-            Sprite s = gameManager.GetNetworkObject(id);
+            Sprite s = GameManager.GetNetworkObject(id);
             if (s == null)
                 return;
             s.Position = position; 
         }
 
-        public void Update(GameTime gameTime, NetGameState netGameState)
+        public static void Update(GameTime gameTime, NetGameState netGameState)
         {
-            this.gameTime = gameTime;
             if (ConnectionState != ConnectionState.NotConnected)
             {
                 if(IsServer)
@@ -516,7 +408,7 @@ namespace ExplorerOpenGL2.Managers
                 {
                     if (clock > timer)
                     {
-                        //client.SendMessage(gameManager.Player, (int)ClientPackets.UdpUpdatePlayer);
+                        //client.SendMessage(GameManager.Player, (int)ClientPackets.UdpUpdatePlayer);
                         if (IsServer)
                         {
                             gameServer.SendGameStateToClients(netGameState);

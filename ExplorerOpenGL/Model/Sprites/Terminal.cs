@@ -1,4 +1,5 @@
-﻿using ExplorerOpenGL2.Managers;
+﻿using ExplorerOpenGL.Model;
+using ExplorerOpenGL2.Managers;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -18,10 +19,10 @@ namespace ExplorerOpenGL2.Model.Sprites
         int commandHistoryIndex; 
         SpriteFont font;
         public Color FontColor; 
-        private KeyboardManager keyboardManager;
-        private NetworkManager networkManager;
-        private FontManager fontManager;
-        private TextureManager textureManager;
+        private KeyboardManager KeyboardManager;
+        private NetworkManager NetworkManager;
+        private FontManager FontManager;
+        private TextureManager TextureManager;
         private TextinputBox terminalTexintput;
         private int height;
         private int width; 
@@ -40,10 +41,6 @@ namespace ExplorerOpenGL2.Model.Sprites
         public Terminal(Texture2D texture, SpriteFont Font)
             :base(texture)
         {
-            networkManager = NetworkManager.Instance; 
-            keyboardManager = KeyboardManager.Instance;
-            fontManager = FontManager.Instance;
-            textureManager = TextureManager.Instance;
             height = 500; 
             width = texture.Width;
             IsHUD = true; 
@@ -52,17 +49,22 @@ namespace ExplorerOpenGL2.Model.Sprites
             //SetTexture(texture); 
             Opacity = .5f;
 
-            terminalTexintput = new TextinputBox(textureManager.CreateTexture(700, 35, paint => Color.Black * .8f), fontManager.GetFont("Default"), true, true) { IsHUD = true, Position = new Vector2(0, 695), Opacity = 0f, };
+            terminalTexintput = new TextinputBox(TextureManager.CreateTexture(700, 30, paint => Color.Black * .8f), FontManager.GetFont("Default"), true, true) { IsHUD = true, Position = new Vector2(5, ConstantManager.HEIGHT.GetValue<int>() -40), Opacity = 0f, };
             terminalTexintput.Validated += OnTextinputValidation;
-            keyboardManager.KeyPressedSubTo(Keys.Enter, OnEnterPress);
-            keyboardManager.KeyPressedSubTo(Keys.Up, OnUpPress); 
-            keyboardManager.KeyPressedSubTo(Keys.Down, OnDownPress);
-            keyboardManager.KeyPressedSubTo(Keys.Escape, OnEscapePress);
-            keyboardManager.TextInputed += KeyboardManager_TextInputed;
-            keyboardManager.OnSpriteAdded(terminalTexintput, this);
+            KeyboardManager.KeyPressedSubTo(Keys.Enter, OnEnterPress);
+            KeyboardManager.KeyPressedSubTo(Keys.Up, OnUpPress); 
+            KeyboardManager.KeyPressedSubTo(Keys.Down, OnDownPress);
+            KeyboardManager.KeyPressedSubTo(Keys.Escape, OnEscapePress);
+            KeyboardManager.TextInputed += KeyboardManager_TextInputed;
+            KeyboardManager.OnSpriteAdded(terminalTexintput);
             messages = new List<ChatElement>();
             commandHistory = new List<string>();
             commandHistoryIndex = -1; 
+        }
+
+        public override void SetPosition(Vector2 newPos, bool instant = true)
+        {
+            base.SetPosition(newPos, instant);
         }
 
         private void OnDownPress()
@@ -87,7 +89,7 @@ namespace ExplorerOpenGL2.Model.Sprites
 
         private void KeyboardManager_TextInputed(TextInputEventArgs e)
         {
-            if (e.Character == '/' && !terminalTexintput.IsFocused && !keyboardManager.IsTextInputBoxFocused)
+            if (e.Character == '/' && !terminalTexintput.IsFocused && !KeyboardManager.IsTextInputBoxFocused)
             {
                 terminalTexintput.Clear();
                 terminalTexintput.Focus();
@@ -97,20 +99,20 @@ namespace ExplorerOpenGL2.Model.Sprites
 
         private void OnEnterPress()
         {
-            if ((keyboardManager.focusedTextInput == null || keyboardManager.focusedTextInput == terminalTexintput) && gameManager.GameState != GameState.Pause)
+            if ((KeyboardManager.focusedTextInput == null || KeyboardManager.focusedTextInput == terminalTexintput) && GameManager.GameState != GameState.Pause)
             {
                 if (terminalTexintput.ToggleFocus(true))
-                    gameManager.ChangeGameState(GameState.Typing);
+                    GameManager.ChangeGameState(GameState.Typing);
                 else
-                    gameManager.ChangeToLastGameState(); 
+                    GameManager.ChangeToLastGameState(); 
             }
         }
         private void OnEscapePress()
         {
-            if (gameManager.GameState == GameState.Typing)
+            if (GameManager.GameState == GameState.Typing)
             {
                 terminalTexintput.UnFocus();
-                gameManager.ChangeToLastGameState();
+                GameManager.ChangeToLastGameState();
             }
         }
 
@@ -166,9 +168,9 @@ namespace ExplorerOpenGL2.Model.Sprites
 
         public void AddMessageToTerminal(string message)
         {
-            if (gameManager.Player != null)
+            if (GameManager.Player != null)
             {
-                AddMessageToTerminal(message, gameManager.Player.Name, Color.White);
+                AddMessageToTerminal(message, GameManager.Player.Name, Color.White);
                 return; 
             }
             AddMessageToTerminal(message, "System", Color.White);
@@ -197,7 +199,7 @@ namespace ExplorerOpenGL2.Model.Sprites
                     message.Timer -= gametime.ElapsedGameTime.TotalMilliseconds;
             }
 
-            if (keyboardManager.IsKeyDown(Keys.H) && !keyboardManager.IsTextInputBoxFocused)
+            if (KeyboardManager.IsKeyDown(Keys.H) && !KeyboardManager.IsTextInputBoxFocused)
                 displayChatElements(); 
             if (terminalTexintput.IsFocused)
                 displayChatElements(); 
@@ -235,9 +237,9 @@ namespace ExplorerOpenGL2.Model.Sprites
             {
                 return; 
             }
-            if (networkManager.IsConnectedToAServer)
+            if (NetworkManager.IsConnectedToAServer)
             {
-                networkManager.SendMessageToServer(s);
+                NetworkManager.SendMessageToServer(s);
                 return; 
             }
             AddMessageToTerminal(s);
@@ -277,19 +279,19 @@ namespace ExplorerOpenGL2.Model.Sprites
 
         private void changeName(string[] commande)
         {
-            if (gameManager.Player == null)
+            if (GameManager.Player == null)
             {
                 AddMessageToTerminal("Can't find instance of a player", "Error", Color.Red);
                 return;
             }
-            if (networkManager.IsConnectedToAServer)
+            if (NetworkManager.IsConnectedToAServer)
             {
-                networkManager.RequestNameChange(commande[1]); 
+                NetworkManager.RequestNameChange(commande[1]); 
                 return; 
             }
             else
             {
-                gameManager.Player.ChangeName(commande[1]);
+                GameManager.Player.ChangeName(commande[1]);
                 AddMessageToTerminal("Successfully changed name to : " + commande[1], "Info", Color.Green);
                 return; 
             }
