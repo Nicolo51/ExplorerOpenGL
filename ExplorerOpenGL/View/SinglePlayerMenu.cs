@@ -1,4 +1,5 @@
-﻿using ExplorerOpenGL2.Managers;
+﻿using ExplorerOpenGL.Managers;
+using ExplorerOpenGL2.Managers;
 using ExplorerOpenGL2.Model.Sprites;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -50,22 +51,13 @@ namespace ExplorerOpenGL2.View
 
         private void OnMapSelectedToPlay(object sender, string mapName)
         {
-            GameManager.StartGame("Nicolas", "127.0.0.1", mapName, true);
+            GameManager.StartGame(ConstantManager.LOGIN_NAME.GetValue<string>(), "127.0.0.1", mapName, true);
             this.Close(); 
             //var us = new UploadScreen(mapName);
             //us.UploadEnded += Us_UploadEnded;
             //us.BtnUpload_MouseClicked(this, null, Vector2.Zero); 
             //us.Show();
             //this.Hide(); 
-        }
-
-        private void Us_UploadEnded(object sender, bool success, string mapName)
-        {
-            (sender as UploadScreen).Close();
-            this.UnHide(); 
-            //NetworkManager.ChangeMap(mapName, null);
-            GameManager.StartGame("Nicolas", "127.0.0.1","", true); 
-            this.Close(); 
         }
 
         private void OnMapSelectedToEdit(object sender, string mapName)

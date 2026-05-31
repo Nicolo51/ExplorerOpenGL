@@ -193,6 +193,12 @@ namespace ExplorerOpenGL2.Managers
             Graphics.ApplyChanges(); 
         }
 
+        public static void ToggleVsync(bool vsync)
+        {
+            Graphics.SynchronizeWithVerticalRetrace = vsync;
+            Graphics.ApplyChanges();
+        }
+
         public static void StopGame()
         {
             Camera.FollowSprite(null);

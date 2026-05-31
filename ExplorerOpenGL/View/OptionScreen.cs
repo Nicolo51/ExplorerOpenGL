@@ -113,6 +113,7 @@ namespace ExplorerOpenGL.View
             ConstantManager.SaveConstants(ucs);
             GameManager.SetViewport(ConstantManager.WIDTH.GetValue<int>(), ConstantManager.HEIGHT.GetValue<int>());
             GameManager.ToggleFullScreen(ConstantManager.FULLSCREEN.GetValue<bool>()); 
+            GameManager.ToggleVsync(ConstantManager.VSYNC.GetValue<bool>());
         }
 
         public override void Show()
